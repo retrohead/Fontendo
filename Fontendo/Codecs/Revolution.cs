@@ -1,5 +1,4 @@
-﻿
-using Fontendo.Extensions;
+﻿using Fontendo.Extensions;
 using Fontendo.Interfaces;
 using static Fontendo.Interfaces.ITextureCodec;
 
@@ -90,12 +89,7 @@ namespace Fontendo.Codecs.RVL
             throw new NotImplementedException();
         }
 
-        public byte GeneralTextureType(ushort texFmt)
-        {
-            throw new NotImplementedException();
-        }
-
-        public byte PlatformTextureType(byte generalFmt)
+        public byte GetTextureType(ushort texFmt)
         {
             throw new NotImplementedException();
         }

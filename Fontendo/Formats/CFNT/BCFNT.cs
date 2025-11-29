@@ -3,19 +3,23 @@ using Fontendo.Extensions;
 using Fontendo.Interfaces;
 using System;
 using System.Drawing.Imaging;
+using static Fontendo.Extensions.FontBase;
 
-public class BCFNT
+public class BCFNT : IFontendoFont
 {
-    public CFNT? CFNT = null;
-    public FINF? FINF = null;
-    public CGLP? CGLP = null;
-    public TGLP? TGLP = null;
+    private CFNT? CFNT = null;
+    private FINF? FINF = null;
+    private CGLP? CGLP = null;
+    private TGLP? TGLP = null;
 
-    public List<CWDH>? CWDH_Headers = null;
-    public List<CharWidths>? CharWidths = null;
-    public List<CMAP>? CMAP_Headers = null;
-    public List<CMAPEntry>? CharMaps = null;
-    public List<Bitmap>? Sheets = null;
+    private List<CWDH>? CWDH_Headers = null;
+    private List<CharWidths>? CharWidths = null;
+    private List<CMAP>? CMAP_Headers = null;
+    private List<CMAPEntry>? CharMaps = null;
+    private Sheets? Sheets;
+
+
+    private ITextureCodec Codec = TextureCodecFactory.Create(TextureCodecFactory.Platform.CTR);
 
     public ActionResult Load(string filename)
     {
@@ -98,12 +102,12 @@ public class BCFNT
 
             // Decoding textures
             br.BaseStream.Position = TGLP.sheetPtr;
-            Sheets = new List<Bitmap>();
+            Sheets = new Sheets(TGLP.sheetWidth, TGLP.sheetHeight);
+            Sheets.Items = new List<Bitmap>();
 
-            ITextureCodec codec = TextureCodecFactory.Create(TextureCodecFactory.Platform.CTR);
             for (ushort i = 0; i < TGLP.sheetCount; i++)
             {
-                byte[] sheetRaw = codec.DecodeTexture(TGLP.sheetFormat, br, TGLP.sheetWidth, TGLP.sheetHeight);
+                byte[] sheetRaw = Codec.DecodeTexture(TGLP.sheetFormat, br, TGLP.sheetWidth, TGLP.sheetHeight);
 
                 Bitmap sheet = new Bitmap(TGLP.sheetWidth, TGLP.sheetHeight, PixelFormat.Format32bppArgb);
 
@@ -121,10 +125,20 @@ public class BCFNT
                     sheet.UnlockBits(bmpData);
                 }
 
-                Sheets.Add(sheet);
+                Sheets.Items.Add(sheet);
             }
 
         }
         return new ActionResult(true, "OK");
+    }
+
+    public ActionResult Save(string filename)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Sheets GetSheets()
+    {
+        return Sheets ?? new Sheets(0, 0);
     }
 }

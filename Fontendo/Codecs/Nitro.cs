@@ -1,4 +1,5 @@
 ﻿using Fontendo.Extensions;
+using Fontendo.Interfaces;
 using static Fontendo.Interfaces.ITextureCodec;
 
 namespace Fontendo.Codecs.NTR
@@ -28,12 +29,7 @@ namespace Fontendo.Codecs.NTR
             throw new NotImplementedException();
         }
 
-        public byte GeneralTextureType(ushort texFmt)
-        {
-            throw new NotImplementedException();
-        }
-
-        public byte PlatformTextureType(byte generalFmt)
+        public byte GetTextureType(ushort texFmt)
         {
             throw new NotImplementedException();
         }

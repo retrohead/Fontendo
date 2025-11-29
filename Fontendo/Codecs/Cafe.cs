@@ -1,11 +1,10 @@
 ﻿using Fontendo.Extensions;
-using static Fontendo.Codecs.CTR.CTRTextureCodec;
-using System.Text;
+using Fontendo.Interfaces;
 using static Fontendo.Interfaces.ITextureCodec;
 
 namespace Fontendo.Codecs.CAFE
 {
-    public class CAFETextureCodec : Fontendo.Interfaces.ITextureCodec
+    public class CAFETextureCodec : ITextureCodec
     {
         public Dictionary<TextureFormatType, TextureFormatData> TextureFormatFunctions { get; }
 
@@ -30,12 +29,7 @@ namespace Fontendo.Codecs.CAFE
             throw new NotImplementedException();
         }
 
-        public byte GeneralTextureType(ushort texFmt)
-        {
-            throw new NotImplementedException();
-        }
-
-        public byte PlatformTextureType(byte generalFmt)
+        public byte GetTextureType(ushort texFmt)
         {
             throw new NotImplementedException();
         }
