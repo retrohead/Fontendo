@@ -11,6 +11,7 @@ namespace Fontendo
     {
         public static MainForm? Self;
         private FontBase FontendoFont;
+        private double windowLeftPercent = 0.5f;
 
         public MainForm()
         {// At application startup, choose which types to support
@@ -22,6 +23,7 @@ namespace Fontendo
             InitializeComponent();
             Self = this;
             FontendoFont = new FontBase(Platform.CTR);
+            splitContainer1_SplitterMoved(this, null);
         }
 
         private void btnBrowseFont_Click(object sender, EventArgs e)
@@ -51,12 +53,13 @@ namespace Fontendo
             {
                 imageList1.Images.Add(sheet);
             }
-            // Example: bind to a ListView
             listView1.LargeImageList = imageList1;
+            listView1.Items.Clear();
             for (int i = 0; i < imageList1.Images.Count; i++)
             {
-                listView1.Items.Add(new ListViewItem($"Sheet {i}", i) { ImageIndex = i });
+                listView1.Items.Add(new ListViewItem($"Sheet {i + 1}", i) { ImageIndex = i });
             }
+            splitContainer1.Panel1MinSize = sheets.Width + 50;
         }
 
         private void openToolStripMenuItem_Click(object sender, EventArgs e)
@@ -133,6 +136,19 @@ namespace Fontendo
                 "Save font file",
                 Path.GetFileName(FontendoFont.LoadedFontFilePath)
                 );
+        }
+
+        private void splitContainer1_SplitterMoved(object sender, SplitterEventArgs? e)
+        {
+            windowLeftPercent = splitContainer1.Panel1.Width / (splitContainer1.Panel1.Width + splitContainer1.Panel2.Width);
+        }
+
+        private void MainForm_ResizeEnd(object sender, EventArgs e)
+        {
+            int totalWidth = splitContainer1.Panel1.Width + splitContainer1.Panel2.Width;
+            int newLeftWidth = (int)(totalWidth * windowLeftPercent);
+            // Apply the width
+            splitContainer1.SplitterDistance = newLeftWidth;
         }
     }
 }
