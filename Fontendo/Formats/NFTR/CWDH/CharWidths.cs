@@ -1,22 +1,25 @@
-﻿public class CharWidths
+﻿namespace Fontendo.Formats.NFTR
 {
-    public sbyte left; //left space width of character
-    public byte glyphWidth; //glyph width of character
-    public byte charWidth; //character width = left space width + glyph width + right space width
-
-    public ActionResult Parse(BinaryReader br)
+    public class CharWidths
     {
-        try
-        {
-            left = br.ReadSByte();
-            glyphWidth = br.ReadByte();
-            charWidth = br.ReadByte();
+        public sbyte left; //left space width of character
+        public byte glyphWidth; //glyph width of character
+        public byte charWidth; //character width = left space width + glyph width + right space width
 
-        }
-        catch (Exception e)
+        public ActionResult Parse(BinaryReader br)
         {
-            return new ActionResult(false, $"CharWidths exception {e.Message}");
+            try
+            {
+                left = br.ReadSByte();
+                glyphWidth = br.ReadByte();
+                charWidth = br.ReadByte();
+
+            }
+            catch (Exception e)
+            {
+                return new ActionResult(false, $"CharWidths exception {e.Message}");
+            }
+            return new ActionResult(true, "OK");
         }
-        return new ActionResult(true, "OK");
     }
 }

@@ -24,6 +24,7 @@ namespace Fontendo
             Self = this;
             FontendoFont = new FontBase(Platform.CTR);
             splitContainer1_SplitterMoved(this, null);
+            colorPickerBgColour.SelectedColor = Properties.Settings.Default.FontBackgroundColor;
         }
 
         private void btnBrowseFont_Click(object sender, EventArgs e)
@@ -140,7 +141,7 @@ namespace Fontendo
 
         private void splitContainer1_SplitterMoved(object sender, SplitterEventArgs? e)
         {
-            windowLeftPercent = splitContainer1.Panel1.Width / (splitContainer1.Panel1.Width + splitContainer1.Panel2.Width);
+            windowLeftPercent = (double)splitContainer1.Panel1.Width / (double)(splitContainer1.Panel1.Width + splitContainer1.Panel2.Width);
         }
 
         private void MainForm_ResizeEnd(object sender, EventArgs e)
@@ -149,6 +150,31 @@ namespace Fontendo
             int newLeftWidth = (int)(totalWidth * windowLeftPercent);
             // Apply the width
             splitContainer1.SplitterDistance = newLeftWidth;
+        }
+
+        private void colorPickerBgColour_ColorChanged(object sender, EventArgs e)
+        {
+            SetListViewColour(colorPickerBgColour.SelectedColor, true);
+        }
+
+        private void colorPickerBgColour_PreviewColorChanged(object sender, Fontendo.Controls.ColorPreviewEventArgs e)
+        {
+            SetListViewColour(e.PreviewColor, false);
+        }
+
+        private void SetListViewColour(Color color, bool save)
+        {
+            listView1.BackColor = color;
+            // Decide font colour based on lumiance
+            double luminance = Fontendo.Extensions.ColorHelper.GetLuminance(color);
+            listView1.ForeColor = luminance < 0.5 ? Color.White : Color.Black;
+
+            // save settings
+            if (save)
+            {
+                Properties.Settings.Default.FontBackgroundColor = color;
+                Properties.Settings.Default.Save();
+            }
         }
     }
 }

@@ -1,10 +1,5 @@
-﻿using Fontendo.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
+﻿using Fontendo.Formats.NFTR;
+using Fontendo.Interfaces;
 
 namespace Fontendo.Extensions
 {
@@ -35,16 +30,20 @@ namespace Fontendo.Extensions
             {
                 case Platform.RVL:
                     TextureCodec = new Fontendo.Codecs.RVL.RVLTextureCodec();
-                    Font = new BCFNT();
-                    break;
+                    // TODO: Implement RVL fonts
+                    throw new NotImplementedException("RVL font not implemented yet");
+                    //Font = new BCFNT();
+                    //break;
                 case Platform.CTR:
                     TextureCodec = new Fontendo.Codecs.CTR.CTRTextureCodec();
                     Font = new BCFNT();
                     break;
                 case Platform.NTR:
+                    // TODO: Implement NTR fonts
                     TextureCodec = new Fontendo.Codecs.NTR.NTRTextureCodec();
-                    Font = new BCFNT();
-                    break;
+                    throw new NotImplementedException("NTR font not implemented yet");
+                //Font = new BCFNT();
+                //break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(platform));
             }

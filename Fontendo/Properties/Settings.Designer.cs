@@ -34,5 +34,17 @@ namespace Fontendo.Properties {
                 this["RecentFiles"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Black")]
+        public global::System.Drawing.Color FontBackgroundColor {
+            get {
+                return ((global::System.Drawing.Color)(this["FontBackgroundColor"]));
+            }
+            set {
+                this["FontBackgroundColor"] = value;
+            }
+        }
     }
 }

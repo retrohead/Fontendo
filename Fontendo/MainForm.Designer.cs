@@ -44,16 +44,21 @@
             toolStripSeparator2 = new ToolStripSeparator();
             exitToolStripMenuItem = new ToolStripMenuItem();
             splitContainer1 = new SplitContainer();
+            tableLayoutPanel3 = new TableLayoutPanel();
             listView1 = new ListView();
+            colorPickerBgColour = new Fontendo.Controls.ColorPickerButton();
             tableLayoutPanel2 = new TableLayoutPanel();
             pictureBox2 = new PictureBox();
+            panel1 = new Panel();
             imageList1 = new ImageList(components);
+            colorDialog1 = new ColorDialog();
             tableLayoutPanel1.SuspendLayout();
             menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)splitContainer1).BeginInit();
             splitContainer1.Panel1.SuspendLayout();
             splitContainer1.Panel2.SuspendLayout();
             splitContainer1.SuspendLayout();
+            tableLayoutPanel3.SuspendLayout();
             tableLayoutPanel2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)pictureBox2).BeginInit();
             SuspendLayout();
@@ -170,59 +175,113 @@
             // 
             // splitContainer1
             // 
+            splitContainer1.BackColor = SystemColors.Control;
             tableLayoutPanel1.SetColumnSpan(splitContainer1, 2);
             splitContainer1.Dock = DockStyle.Fill;
-            splitContainer1.Location = new Point(3, 67);
+            splitContainer1.Location = new Point(5, 64);
+            splitContainer1.Margin = new Padding(5, 0, 5, 0);
             splitContainer1.Name = "splitContainer1";
             // 
             // splitContainer1.Panel1
             // 
-            splitContainer1.Panel1.Controls.Add(listView1);
+            splitContainer1.Panel1.BackColor = SystemColors.Control;
+            splitContainer1.Panel1.Controls.Add(tableLayoutPanel3);
             splitContainer1.Panel1MinSize = 150;
             // 
             // splitContainer1.Panel2
             // 
             splitContainer1.Panel2.Controls.Add(tableLayoutPanel2);
             splitContainer1.Panel2MinSize = 300;
-            splitContainer1.Size = new Size(678, 391);
-            splitContainer1.SplitterDistance = 333;
+            splitContainer1.Size = new Size(674, 397);
+            splitContainer1.SplitterDistance = 329;
+            splitContainer1.SplitterWidth = 7;
             splitContainer1.TabIndex = 6;
             splitContainer1.SplitterMoved += splitContainer1_SplitterMoved;
             // 
+            // tableLayoutPanel3
+            // 
+            tableLayoutPanel3.ColumnCount = 2;
+            tableLayoutPanel3.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 150F));
+            tableLayoutPanel3.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            tableLayoutPanel3.Controls.Add(listView1, 0, 0);
+            tableLayoutPanel3.Controls.Add(colorPickerBgColour, 0, 1);
+            tableLayoutPanel3.Dock = DockStyle.Fill;
+            tableLayoutPanel3.Location = new Point(0, 0);
+            tableLayoutPanel3.Margin = new Padding(0);
+            tableLayoutPanel3.Name = "tableLayoutPanel3";
+            tableLayoutPanel3.RowCount = 2;
+            tableLayoutPanel3.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            tableLayoutPanel3.RowStyles.Add(new RowStyle(SizeType.Absolute, 32F));
+            tableLayoutPanel3.Size = new Size(329, 397);
+            tableLayoutPanel3.TabIndex = 0;
+            // 
             // listView1
             // 
-            listView1.BackColor = Color.Black;
+            listView1.BackColor = Color.FromArgb(122, 65, 196);
+            tableLayoutPanel3.SetColumnSpan(listView1, 2);
             listView1.Dock = DockStyle.Fill;
-            listView1.Location = new Point(0, 0);
+            listView1.ForeColor = Color.White;
+            listView1.Location = new Point(3, 3);
+            listView1.Margin = new Padding(3, 3, 0, 3);
             listView1.Name = "listView1";
-            listView1.Size = new Size(333, 391);
+            listView1.Size = new Size(326, 359);
             listView1.TabIndex = 3;
             listView1.UseCompatibleStateImageBehavior = false;
             // 
+            // colorPickerBgColour
+            // 
+            colorPickerBgColour.CircleMargin = 10;
+            colorPickerBgColour.CirclePosition = Fontendo.Controls.CirclePosition.Left;
+            colorPickerBgColour.CircleSize = 20;
+            colorPickerBgColour.Location = new Point(3, 368);
+            colorPickerBgColour.Name = "colorPickerBgColour";
+            colorPickerBgColour.SelectedColor = Color.FromArgb(122, 65, 196);
+            colorPickerBgColour.Size = new Size(144, 26);
+            colorPickerBgColour.TabIndex = 5;
+            colorPickerBgColour.Text = "Background Colour";
+            colorPickerBgColour.UseVisualStyleBackColor = true;
+            colorPickerBgColour.ColorChanged += colorPickerBgColour_ColorChanged;
+            colorPickerBgColour.PreviewColorChanged += colorPickerBgColour_PreviewColorChanged;
+            // 
             // tableLayoutPanel2
             // 
+            tableLayoutPanel2.BackColor = SystemColors.Control;
             tableLayoutPanel2.ColumnCount = 2;
             tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 100F));
+            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 60F));
             tableLayoutPanel2.Controls.Add(pictureBox2, 1, 1);
+            tableLayoutPanel2.Controls.Add(panel1, 0, 0);
             tableLayoutPanel2.Dock = DockStyle.Fill;
             tableLayoutPanel2.Location = new Point(0, 0);
+            tableLayoutPanel2.Margin = new Padding(0);
             tableLayoutPanel2.Name = "tableLayoutPanel2";
             tableLayoutPanel2.RowCount = 2;
             tableLayoutPanel2.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            tableLayoutPanel2.RowStyles.Add(new RowStyle(SizeType.Absolute, 100F));
-            tableLayoutPanel2.Size = new Size(341, 391);
+            tableLayoutPanel2.RowStyles.Add(new RowStyle(SizeType.Absolute, 32F));
+            tableLayoutPanel2.Size = new Size(338, 397);
             tableLayoutPanel2.TabIndex = 0;
             // 
             // pictureBox2
             // 
-            pictureBox2.Image = Properties.Resources.Fontendo;
-            pictureBox2.Location = new Point(244, 294);
+            pictureBox2.Dock = DockStyle.Fill;
+            pictureBox2.Image = Properties.Resources.Fontendo_tiny;
+            pictureBox2.Location = new Point(278, 365);
+            pictureBox2.Margin = new Padding(0);
             pictureBox2.Name = "pictureBox2";
-            pictureBox2.Size = new Size(94, 94);
-            pictureBox2.SizeMode = PictureBoxSizeMode.Zoom;
+            pictureBox2.Size = new Size(60, 32);
             pictureBox2.TabIndex = 4;
             pictureBox2.TabStop = false;
+            // 
+            // panel1
+            // 
+            panel1.BorderStyle = BorderStyle.Fixed3D;
+            tableLayoutPanel2.SetColumnSpan(panel1, 2);
+            panel1.Dock = DockStyle.Fill;
+            panel1.Location = new Point(0, 3);
+            panel1.Margin = new Padding(0, 3, 3, 3);
+            panel1.Name = "panel1";
+            panel1.Size = new Size(335, 359);
+            panel1.TabIndex = 5;
             // 
             // imageList1
             // 
@@ -250,6 +309,7 @@
             splitContainer1.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)splitContainer1).EndInit();
             splitContainer1.ResumeLayout(false);
+            tableLayoutPanel3.ResumeLayout(false);
             tableLayoutPanel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)pictureBox2).EndInit();
             ResumeLayout(false);
@@ -275,5 +335,9 @@
         private ToolStripMenuItem saveAsToolStripMenuItem;
         private SplitContainer splitContainer1;
         private TableLayoutPanel tableLayoutPanel2;
+        private ColorDialog colorDialog1;
+        private Controls.ColorPickerButton colorPickerBgColour;
+        private TableLayoutPanel tableLayoutPanel3;
+        private Panel panel1;
     }
 }
