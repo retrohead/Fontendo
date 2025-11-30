@@ -42,4 +42,8 @@
     </None>
   </ItemGroup>
 
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="copy &quot;$(ProjectDir)DerivedNames.txt&quot; &quot;$(TargetDir)DerievedNames.txt&quot;&#xD;&#xA;copy &quot;$(ProjectDir)SHIFTJIS.TXT&quot; &quot;$(TargetDir)SHIFTJIS.TXT&quot;" />
+  </Target>
+
 </Project>

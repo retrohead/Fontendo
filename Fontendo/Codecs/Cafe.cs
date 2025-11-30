@@ -29,7 +29,12 @@ namespace Fontendo.Codecs.CAFE
             throw new NotImplementedException();
         }
 
-        public byte GetTextureType(ushort texFmt)
+        public byte ConvertGeneralTextureTypeToPlatform(FontBase.ImageFormats generalFmt)
+        {
+            throw new NotImplementedException();
+        }
+
+        public FontBase.ImageFormats ConvertPlatformTextureTypeToGeneral(ushort texFmt)
         {
             throw new NotImplementedException();
         }

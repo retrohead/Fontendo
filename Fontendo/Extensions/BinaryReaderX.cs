@@ -20,7 +20,7 @@ namespace Fontendo.Extensions
             bool isLE = ReadEndiannessByte(offset);
             FlipBytes = (Endianness.IsSystemLittleEndian() != isLE);
         }
-        public Endianness.Endian Endian()
+        public Endianness.Endian GetEndianness()
         {
             if (Endianness.IsSystemLittleEndian())
             {

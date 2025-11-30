@@ -8,11 +8,12 @@ namespace Fontendo.Extensions
 {
     public class PropertyList
     {
+
         /// <summary>
         /// Data type of a property value for dynamic GUI and serialization.
         /// Matches the original C++ enum ordering.
         /// </summary>
-        public enum PropertyType : byte
+        public enum FontPropertyType : byte
         {
             Bool,
             Byte,
@@ -34,7 +35,7 @@ namespace Fontendo.Extensions
         /// Descriptor shared across properties of the same kind (e.g., glyph entries).
         /// Holds index, name, type info, control hint, and optional numeric range.
         /// </summary>
-        public sealed class PropertyListEntryDescriptor
+        public sealed class FontPropertyListEntryDescriptor
         {
             /// <summary>Property index in a list (avoids passing the index around).</summary>
             public int Index { get; set; }
@@ -43,17 +44,17 @@ namespace Fontendo.Extensions
             public string Name { get; set; }
 
             /// <summary>Underlying data type of the property value.</summary>
-            public PropertyType PropType { get; set; }
+            public FontPropertyType PropType { get; set; }
 
             /// <summary>
             /// Inclusive numeric range when applicable; ignored for non-numeric types.
             /// </summary>
             public (long Min, long Max) ValueRange { get; set; }
 
-            public PropertyListEntryDescriptor(
+            public FontPropertyListEntryDescriptor(
                 int index,
                 string name,
-                PropertyType propType,
+                FontPropertyType propType,
                 (long Min, long Max) valueRange = default)
             {
                 Index = index;
@@ -69,7 +70,7 @@ namespace Fontendo.Extensions
         public abstract class PropertyBase : IDisposable
         {
             /// <summary>Shared descriptor describing this property.</summary>
-            public PropertyListEntryDescriptor? Descriptor { get; protected set; }
+            public FontPropertyListEntryDescriptor? Descriptor { get; protected set; }
 
             // If you later attach unmanaged resources, manage them here.
             public virtual void Dispose()
@@ -91,7 +92,7 @@ namespace Fontendo.Extensions
             /// <summary>
             /// Constructs a property using an existing shared descriptor.
             /// </summary>
-            public Property(PropertyListEntryDescriptor descriptor, T value)
+            public Property(FontPropertyListEntryDescriptor descriptor, T value)
             {
                 Descriptor = descriptor ?? throw new ArgumentNullException(nameof(descriptor));
                 Value = value;
@@ -105,10 +106,10 @@ namespace Fontendo.Extensions
                 int index,
                 string name,
                 T value,
-                PropertyType propType,
+                FontPropertyType propType,
                 (long Min, long Max) valueRange = default)
             {
-                Descriptor = new PropertyListEntryDescriptor(index, name, propType, valueRange);
+                Descriptor = new FontPropertyListEntryDescriptor(index, name, propType, valueRange);
                 Value = value;
             }
         }

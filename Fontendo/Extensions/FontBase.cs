@@ -53,6 +53,27 @@ namespace Fontendo.Extensions
             CP1252,
             Num
         };
+        public enum ImageFormats
+        {
+            None, //Fallback option, just in case
+            L2, //DS gen 4 pokemon fonts, 2 bit luminance
+            L2A,
+            L4, //I4, L4, 4 bit luminance
+            L4A, //IA4, LA4, 4 bit luminance + 4 bit alpha
+            L8, //I8, L8, 8 bit luminance
+            HL8, //CTR HL8
+            A8, //CTR A8, 8 bit alpha-only, identical to L8
+            A4, //CTR a4, 4 bit alpha-only, identical to L4
+            L8A, //IA8, LA8, 8 bit luminance + 8 bit alpha
+            RGB565, //5 bit red + 6 bit green + 5 bit blue
+            RGB5A1, //5 bpc RGB + 1 bit alpha
+            RGB5A3, //4 bpc RGB + 3 bit alpha or 5 bpc RGB, based on the first bit
+            RGBA4, //4 bpc RGBA
+            RGB8, //8 bpc RGB
+            RGBA8, //8 bpc RBGBA
+            ETC1, //CTR ETC1, Ericsson Texture Compression 1
+            ETC1A4, //CTR ETC1A4, ETC1 with 4 bits of alpha
+        };
         public FontBase(Platform platform)
         {
             switch (platform)

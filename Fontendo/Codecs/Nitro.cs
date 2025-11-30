@@ -29,11 +29,6 @@ namespace Fontendo.Codecs.NTR
             throw new NotImplementedException();
         }
 
-        public byte GetTextureType(ushort texFmt)
-        {
-            throw new NotImplementedException();
-        }
-
 
         public static byte[] DecodeBitmap(int bpp, BitReader br, ushort width, ushort height)
         {
@@ -106,6 +101,16 @@ namespace Fontendo.Codecs.NTR
                     }
                 }
             }
+        }
+
+        public byte ConvertGeneralTextureTypeToPlatform(FontBase.ImageFormats generalFmt)
+        {
+            throw new NotImplementedException();
+        }
+
+        public FontBase.ImageFormats ConvertPlatformTextureTypeToGeneral(ushort texFmt)
+        {
+            throw new NotImplementedException();
         }
     }
 }

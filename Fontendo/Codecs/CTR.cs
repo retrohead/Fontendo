@@ -1,5 +1,6 @@
 ﻿using Fontendo.Extensions;
 using Fontendo.Interfaces;
+using static Fontendo.Extensions.FontBase;
 using static Fontendo.Interfaces.ITextureCodec;
 
 namespace Fontendo.Codecs.CTR
@@ -725,14 +726,78 @@ namespace Fontendo.Codecs.CTR
 
         #endregion
 
-        byte ITextureCodec.GetTextureType(ushort texFmt)
+        public ImageFormats ConvertPlatformTextureTypeToGeneral(ushort texFmt)
         {
-            if (texFmt > 0xF)
-                throw new ArgumentOutOfRangeException("Texture format is out of range for a CTR font");
-            if (TextureFormatFunctions.TryGetValue((TextureFormatType)texFmt, out var formatdata))
-                return formatdata.TextureFormatTypeByte;
+            switch((TextureFormatType)texFmt)
+            {
+                case TextureFormatType.RGBA8888:
+                    return ImageFormats.RGBA8;
+                case TextureFormatType.RGB888:
+                    return ImageFormats.RGB8;
+                case TextureFormatType.RGBA5551:
+                    return ImageFormats.RGB5A1;
+                case TextureFormatType.RGB565:
+                    return ImageFormats.RGB565;
+                case TextureFormatType.RGBA4444:
+                    return ImageFormats.RGBA4; ;
+                case TextureFormatType.LA88:
+                    return ImageFormats.L8A;
+                case TextureFormatType.HL8:
+                    return ImageFormats.HL8;
+                case TextureFormatType.L8:
+                    return ImageFormats.L8;
+                case TextureFormatType.A8:
+                    return ImageFormats.A8;
+                case TextureFormatType.LA44:
+                    return ImageFormats.L4A;
+                case TextureFormatType.L4:
+                    return ImageFormats.L4;
+                case TextureFormatType.A4:
+                    return ImageFormats.A4;
+                case TextureFormatType.ETC1:
+                    return ImageFormats.ETC1;
+                case TextureFormatType.ETC1A4:
+                    return ImageFormats.ETC1A4;
+                default:
+                    throw new FileFormatException("Unspported CTR tecture format");
+            }
+        }
 
-            throw new ArgumentOutOfRangeException(nameof(texFmt), texFmt, "Unsupported CTR texture format!");
+        public byte ConvertGeneralTextureTypeToPlatform(ImageFormats generalFmt)
+        {
+            switch (generalFmt)
+            {
+                case ImageFormats.RGBA8:
+                    return (byte)TextureFormatType.RGBA8888;
+                case ImageFormats.RGB8:
+                    return (byte)TextureFormatType.RGB888;
+                case ImageFormats.RGB5A1:
+                    return (byte)TextureFormatType.RGBA5551;
+                case ImageFormats.RGB565:
+                    return (byte)TextureFormatType.RGB565;
+                case ImageFormats.RGBA4:
+                    return (byte)TextureFormatType.RGBA4444;
+                case ImageFormats.L8A:
+                    return (byte)TextureFormatType.LA88;
+                case ImageFormats.HL8:
+                    return (byte)TextureFormatType.HL8;
+                case ImageFormats.L8:
+                    return (byte)TextureFormatType.L8;
+                case ImageFormats.A8:
+                    return (byte)TextureFormatType.A8;
+                case ImageFormats.L4A:
+                    return (byte)TextureFormatType.LA44;
+                case ImageFormats.L4:
+                    return (byte)TextureFormatType.L4;
+                case ImageFormats.A4:
+                    return (byte)TextureFormatType.A4;
+                case ImageFormats.ETC1:
+                    return (byte)TextureFormatType.ETC1;
+                case ImageFormats.ETC1A4:
+                    return (byte)TextureFormatType.ETC1A4;
+                default:
+                    return (byte)TextureFormatType.RGBA8888; //In case it's something unknown, default to RGBA8
+            }
         }
     }
 }

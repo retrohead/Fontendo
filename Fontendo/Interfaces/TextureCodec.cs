@@ -1,4 +1,5 @@
 ﻿using Fontendo.Extensions;
+using static Fontendo.Extensions.FontBase;
 
 namespace Fontendo.Interfaces
 {
@@ -6,7 +7,8 @@ namespace Fontendo.Interfaces
     {
         byte[] DecodeTexture(ushort texFmt, BinaryReaderX br, ushort width, ushort height);
         byte[] EncodeTexture(ushort texFmt, byte[] data, ushort width, ushort height);
-        byte GetTextureType(ushort texFmt);
+        public byte ConvertGeneralTextureTypeToPlatform(ImageFormats generalFmt);
+        public ImageFormats ConvertPlatformTextureTypeToGeneral(ushort texFmt);
 
 
         public delegate byte[] DecodeFunc(BinaryReaderX br, ushort width, ushort height);

@@ -1,17 +1,15 @@
 using Fontendo.Extensions;
-using System.IO;
-using System.Windows.Forms;
 using static FileSystem;
 using static Fontendo.Extensions.FontBase;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace Fontendo
 {
     public partial class MainForm : Form
     {
         public static MainForm? Self;
-        private FontBase FontendoFont;
+        public FontBase FontendoFont;
         private double windowLeftPercent = 0.5f;
+        public SJISConv SJIS;
 
         public MainForm()
         {// At application startup, choose which types to support
@@ -20,6 +18,8 @@ namespace Fontendo
                 FileType.BinaryCrustFont
             });
             RecentFiles.Initialize();
+            SJIS = new SJISConv();
+
             InitializeComponent();
             Self = this;
             FontendoFont = new FontBase(Platform.CTR);
@@ -47,8 +47,9 @@ namespace Fontendo
         {
             imageListSheets.Images.Clear();
             if (FontendoFont == null) return;
+            if (FontendoFont.Font.Sheets == null) return;
 
-            Sheets sheets = FontendoFont.Font.GetSheets();
+            Sheets sheets = FontendoFont.Font.Sheets;
             imageListSheets.ImageSize = new Size(sheets.Width, sheets.Height);
             imageListSheets.ColorDepth = ColorDepth.Depth32Bit;
 
@@ -171,18 +172,19 @@ namespace Fontendo
 
         private void colorPickerBgColour_ColorChanged(object sender, EventArgs e)
         {
-            SetListViewColour(colorPickerBgColour.SelectedColor, true);
+            SetBackgroundColour(colorPickerBgColour.SelectedColor, true);
         }
 
         private void colorPickerBgColour_PreviewColorChanged(object sender, Fontendo.Controls.ColorPreviewEventArgs e)
         {
-            SetListViewColour(e.PreviewColor, false);
+            SetBackgroundColour(e.PreviewColor, false);
         }
 
-        private void SetListViewColour(Color color, bool save)
+        private void SetBackgroundColour(Color color, bool save)
         {
             listViewSheets.BackColor = color;
             listViewCharacters.BackColor = color;
+            glyphEditor1.GlyphBackground = color;
             // Decide font colour based on lumiance
             double luminance = Fontendo.Extensions.ColorHelper.GetLuminance(color);
             listViewSheets.ForeColor = luminance < 0.5 ? Color.White : Color.Black;
@@ -210,22 +212,24 @@ namespace Fontendo
             imageListCharacters.Images.Clear();
 
             // Get all CharImages belonging to this sheet
-            var charsForSheet = FontendoFont.Font.GetCharImages(sheetIndex);
-
-            foreach (var charImg in charsForSheet)
+            var charsForSheet = FontendoFont.Font.CharImages?.Where(c => c.Sheet.Equals(sheetIndex));
+            if (charsForSheet != null)
             {
-                // Add the bitmap to the ImageList
-                imageListCharacters.Images.Add(charImg.Image);
-
-                // Add a ListViewItem with metadata
-                var item = new ListViewItem
+                foreach (var charImg in charsForSheet)
                 {
-                    ImageIndex = imageListCharacters.Images.Count - 1,
-                    Text = $"Char {charImg.Index}",
-                    Tag = charImg // keep reference to the CharImage object
-                };
+                    // Add the bitmap to the ImageList
+                    imageListCharacters.Images.Add(charImg.Image);
 
-                listViewCharacters.Items.Add(item);
+                    // Add a ListViewItem with metadata
+                    var item = new ListViewItem
+                    {
+                        ImageIndex = imageListCharacters.Images.Count - 1,
+                        Text = $"Char {charImg.Index}",
+                        Tag = charImg // keep reference to the CharImage object
+                    };
+
+                    listViewCharacters.Items.Add(item);
+                }
             }
             if(listViewCharacters.Items.Count > 0)
                 listViewCharacters.Items[0].Selected = true;
@@ -235,16 +239,15 @@ namespace Fontendo
         private void listViewCharacters_SelectedIndexChanged(object sender, EventArgs e)
         {
             glyphEditor1.ClearGlyphDetails();
-            if (listViewCharacters.SelectedItems.Count == 0)
-                return;
+            if (listViewCharacters.SelectedItems.Count == 0) return;
             CharImage? img = (CharImage?)listViewCharacters.SelectedItems[0].Tag;
-            if (img == null)
+            if (img == null) return;
+            int? index = FontendoFont.Font.CharImages?.IndexOf(img);
+            if (index == null || index < 0) return;
+            var glyph = FontendoFont.Font.Glyphs?.FirstOrDefault(g => g.Index.Equals(index));
+            if (index < 0 || glyph == null)
                 return;
-            int index = FontendoFont.Font.GetCharImages().IndexOf(img);
-            var glyphs = FontendoFont.Font.GetGlyphDetails(index);
-            if (index < 0 || glyphs.Count() == 0)
-                return;
-            glyphEditor1.ShowGlyphDetails(glyphs[0]);
+            glyphEditor1.ShowGlyphDetails(glyph);
         }
     }
 }

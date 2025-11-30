@@ -1,10 +1,11 @@
 ﻿using static Fontendo.Extensions.PropertyList;
+using static Fontendo.Formats.GlyphProperties;
 
 namespace Fontendo.Extensions
 {
     public class Glyph
     {
-        public List<PropertyBase>? Props { get; private set; }
+        public Dictionary<GlyphProperty, PropertyBase>? Properties { get; private set; }
         public Bitmap? Pixmap { get; private set; }
 
         public int Index { get; set; }
@@ -12,14 +13,14 @@ namespace Fontendo.Extensions
 
         public Glyph()
         {
-            Props = new List<PropertyBase>();
+            Properties = new Dictionary<GlyphProperty, PropertyBase>();
             Pixmap = new Bitmap(16, 16);
         }
 
-        public Glyph(int index, List<PropertyBase> props, Bitmap pixmap)
+        public Glyph(int index, Dictionary<GlyphProperty, PropertyBase> props, Bitmap pixmap)
         {
             Index = index;
-            Props = props ?? new List<PropertyBase>();
+            Properties = props ?? new Dictionary<GlyphProperty, PropertyBase>();
             Pixmap = pixmap ?? new Bitmap(16, 16);
         }
 

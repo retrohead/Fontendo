@@ -314,6 +314,7 @@
             // 
             tableLayoutPanel2.SetColumnSpan(glyphEditor1, 2);
             glyphEditor1.Dock = DockStyle.Fill;
+            glyphEditor1.GlyphBackground = Color.FromArgb(122, 65, 196);
             glyphEditor1.Location = new Point(3, 3);
             glyphEditor1.Name = "glyphEditor1";
             glyphEditor1.Size = new Size(332, 176);
