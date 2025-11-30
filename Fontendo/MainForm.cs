@@ -45,21 +45,35 @@ namespace Fontendo
 
         private void ListFontSheets()
         {
-            imageList1.Images.Clear();
+            imageListSheets.Images.Clear();
             if (FontendoFont == null) return;
+
             Sheets sheets = FontendoFont.Font.GetSheets();
-            imageList1.ImageSize = new Size(sheets.Width, sheets.Height);
-            imageList1.ColorDepth = ColorDepth.Depth32Bit;
+            imageListSheets.ImageSize = new Size(sheets.Width, sheets.Height);
+            imageListSheets.ColorDepth = ColorDepth.Depth32Bit;
+
+            // Add all sheets to the ImageList
             foreach (Bitmap sheet in sheets.Items)
             {
-                imageList1.Images.Add(sheet);
+                imageListSheets.Images.Add(sheet);
             }
-            listView1.LargeImageList = imageList1;
-            listView1.Items.Clear();
-            for (int i = 0; i < imageList1.Images.Count; i++)
+
+            listViewSheets.LargeImageList = imageListSheets;
+            listViewSheets.Items.Clear();
+
+            // Create items with Tag = sheet
+            for (int i = 0; i < sheets.Items.Count; i++)
             {
-                listView1.Items.Add(new ListViewItem($"Sheet {i + 1}", i) { ImageIndex = i });
+                var item = new ListViewItem($"Sheet {i + 1}", i)
+                {
+                    ImageIndex = i,
+                    Tag = sheets.Items[i] // store the Bitmap in Tag
+                };
+                listViewSheets.Items.Add(item);
             }
+            if (listViewSheets.Items.Count > 0)
+                listViewSheets.Items[0].Selected = true;
+
             splitContainer1.Panel1MinSize = sheets.Width + 50;
         }
 
@@ -95,6 +109,7 @@ namespace Fontendo
                 recentFilesToolStripMenuItem.DropDownItems.Add(noRecentItemsToolStripMenuItem);
             }
         }
+
         private void RecentItem_Click(object? sender, EventArgs e)
         {
             if (sender == null)
@@ -104,7 +119,7 @@ namespace Fontendo
                 return;
             if (!File.Exists(((RecentFiles.RecentFile)item.Tag).FilePath))
             {
-                if (MessageBox.Show("The file no longer exists, do you want to remove it from your recent files list?", "Missing File", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                if (MessageBox.Show(this, "The file no longer exists, do you want to remove it from your recent files list?", "Missing File", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                     RecentFiles.Items.Remove(((RecentFiles.RecentFile)item.Tag));
                 return;
             }
@@ -113,7 +128,7 @@ namespace Fontendo
 
             if (!result.Success)
             {
-                MessageBox.Show($"Font failed to load {result.Message}");
+                MessageBox.Show(this, $"Font failed to load {result.Message}", "Font Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
             textFontFilePath.Text = ((RecentFiles.RecentFile)item.Tag).FilePath;
@@ -137,6 +152,8 @@ namespace Fontendo
                 "Save font file",
                 Path.GetFileName(FontendoFont.LoadedFontFilePath)
                 );
+            if (string.IsNullOrEmpty(filepath)) return;
+            FontendoFont.Font.Save(filepath);
         }
 
         private void splitContainer1_SplitterMoved(object sender, SplitterEventArgs? e)
@@ -164,10 +181,12 @@ namespace Fontendo
 
         private void SetListViewColour(Color color, bool save)
         {
-            listView1.BackColor = color;
+            listViewSheets.BackColor = color;
+            listViewCharacters.BackColor = color;
             // Decide font colour based on lumiance
             double luminance = Fontendo.Extensions.ColorHelper.GetLuminance(color);
-            listView1.ForeColor = luminance < 0.5 ? Color.White : Color.Black;
+            listViewSheets.ForeColor = luminance < 0.5 ? Color.White : Color.Black;
+            listViewCharacters.ForeColor = listViewSheets.ForeColor;
 
             // save settings
             if (save)
@@ -175,6 +194,57 @@ namespace Fontendo
                 Properties.Settings.Default.FontBackgroundColor = color;
                 Properties.Settings.Default.Save();
             }
+        }
+
+        private void listViewSheets_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (listViewSheets.SelectedItems.Count == 0)
+                return;
+
+            // Get the sheet index from the selected item
+            int sheetIndex = listViewSheets.SelectedItems[0].Index;
+
+            // Clear old items
+            listViewCharacters.BeginUpdate();
+            listViewCharacters.Items.Clear();
+            imageListCharacters.Images.Clear();
+
+            // Get all CharImages belonging to this sheet
+            var charsForSheet = FontendoFont.Font.GetCharImages(sheetIndex);
+
+            foreach (var charImg in charsForSheet)
+            {
+                // Add the bitmap to the ImageList
+                imageListCharacters.Images.Add(charImg.Image);
+
+                // Add a ListViewItem with metadata
+                var item = new ListViewItem
+                {
+                    ImageIndex = imageListCharacters.Images.Count - 1,
+                    Text = $"Char {charImg.Index}",
+                    Tag = charImg // keep reference to the CharImage object
+                };
+
+                listViewCharacters.Items.Add(item);
+            }
+            if(listViewCharacters.Items.Count > 0)
+                listViewCharacters.Items[0].Selected = true;
+            listViewCharacters.EndUpdate();
+        }
+
+        private void listViewCharacters_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            glyphEditor1.ClearGlyphDetails();
+            if (listViewCharacters.SelectedItems.Count == 0)
+                return;
+            CharImage? img = (CharImage?)listViewCharacters.SelectedItems[0].Tag;
+            if (img == null)
+                return;
+            int index = FontendoFont.Font.GetCharImages().IndexOf(img);
+            var glyphs = FontendoFont.Font.GetGlyphDetails(index);
+            if (index < 0 || glyphs.Count() == 0)
+                return;
+            glyphEditor1.ShowGlyphDetails(glyphs[0]);
         }
     }
 }

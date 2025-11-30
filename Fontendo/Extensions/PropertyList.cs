@@ -31,54 +31,34 @@ namespace Fontendo.Extensions
         }
 
         /// <summary>
-        /// Suggested GUI control to use when editing the property.
-        /// Matches the original C++ enum ordering.
-        /// </summary>
-        public enum ControlType : byte
-        {
-            None,
-            SpinBox,
-            HexSpinBox,
-            Label,
-            BoolPicker,
-            EndiannessPicker,
-            CodePointPicker
-        }
-
-        /// <summary>
         /// Descriptor shared across properties of the same kind (e.g., glyph entries).
         /// Holds index, name, type info, control hint, and optional numeric range.
         /// </summary>
         public sealed class PropertyListEntryDescriptor
         {
             /// <summary>Property index in a list (avoids passing the index around).</summary>
-            public uint Index { get; }
+            public int Index { get; set; }
 
             /// <summary>Human-readable property name.</summary>
-            public string Name { get; }
+            public string Name { get; set; }
 
             /// <summary>Underlying data type of the property value.</summary>
-            public PropertyType PropType { get; }
-
-            /// <summary>Preferred control type for editing the property.</summary>
-            public ControlType CtrlType { get; }
+            public PropertyType PropType { get; set; }
 
             /// <summary>
             /// Inclusive numeric range when applicable; ignored for non-numeric types.
             /// </summary>
-            public (long Min, long Max) ValueRange { get; }
+            public (long Min, long Max) ValueRange { get; set; }
 
             public PropertyListEntryDescriptor(
-                uint index,
+                int index,
                 string name,
                 PropertyType propType,
-                ControlType ctrlType,
                 (long Min, long Max) valueRange = default)
             {
                 Index = index;
                 Name = name;
                 PropType = propType;
-                CtrlType = ctrlType;
                 ValueRange = valueRange;
             }
         }
@@ -89,7 +69,7 @@ namespace Fontendo.Extensions
         public abstract class PropertyBase : IDisposable
         {
             /// <summary>Shared descriptor describing this property.</summary>
-            public PropertyListEntryDescriptor Descriptor { get; protected set; }
+            public PropertyListEntryDescriptor? Descriptor { get; protected set; }
 
             // If you later attach unmanaged resources, manage them here.
             public virtual void Dispose()
@@ -122,14 +102,13 @@ namespace Fontendo.Extensions
             /// Useful when you don't have a shared descriptor prepared.
             /// </summary>
             public Property(
-                uint index,
+                int index,
                 string name,
                 T value,
                 PropertyType propType,
-                ControlType ctrlType,
                 (long Min, long Max) valueRange = default)
             {
-                Descriptor = new PropertyListEntryDescriptor(index, name, propType, ctrlType, valueRange);
+                Descriptor = new PropertyListEntryDescriptor(index, name, propType, valueRange);
                 Value = value;
             }
         }

@@ -1,4 +1,4 @@
-﻿using Fontendo.Formats.NFTR;
+﻿using Fontendo.Formats.CTR;
 using Fontendo.Interfaces;
 
 namespace Fontendo.Extensions
@@ -18,17 +18,46 @@ namespace Fontendo.Extensions
                 Items = new List<Bitmap>();
             }
         }
+        public class CharImage
+        {
+            public int Index { get; set; }
+            public int Sheet { get; set; }
+            public Bitmap Image { get; set; }
+
+            public CharImage(int Index, int Sheet, Bitmap Image)
+            {
+                this.Index = Index;
+                this.Sheet = Sheet;
+                this.Image = Image;
+            }
+        }
 
         public IFontendoFont Font;
         public ITextureCodec TextureCodec;
         public FileSystem.FileType LoadedFontFileType;
         public string LoadedFontFilePath = "";
-        public enum Platform { NTR, RVL, CTR }
+        public enum Platform
+        {
+            Dolphin,
+            Revolution,
+            Cafe,
+            NX,
+            Nitro,
+            CTR
+        }
+        public enum CharEncodings
+        {
+            UTF8,
+            UTF16,
+            ShiftJIS,
+            CP1252,
+            Num
+        };
         public FontBase(Platform platform)
         {
             switch (platform)
             {
-                case Platform.RVL:
+                case Platform.Revolution:
                     TextureCodec = new Fontendo.Codecs.RVL.RVLTextureCodec();
                     // TODO: Implement RVL fonts
                     throw new NotImplementedException("RVL font not implemented yet");
@@ -38,12 +67,12 @@ namespace Fontendo.Extensions
                     TextureCodec = new Fontendo.Codecs.CTR.CTRTextureCodec();
                     Font = new BCFNT();
                     break;
-                case Platform.NTR:
+                case Platform.Nitro:
                     // TODO: Implement NTR fonts
                     TextureCodec = new Fontendo.Codecs.NTR.NTRTextureCodec();
                     throw new NotImplementedException("NTR font not implemented yet");
-                //Font = new BCFNT();
-                //break;
+                    //Font = new BCFNT();
+                    //break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(platform));
             }

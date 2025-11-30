@@ -1,30 +1,30 @@
-﻿namespace Fontendo.Formats.NFTR
+﻿namespace Fontendo.Formats.CTR
 {
     public class CMAP
     {
-        private UInt32 entriesOffset;
+        private UInt32 EntriesOffset;
 
-        public UInt32 magic; //Should always be 0x434D4150, CMAP in ASCII
-        public UInt32 length; //CMAP section length in bytes
-        public UInt16 codeBegin; //First character code
-        public UInt16 codeEnd; //Last character code
-        public UInt16 mappingMethod; //Mapping method, 0x0 - Direct, 0x1 - Table, 0x2 - Scan
-        public UInt16 reserved; //Reserved (this is referred to it as so even in the official SDK software)
-        public UInt32 ptrNext; //Pointer to the next CMAP(next CMAP offset + 0x8), 0x0 if last
+        public UInt32 Magic; //Should always be 0x434D4150, CMAP in ASCII
+        public UInt32 Length; //CMAP section length in bytes
+        public UInt16 CodeBegin; //First character code
+        public UInt16 CodeEnd; //Last character code
+        public UInt16 MappingMethod; //Mapping method, 0x0 - Direct, 0x1 - Table, 0x2 - Scan
+        public UInt16 Reserved; //Reserved (this is referred to it as so even in the official SDK software)
+        public UInt32 PtrNext; //Pointer to the next CMAP(next CMAP offset + 0x8), 0x0 if last
         public List<CMAPEntry> entries = new List<CMAPEntry>();
 
         public ActionResult Parse(BinaryReader br)
         {
             try
             {
-                magic = br.ReadUInt32();
-                length = br.ReadUInt32();
-                codeBegin = br.ReadUInt16();
-                codeEnd = br.ReadUInt16();
-                mappingMethod = br.ReadUInt16();
-                reserved = br.ReadUInt16();
-                ptrNext = br.ReadUInt32();
-                entriesOffset = (UInt32)br.BaseStream.Position;
+                Magic = br.ReadUInt32();
+                Length = br.ReadUInt32();
+                CodeBegin = br.ReadUInt16();
+                CodeEnd = br.ReadUInt16();
+                MappingMethod = br.ReadUInt16();
+                Reserved = br.ReadUInt16();
+                PtrNext = br.ReadUInt32();
+                EntriesOffset = (UInt32)br.BaseStream.Position;
 
                 // read entries
                 ActionResult result = ReadEntries(br);
@@ -43,7 +43,7 @@
 
         private bool ValidateSignature()
         {
-            if (magic != 0x434D4150U && magic != 0x50414D43)
+            if (Magic != 0x434D4150U && Magic != 0x50414D43)
                 return false;
             return true;
         }
@@ -51,22 +51,22 @@
         private ActionResult ReadEntries(BinaryReader br)
         {
             entries = new List<CMAPEntry>();
-            if (entriesOffset == 0)
+            if (EntriesOffset == 0)
                 return new ActionResult(false, "CMAP Entry Offset is zero");
-            br.BaseStream.Position = entriesOffset;
+            br.BaseStream.Position = EntriesOffset;
             UInt16 temp = 0;
-            switch (mappingMethod)
+            switch (MappingMethod)
             {
                 case 0: //Direct
                     temp = br.ReadUInt16(); //indexOffset
-                    for (UInt16 i = codeBegin; i <= codeEnd; i++)
+                    for (UInt16 i = CodeBegin; i <= CodeEnd; i++)
                     {
                         entries.Add(new CMAPEntry(i, temp));
                         temp++;
                     }
                     break;
                 case 1: //Table
-                    for (UInt16 i = codeBegin; i <= codeEnd; i++)
+                    for (UInt16 i = CodeBegin; i <= CodeEnd; i++)
                     {
                         temp = br.ReadUInt16(); //index
                         if (temp != 0xFFFFU) entries.Add(new CMAPEntry(i, temp));

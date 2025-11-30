@@ -1,41 +1,43 @@
 ﻿using Fontendo.Extensions;
 
-namespace Fontendo.Formats.NFTR
+namespace Fontendo.Formats
 {
-    public class NTR
+    public class FontProperties
     {
         /// <summary>
-        /// Glyph property indexes for NFTR/CFNT fonts.
+        /// Glyph property indexes for fonts.
         /// </summary>
-        public enum NitroGlyphProp : int
+        public enum GlyphProp : int
         {
-            Index = 0,
-            Code = 1,
-            Left = 2,
-            GlyphWidth = 3,
-            CharWidth = 4
+            Index,
+            Code,
+            Left,
+            GlyphWidth,
+            CharWidth
         }
         /// <summary>
-        /// Font property indexes for NFTR/CFNT fonts.
-        /// Shared + NTR-specific.
+        /// Font property indexes.
         /// </summary>
-        public enum NitroFontProp : int
+        public enum FontProperty : int
         {
             // Shared
-            Endianness = 0,
-            CharEncoding = 1,
-            Linefeed = 2,
-            Height = 3,
-            Width = 4,
-            Ascent = 5,
-            Baseline = 6,
-            Version = 7,
+            Endianness,
+            CharEncoding,
+            LineFeed,
+            Height,
+            Width,
+            Ascent,
+            Baseline,
+            Version,
 
             // NTR-specific
-            NtrBpp = 8,
-            NtrVertical = 9,
-            NtrRotation = 10,
-            NtrGameFreak = 11
+            NtrBpp,
+            NtrVertical,
+            NtrRotation,
+            NtrGameFreak,
+
+            // RVL only
+            NtrRvlImageFormat
         }
 
         /// <summary>
@@ -58,134 +60,134 @@ namespace Fontendo.Formats.NFTR
 
         /// <summary>Gets the glyph index.</summary>
         public static ushort GetGlyphIndex(List<PropertyList.PropertyBase> props)
-            => GetValue<ushort>(props, (int)NitroGlyphProp.Index);
+            => GetValue<ushort>(props, (int)GlyphProp.Index);
 
         /// <summary>Gets the glyph code point.</summary>
         public static ushort GetGlyphCode(List<PropertyList.PropertyBase> props)
-            => GetValue<ushort>(props, (int)NitroGlyphProp.Code);
+            => GetValue<ushort>(props, (int)GlyphProp.Code);
 
         /// <summary>Gets the glyph left bearing.</summary>
         public static sbyte GetGlyphLeft(List<PropertyList.PropertyBase> props)
-            => GetValue<sbyte>(props, (int)NitroGlyphProp.Left);
+            => GetValue<sbyte>(props, (int)GlyphProp.Left);
 
         /// <summary>Gets the glyph bitmap width.</summary>
         public static byte GetGlyphGlyphWidth(List<PropertyList.PropertyBase> props)
-            => GetValue<byte>(props, (int)NitroGlyphProp.GlyphWidth);
+            => GetValue<byte>(props, (int)GlyphProp.GlyphWidth);
 
         /// <summary>Gets the advance (character) width.</summary>
         public static byte GetGlyphCharWidth(List<PropertyList.PropertyBase> props)
-            => GetValue<byte>(props, (int)NitroGlyphProp.CharWidth);
+            => GetValue<byte>(props, (int)GlyphProp.CharWidth);
 
         /// <summary>Sets the glyph index.</summary>
         public static void SetGlyphIndex(List<PropertyList.PropertyBase> props, ushort val)
-            => SetValue<ushort>(props, (int)NitroGlyphProp.Index, val);
+            => SetValue<ushort>(props, (int)GlyphProp.Index, val);
 
         /// <summary>Sets the glyph code point.</summary>
         public static void SetGlyphCode(List<PropertyList.PropertyBase> props, ushort val)
-            => SetValue<ushort>(props, (int)NitroGlyphProp.Code, val);
+            => SetValue<ushort>(props, (int)GlyphProp.Code, val);
 
         /// <summary>Sets the glyph left bearing.</summary>
         public static void SetGlyphLeft(List<PropertyList.PropertyBase> props, sbyte val)
-            => SetValue<sbyte>(props, (int)NitroGlyphProp.Left, val);
+            => SetValue<sbyte>(props, (int)GlyphProp.Left, val);
 
         /// <summary>Sets the glyph bitmap width.</summary>
         public static void SetGlyphGlyphWidth(List<PropertyList.PropertyBase> props, byte val)
-            => SetValue<byte>(props, (int)NitroGlyphProp.GlyphWidth, val);
+            => SetValue<byte>(props, (int)GlyphProp.GlyphWidth, val);
 
         /// <summary>Sets the advance (character) width.</summary>
         public static void SetGlyphCharWidth(List<PropertyList.PropertyBase> props, byte val)
-            => SetValue<byte>(props, (int)NitroGlyphProp.CharWidth, val);
+            => SetValue<byte>(props, (int)GlyphProp.CharWidth, val);
 
         // ---- NITRO FONT ----
 
         /// <summary>Gets font endianness.</summary>
         public static bool GetFontEndianness(List<PropertyList.PropertyBase> props)
-            => GetValue<bool>(props, (int)NitroFontProp.Endianness);
+            => GetValue<bool>(props, (int)FontProperty.Endianness);
 
         /// <summary>Gets font character encoding.</summary>
         public static byte GetFontCharEncoding(List<PropertyList.PropertyBase> props)
-            => GetValue<byte>(props, (int)NitroFontProp.CharEncoding);
+            => GetValue<byte>(props, (int)FontProperty.CharEncoding);
 
         /// <summary>Gets font linefeed.</summary>
         public static byte GetFontLinefeed(List<PropertyList.PropertyBase> props)
-            => GetValue<byte>(props, (int)NitroFontProp.Linefeed);
+            => GetValue<byte>(props, (int)FontProperty.LineFeed);
 
         /// <summary>Gets font height.</summary>
         public static byte GetFontHeight(List<PropertyList.PropertyBase> props)
-            => GetValue<byte>(props, (int)NitroFontProp.Height);
+            => GetValue<byte>(props, (int)FontProperty.Height);
 
         /// <summary>Gets font width.</summary>
         public static byte GetFontWidth(List<PropertyList.PropertyBase> props)
-            => GetValue<byte>(props, (int)NitroFontProp.Width);
+            => GetValue<byte>(props, (int)FontProperty.Width);
 
         /// <summary>Gets font ascent.</summary>
         public static byte GetFontAscent(List<PropertyList.PropertyBase> props)
-            => GetValue<byte>(props, (int)NitroFontProp.Ascent);
+            => GetValue<byte>(props, (int)FontProperty.Ascent);
 
         /// <summary>Gets font baseline.</summary>
         public static byte GetFontBaseline(List<PropertyList.PropertyBase> props)
-            => GetValue<byte>(props, (int)NitroFontProp.Baseline);
+            => GetValue<byte>(props, (int)FontProperty.Baseline);
 
         /// <summary>Gets font version.</summary>
         public static ushort GetFontVersion(List<PropertyList.PropertyBase> props)
-            => GetValue<ushort>(props, (int)NitroFontProp.Version);
+            => GetValue<ushort>(props, (int)FontProperty.Version);
 
         /// <summary>Sets font endianness.</summary>
         public static void SetFontEndianness(List<PropertyList.PropertyBase> props, bool val)
-            => SetValue<bool>(props, (int)NitroFontProp.Endianness, val);
+            => SetValue<bool>(props, (int)FontProperty.Endianness, val);
 
         /// <summary>Sets font character encoding.</summary>
         public static void SetFontCharEncoding(List<PropertyList.PropertyBase> props, byte val)
-            => SetValue<byte>(props, (int)NitroFontProp.CharEncoding, val);
+            => SetValue<byte>(props, (int)FontProperty.CharEncoding, val);
 
         /// <summary>Sets font linefeed.</summary>
         public static void SetFontLinefeed(List<PropertyList.PropertyBase> props, byte val)
-            => SetValue<byte>(props, (int)NitroFontProp.Linefeed, val);
+            => SetValue<byte>(props, (int)FontProperty.LineFeed, val);
 
         /// <summary>Sets font height.</summary>
         public static void SetFontHeight(List<PropertyList.PropertyBase> props, byte val)
-            => SetValue<byte>(props, (int)NitroFontProp.Height, val);
+            => SetValue<byte>(props, (int)FontProperty.Height, val);
 
         /// <summary>Sets font width.</summary>
         public static void SetFontWidth(List<PropertyList.PropertyBase> props, byte val)
-            => SetValue<byte>(props, (int)NitroFontProp.Width, val);
+            => SetValue<byte>(props, (int)FontProperty.Width, val);
 
         /// <summary>Sets font ascent.</summary>
         public static void SetFontAscent(List<PropertyList.PropertyBase> props, byte val)
-            => SetValue<byte>(props, (int)NitroFontProp.Ascent, val);
+            => SetValue<byte>(props, (int)FontProperty.Ascent, val);
 
         /// <summary>Sets font baseline.</summary>
         public static void SetFontBaseline(List<PropertyList.PropertyBase> props, byte val)
-            => SetValue<byte>(props, (int)NitroFontProp.Baseline, val);
+            => SetValue<byte>(props, (int)FontProperty.Baseline, val);
 
         /// <summary>Sets font version.</summary>
         public static void SetFontVersion(List<PropertyList.PropertyBase> props, ushort val)
-            => SetValue<ushort>(props, (int)NitroFontProp.Version, val);
+            => SetValue<ushort>(props, (int)FontProperty.Version, val);
 
         // ---- NTR-only ----
 
         /// <summary>Gets NTR font bits-per-pixel (BPP).</summary>
         public static byte GetNtrFontBpp(List<PropertyList.PropertyBase> props)
-            => GetValue<byte>(props, (int)NitroFontProp.NtrBpp);
+            => GetValue<byte>(props, (int)FontProperty.NtrBpp);
 
         /// <summary>Gets NTR vertical layout flag.</summary>
         public static bool GetNtrFontVertical(List<PropertyList.PropertyBase> props)
-            => GetValue<bool>(props, (int)NitroFontProp.NtrVertical);
+            => GetValue<bool>(props, (int)FontProperty.NtrVertical);
 
         /// <summary>Gets NTR rotation value.</summary>
         public static byte GetNtrFontRotation(List<PropertyList.PropertyBase> props)
-            => GetValue<byte>(props, (int)NitroFontProp.NtrRotation);
+            => GetValue<byte>(props, (int)FontProperty.NtrRotation);
 
         /// <summary>Sets NTR font bits-per-pixel (BPP).</summary>
         public static void SetNtrFontBpp(List<PropertyList.PropertyBase> props, byte val)
-            => SetValue<byte>(props, (int)NitroFontProp.NtrBpp, val);
+            => SetValue<byte>(props, (int)FontProperty.NtrBpp, val);
 
         /// <summary>Sets NTR vertical layout flag.</summary>
         public static void SetNtrFontVertical(List<PropertyList.PropertyBase> props, bool val)
-            => SetValue<bool>(props, (int)NitroFontProp.NtrVertical, val);
+            => SetValue<bool>(props, (int)FontProperty.NtrVertical, val);
 
         /// <summary>Sets NTR rotation value.</summary>
         public static void SetNtrFontRotation(List<PropertyList.PropertyBase> props, byte val)
-            => SetValue<byte>(props, (int)NitroFontProp.NtrRotation, val);
+            => SetValue<byte>(props, (int)FontProperty.NtrRotation, val);
     }
 }

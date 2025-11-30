@@ -1,4 +1,4 @@
-﻿namespace Fontendo.Formats.NFTR
+﻿namespace Fontendo.Formats.CTR
 {
     public class CWDH
     {

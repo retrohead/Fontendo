@@ -1,26 +1,26 @@
-﻿namespace Fontendo.Formats.NFTR
+﻿namespace Fontendo.Formats.CTR
 {
     public class CMAPEntry
     {
-        public UInt16 code; //Character code
-        public UInt16 index; //Glyph index
+        public UInt16 Code; //Character code
+        public UInt16 Index; //Glyph index
 
         public CMAPEntry()
         {
 
         }
-        public CMAPEntry(UInt16 code, UInt16 index)
+        public CMAPEntry(UInt16 Code, UInt16 Index)
         {
-            this.code = code;
-            this.index = index;
+            this.Code = Code;
+            this.Index = Index;
         }
 
         public ActionResult Parse(BinaryReader br)
         {
             try
             {
-                code = br.ReadUInt16();
-                index = br.ReadUInt16();
+                Code = br.ReadUInt16();
+                Index = br.ReadUInt16();
             }
             catch (Exception e)
             {
