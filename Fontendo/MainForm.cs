@@ -142,7 +142,15 @@ namespace Fontendo
         {
             if (!FontendoFont.IsLoaded()) return;
 
-            FontendoFont.Font.Save(FontendoFont.LoadedFontFilePath);
+            ActionResult result = FontendoFont.Font.Save(FontendoFont.LoadedFontFilePath);
+            if (!result.Success)
+            {
+                MessageBox.Show(this, $"Font failed to save {result.Message}", "Font Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            else
+            {
+                MessageBox.Show(this, "Font saved successfully.", "Font Saved", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
         }
 
         private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
@@ -155,7 +163,15 @@ namespace Fontendo
                 Path.GetFileName(FontendoFont.LoadedFontFilePath)
                 );
             if (string.IsNullOrEmpty(filepath)) return;
-            FontendoFont.Font.Save(filepath);
+            ActionResult result = FontendoFont.Font.Save(filepath);
+            if (!result.Success)
+            {
+                MessageBox.Show(this, $"Font failed to save {result.Message}", "Font Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            else
+            {
+                MessageBox.Show(this, "Font saved successfully.", "Font Saved", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
         }
 
         private void splitContainer1_SplitterMoved(object sender, SplitterEventArgs? e)

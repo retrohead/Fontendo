@@ -1,8 +1,8 @@
 ﻿using Fontendo.Extensions;
 using static Fontendo.Extensions.FontBase;
-using static Fontendo.Extensions.PropertyList;
-using static Fontendo.Formats.FontProperties;
-using static Fontendo.Formats.GlyphProperties;
+using static Fontendo.FontProperties.PropertyList;
+using static Fontendo.FontProperties.FontPropertyList;
+using static Fontendo.FontProperties.GlyphProperties;
 
 namespace Fontendo.Interfaces
 {
@@ -12,14 +12,9 @@ namespace Fontendo.Interfaces
         public Sheets? Sheets { get; set; }
         public List<Glyph>? Glyphs { get; set; }
         public List<CharImage>? CharImages { get; set; }
-
-        public Dictionary<FontProperty, FontPropertyListEntryDescriptor> FontPropertyDescriptors { get; set; }
-        public Dictionary<FontProperty, PropertyBase> FontProperties { get; set; }
-
-        public Dictionary<GlyphProperty, FontPropertyListEntryDescriptor> GlyphPropertyDescriptors { get; set; }
-        public Dictionary<GlyphProperty, PropertyBase> GlyphProperties { get; set; }
-
+        public FontPropertyRegistry Properties { get; set; }
         public ActionResult Load(string filename);
         public ActionResult Save(string filename);
+        public void Dispose();
     }
 }

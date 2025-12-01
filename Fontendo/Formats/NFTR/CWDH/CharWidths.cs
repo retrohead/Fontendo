@@ -1,6 +1,7 @@
 ﻿using Fontendo.Extensions;
 using Fontendo.Extensions.BinaryTools;
-using static Fontendo.Formats.GlyphProperties;
+using Fontendo.FontProperties;
+using static Fontendo.FontProperties.GlyphProperties;
 
 namespace Fontendo.Formats.CTR
 {
@@ -10,22 +11,22 @@ namespace Fontendo.Formats.CTR
         public byte GlyphWidth; //glyph width of character
         public byte CharWidth; //character width = left space width + glyph width + right space width
 
-        private BinaryReaderX? br;
-        public CharWidths(BinaryReaderX br)
+        BinaryReaderX? br;
+        public CharWidths(BinaryReaderX? br)
         {
             this.br = br;
         }
-        public CharWidths(sbyte Left, byte GlyphWidth, byte CharWidth)
+        public CharWidths(sbyte t_left, byte t_glyphWidth, byte t_charWidth)
         {
-            this.Left = Left;
-            this.GlyphWidth = GlyphWidth;
-            this.CharWidth = CharWidth;
+            Left = t_left;
+            GlyphWidth = t_glyphWidth;
+            CharWidth = t_charWidth;
         }
 
         public ActionResult Parse()
         {
             if (br == null)
-                return new ActionResult(false, "Binary reader not attached to CharWidths");
+                return new ActionResult(false, "Binary reader not attached to CWDH");
             try
             {
                 Left = br.ReadSByte();
@@ -50,14 +51,11 @@ namespace Fontendo.Formats.CTR
             foreach (var glyph in glyphs)
             {
                 // Assuming glyph.Props is a List<PropertyBase> in the same order as in your Load
-                var leftProp = glyph.Properties[GlyphProperty.Left] as PropertyList.Property<sbyte>;
-                var glyphWidthProp = glyph.Properties[GlyphProperty.GlyphWidth] as PropertyList.Property<byte>;
-                var charWidthProp = glyph.Properties[GlyphProperty.CharWidth] as PropertyList.Property<byte>;
+                var leftProp = glyph.Properties.GetValue<sbyte>(GlyphProperty.Left);
+                var glyphWidthProp = glyph.Properties.GetValue<byte>(GlyphProperty.GlyphWidth);
+                var charWidthProp = glyph.Properties.GetValue<byte>(GlyphProperty.CharWidth);
 
-                if (leftProp == null || glyphWidthProp == null || charWidthProp == null)
-                    throw new InvalidOperationException("Glyph properties not set correctly.");
-
-                entries.Add(new CharWidths(leftProp.Value, glyphWidthProp.Value, charWidthProp.Value));
+                entries.Add(new CharWidths(leftProp, glyphWidthProp, charWidthProp));
             }
 
             return entries;

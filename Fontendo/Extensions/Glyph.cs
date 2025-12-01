@@ -1,26 +1,40 @@
-﻿using static Fontendo.Extensions.PropertyList;
-using static Fontendo.Formats.GlyphProperties;
+﻿using Fontendo.FontProperties;
+using static Fontendo.FontProperties.GlyphProperties;
+using static Fontendo.FontProperties.PropertyList;
 
 namespace Fontendo.Extensions
 {
     public class Glyph
     {
-        public Dictionary<GlyphProperty, PropertyBase>? Properties { get; private set; }
+        public GlyphPropertyRegistry Properties { get; private set; }
         public Bitmap? Pixmap { get; private set; }
 
         public int Index { get; set; }
         public int CodePoint { get; set; }
 
-        public Glyph()
-        {
-            Properties = new Dictionary<GlyphProperty, PropertyBase>();
-            Pixmap = new Bitmap(16, 16);
-        }
 
-        public Glyph(int index, Dictionary<GlyphProperty, PropertyBase> props, Bitmap pixmap)
+        public Glyph(int index, Bitmap pixmap, Dictionary<GlyphProperty, object>? propertyValues = null)
         {
             Index = index;
-            Properties = props ?? new Dictionary<GlyphProperty, PropertyBase>();
+
+            Properties = new GlyphPropertyRegistry();
+
+            Properties = new GlyphPropertyRegistry();
+            Properties.AddProperty(GlyphProperty.Index, "Index", PropertyValueType.UInt16);
+            Properties.AddProperty(GlyphProperty.Code, "Code point", PropertyValueType.UInt16);
+            Properties.AddProperty(GlyphProperty.Left, "Left", PropertyValueType.SByte, (-0x7F, 0x7F));
+            Properties.AddProperty(GlyphProperty.GlyphWidth, "Glyph width", PropertyValueType.Byte, (0x0, 0xFF));
+            Properties.AddProperty(GlyphProperty.CharWidth, "Char width", PropertyValueType.Byte, (0x0, 0xFF));
+
+            if(propertyValues != null)
+            {
+                foreach (var kvp in propertyValues)
+                {
+                    Properties.SetValue(kvp.Key, kvp.Value);
+                }
+            }
+
+            Pixmap = new Bitmap(16, 16);
             Pixmap = pixmap ?? new Bitmap(16, 16);
         }
 
