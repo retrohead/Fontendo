@@ -1,4 +1,5 @@
 using Fontendo.Extensions;
+using Microsoft.VisualBasic.Logging;
 using static FileSystem;
 using static Fontendo.Extensions.FontBase;
 
@@ -248,6 +249,23 @@ namespace Fontendo
             if (index < 0 || glyph == null)
                 return;
             glyphEditor1.ShowGlyphDetails(glyph);
+        }
+
+        static bool deletelog = true;
+        public static void Log(string message)
+        {
+            if(deletelog)
+            {
+                deletelog = false;
+                if (File.Exists(Path.Combine("C:\\Users\\kebud\\source\\repos\\Izuto\\sample_files", "fontendo.log")))
+                {
+                    File.Delete(Path.Combine("C:\\Users\\kebud\\source\\repos\\Izuto\\sample_files", "fontendo.log"));
+                }
+            }
+            using (var writer = new StreamWriter(Path.Combine("C:\\Users\\kebud\\source\\repos\\Izuto\\sample_files", "fontendo.log"), true))
+            {
+                writer.WriteLine($"[{DateTime.Now}] {message}");
+            }
         }
     }
 }

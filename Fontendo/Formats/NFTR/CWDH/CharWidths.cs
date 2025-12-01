@@ -1,4 +1,5 @@
 ﻿using Fontendo.Extensions;
+using Fontendo.Extensions.BinaryTools;
 using static Fontendo.Formats.GlyphProperties;
 
 namespace Fontendo.Formats.CTR
@@ -9,18 +10,22 @@ namespace Fontendo.Formats.CTR
         public byte GlyphWidth; //glyph width of character
         public byte CharWidth; //character width = left space width + glyph width + right space width
 
-        public CharWidths()
+        private BinaryReaderX? br;
+        public CharWidths(BinaryReaderX br)
         {
+            this.br = br;
         }
-        public CharWidths(sbyte t_left, byte t_glyphWidth, byte t_charWidth)
+        public CharWidths(sbyte Left, byte GlyphWidth, byte CharWidth)
         {
-            Left = t_left;
-            GlyphWidth = t_glyphWidth;
-            CharWidth = t_charWidth;
+            this.Left = Left;
+            this.GlyphWidth = GlyphWidth;
+            this.CharWidth = CharWidth;
         }
 
-        public ActionResult Parse(BinaryReader br)
+        public ActionResult Parse()
         {
+            if (br == null)
+                return new ActionResult(false, "Binary reader not attached to CharWidths");
             try
             {
                 Left = br.ReadSByte();
@@ -61,11 +66,11 @@ namespace Fontendo.Formats.CTR
         /// <summary>
         /// Equivalent of C++ CharWidths::serialize
         /// </summary>
-        public void Serialize(BinaryWriter bw)
+        public void Serialize(BinaryWriterX bw)
         {
-            bw.Write(Left);
-            bw.Write(GlyphWidth);
-            bw.Write(CharWidth);
+            bw.WriteSbyte(Left);
+            bw.WriteByte(GlyphWidth);
+            bw.WriteByte(CharWidth);
         }
     }
 }

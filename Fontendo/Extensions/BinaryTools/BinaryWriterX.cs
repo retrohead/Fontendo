@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Fontendo.Extensions
+namespace Fontendo.Extensions.BinaryTools
 {
 
     public class BinaryWriterX : IDisposable
@@ -27,7 +27,7 @@ namespace Fontendo.Extensions
 
         public void SetEndianness(bool isLE)
         {
-            FlipBytes = (Endianness.IsSystemLittleEndian() != isLE);
+            FlipBytes = Endianness.IsSystemLittleEndian() != isLE;
         }
         public Endianness.Endian Endian()
         {
@@ -47,44 +47,44 @@ namespace Fontendo.Extensions
 
         public void SetPosition(long pos) => bw.BaseStream.Seek(pos, SeekOrigin.Begin);
 
-        public void Write(byte value) => bw.Write(value);
+        public void WriteByte(byte value) => bw.Write(value);
 
-        public void Write(sbyte value) => bw.Write(value);
+        public void WriteSbyte(sbyte value) => bw.Write(value);
 
-        public void Write(byte[] buffer, int index, int count) => bw.Write(buffer, index, count);
+        public void WriteBytes(byte[] buffer, int index, int count) => bw.Write(buffer, index, count);
 
-        public void Write(float value) => Write(BitConverter.ToUInt32(BitConverter.GetBytes(value), 0));
+        public void WriteFloat(float value) => bw.Write(BitConverter.ToUInt32(BitConverter.GetBytes(value), 0));
 
-        public void Write(double value) => Write(BitConverter.ToUInt64(BitConverter.GetBytes(value), 0));
+        public void WriteDouble(double value) => bw.Write(BitConverter.ToUInt64(BitConverter.GetBytes(value), 0));
 
-        public void Write(short value) => Write((ushort)value);
+        public void WriteShort(short value) => bw.Write((ushort)value);
 
-        public void Write(ushort value)
+        public void WriteUshort(ushort value)
         {
             var bytes = BitConverter.GetBytes(value);
             if (FlipBytes) Array.Reverse(bytes);
             bw.Write(bytes);
         }
 
-        public void Write(int value) => Write((uint)value);
+        public void WriteUInt16(UInt16 value) => bw.Write((UInt16)value);
 
-        public void Write(uint value)
+        public void WriteUInt32(UInt32 value)
         {
             var bytes = BitConverter.GetBytes(value);
             if (FlipBytes) Array.Reverse(bytes);
             bw.Write(bytes);
         }
 
-        public void Write(long value) => Write((ulong)value);
+        public void WriteLong(long value) => WriteULong((ulong)value);
 
-        public void Write(ulong value)
+        public void WriteULong(ulong value)
         {
             var bytes = BitConverter.GetBytes(value);
             if (FlipBytes) Array.Reverse(bytes);
             bw.Write(bytes);
         }
 
-        public void Write(string value)
+        public void WriteString(string value)
         {
             var bytes = Encoding.ASCII.GetBytes(value);
             bw.Write(bytes);

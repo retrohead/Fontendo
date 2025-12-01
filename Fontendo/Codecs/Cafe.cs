@@ -1,4 +1,5 @@
 ﻿using Fontendo.Extensions;
+using Fontendo.Extensions.BinaryTools;
 using Fontendo.Interfaces;
 using static Fontendo.Interfaces.ITextureCodec;
 

@@ -1,13 +1,13 @@
-﻿using System;
+﻿using Fontendo.Extensions.BinaryTools;
 
 public class BitReader
 {
     private long bitPosition;
     private long bytePosition;
     private byte buffer;
-    private BinaryReader br;
+    private BinaryReaderX br;
 
-    public BitReader(BinaryReader br)
+    public BitReader(BinaryReaderX br)
     {
         this.br = br;
         bytePosition = br.BaseStream.Position;

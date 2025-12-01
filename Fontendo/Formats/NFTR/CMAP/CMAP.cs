@@ -1,6 +1,8 @@
 ﻿using Fontendo.Extensions;
+using Fontendo.Extensions.BinaryTools;
+using System;
+using System.Reflection.PortableExecutable;
 using static Fontendo.Formats.GlyphProperties;
-
 namespace Fontendo.Formats.CTR
 {
     public class CMAP
@@ -16,25 +18,47 @@ namespace Fontendo.Formats.CTR
         public UInt32 PtrNext; //Pointer to the next CMAP(next CMAP offset + 0x8), 0x0 if last
         public List<CMAPEntry> Entries = new List<CMAPEntry>();
 
-        public CMAP((Glyph, Glyph) t_entries, UInt32 t_magic)
+        private readonly BinaryReaderX? br;
+        public CMAP((Glyph, Glyph) Maps, UInt32 Magic = 0x434D4150U)
         {
-            Magic = t_magic;
-            Length = 0x0U;
-            CodeBegin = GetGlyphPropertyValue<UInt16>(t_entries.Item1, GlyphProperty.Code);
-            CodeEnd = GetGlyphPropertyValue<UInt16>(t_entries.Item2, GlyphProperty.Code);
-            MappingMethod = 0; //Direct
-            Reserved = 0;
-            PtrNext = 0x0U;
-            Entries = new List<CMAPEntry>();
-            Entries.Add(new CMAPEntry(CodeBegin, GetGlyphPropertyValue<UInt16>(t_entries.Item1, GlyphProperty.Index)));
+            this.Magic = Magic;
+            this.Length = 0x0U;
+            this.CodeBegin = GetGlyphPropertyValue<UInt16>(Maps.Item1, GlyphProperty.Code);
+            this.CodeEnd = GetGlyphPropertyValue<UInt16>(Maps.Item2, GlyphProperty.Code);
+            this.MappingMethod = 0; //Direct
+            this.Reserved = 0;
+            this.PtrNext = 0x0U;
+            this.Entries.Add(new CMAPEntry(CodeBegin, GetGlyphPropertyValue<UInt16>(Maps.Item1, GlyphProperty.Index)));
         }
-        public CMAP()
+        public CMAP(UInt16 MappingMethod, List<CMAPEntry> Maps, UInt32 Magic = 0x434D4150U)
         {
-
+            this.Magic = Magic;
+            this.Length = 0x0U;
+            this.MappingMethod = MappingMethod;
+            this.Reserved = 0;
+            this.PtrNext = 0x0U;
+            Entries = Maps;
+            switch (MappingMethod)
+            {
+                case 0x1:
+                    CodeBegin = Entries[0].Code;
+                    CodeEnd = Entries[Entries.Count() - 1].Code;
+                    break;
+                case 0x2:
+                    CodeBegin = 0x0;
+                    CodeEnd = 0xFFFF;
+                    break;
+            }
+        }
+        public CMAP(BinaryReaderX br)
+        {
+            this.br = br;
         }
 
-        public ActionResult Parse(BinaryReader br)
+        public ActionResult Parse()
         {
+            if (br == null)
+                return new ActionResult(false, "Binary reader not attached to CMAP");
             try
             {
                 Magic = br.ReadUInt32();
@@ -46,8 +70,11 @@ namespace Fontendo.Formats.CTR
                 PtrNext = br.ReadUInt32();
                 EntriesOffset = (UInt32)br.BaseStream.Position;
 
+
+                MainForm.Log($"CMAP Entries Start {br.BaseStream.Position}");
                 // read entries
                 ActionResult result = ReadEntries(br);
+                MainForm.Log($"CMAP Read {Entries.Count} entries using method {MappingMethod} ending at {br.BaseStream.Position}");
                 if (!result.Success)
                     return result;
             }
@@ -96,8 +123,8 @@ namespace Fontendo.Formats.CTR
                     temp = br.ReadUInt16(); //count
                     for (UInt16 i = 0; i < temp; i++)
                     {
-                        CMAPEntry entry = new CMAPEntry();
-                        ActionResult result = entry.Parse(br);
+                        CMAPEntry entry = new CMAPEntry(br);
+                        ActionResult result = entry.Parse();
                         if (!result.Success)
                             return new ActionResult(false, $"Failed reading CMAP Entry at index {i}\n\n{result.Message}");
                         Entries.Add(entry);
@@ -153,6 +180,119 @@ namespace Fontendo.Formats.CTR
                 }
 
                 if (!restart) break;
+            }
+
+            return result;
+        }
+
+
+        public static List<List<CMAPEntry>> CreateTableEntries(List<Glyph> glyphs)
+        {
+            var glyphLinkedList = new LinkedList<Glyph>(glyphs);
+            var result = new List<List<CMAPEntry>>();
+            var pos = glyphLinkedList.First;
+
+            while (pos != null)
+            {
+                // Find initial stride starting at pos
+                if (!GetNextStride(out var stride1, glyphLinkedList.Last, pos))
+                    break;
+
+                int glyphSpan = GetGlyphPropertyValue<UInt16>(stride1.End.Value, GlyphProperty.Code) - GetGlyphPropertyValue<UInt16>(stride1.Start.Value, GlyphProperty.Code) + 1;
+                int gapSpan = 0;
+
+                // Try to extend stride forward/backward
+                while (true)
+                {
+                    (LinkedListNode<Glyph> Start, LinkedListNode<Glyph> End) stride2;
+                    (LinkedListNode<Glyph> Start, LinkedListNode<Glyph> End) stride3;
+                    float forwardRatio = 0.0f;
+                    float backwardRatio = 0.0f;
+
+                    // Forward stride
+                    if (stride1.End != glyphLinkedList.Last)
+                    {
+                        var next = stride1.End.Next;
+                        if (GetNextStride(out stride2, glyphLinkedList.Last, next))
+                        {
+                            int span2 = GetGlyphPropertyValue<UInt16>(stride2.End.Value, GlyphProperty.Code) - GetGlyphPropertyValue<UInt16>(stride2.Start.Value, GlyphProperty.Code) + 1;
+                            int gap2 = GetGlyphPropertyValue<UInt16>(stride2.Start.Value, GlyphProperty.Code) - GetGlyphPropertyValue<UInt16>(stride1.End.Value, GlyphProperty.Code) - 1;
+                            int combinedSpan = glyphSpan + span2;
+                            int totalSpan = combinedSpan + gapSpan + gap2;
+                            forwardRatio = (float)combinedSpan / totalSpan;
+
+                            if (forwardRatio >= 0.5f)
+                            {
+                                glyphSpan += span2;
+                                gapSpan += gap2;
+                                stride1.End = stride2.End;
+                                continue;
+                            }
+                        }
+                    }
+
+                    // Backward stride
+                    if (stride1.Start != glyphLinkedList.First)
+                    {
+                        var prev = stride1.Start.Previous;
+                        if (GetPrevStride(out stride3, glyphLinkedList.First, prev))
+                        {
+                            int span3 = GetGlyphPropertyValue<UInt16>(stride3.End.Value, GlyphProperty.Code) - GetGlyphPropertyValue<UInt16>(stride3.Start.Value, GlyphProperty.Code) + 1;
+                            int gap3 = GetGlyphPropertyValue<UInt16>(stride1.Start.Value, GlyphProperty.Code) - GetGlyphPropertyValue<UInt16>(stride3.End.Value, GlyphProperty.Code) - 1;
+                            int combinedSpan = glyphSpan + span3;
+                            int totalSpan = combinedSpan + gapSpan + gap3;
+                            backwardRatio = (float)combinedSpan / totalSpan;
+
+                            if (backwardRatio >= 0.5f)
+                            {
+                                glyphSpan += span3;
+                                gapSpan += gap3;
+                                stride1.Start = stride3.Start;
+                                continue;
+                            }
+                        }
+                    }
+
+                    // If neither forward nor backward extended, stop
+                    break;
+                }
+
+                if (glyphSpan < 40)
+                {
+                    pos = stride1.End.Next;
+                }
+                else
+                {
+                    ushort codeStart = GetGlyphPropertyValue<UInt16>(stride1.Start.Value, GlyphProperty.Code);
+                    ushort codeEnd = GetGlyphPropertyValue<UInt16>(stride1.End.Value, GlyphProperty.Code);
+                    int length = codeEnd - codeStart + 1;
+
+                    var entries = new List<CMAPEntry>();
+                    for (int offset = 0; offset < length; offset++)
+                    {
+                        var glyph = GetGlyphByCodePoint(glyphs, (ushort)(codeStart + offset));
+                        if (glyph != null)
+                        {
+                            entries.Add(new CMAPEntry(GetGlyphPropertyValue<UInt16>(glyph, GlyphProperty.Code), GetGlyphPropertyValue<UInt16>(glyph, GlyphProperty.Index)));
+                        }
+                        else
+                        {
+                            entries.Add(new CMAPEntry((ushort)(codeStart + offset), 0xFFFF));
+                        }
+                    }
+
+                    result.Add(entries);
+
+                    // Advance pos and remove stride nodes
+                    pos = stride1.End.Next;
+                    var node = stride1.Start;
+                    while (node != stride1.End.Next)
+                    {
+                        var next = node.Next;
+                        glyphLinkedList.Remove(node);
+                        node = next;
+                    }
+                }
             }
 
             return result;
@@ -251,5 +391,63 @@ namespace Fontendo.Formats.CTR
 
             return result;
         }
+
+        public void Serialize(BinaryWriterX bw, BlockLinker linker)
+        {
+            linker.IncLookupValue("blockCount", 1);
+            linker.IncLookupValue("CMAP", 1);
+
+            long startPos = bw.BaseStream.Position;
+            long sectionNum = linker.GetLookupValue("CMAP");
+
+            linker.AddLookupValue($"CMAP{sectionNum}", startPos + 0x8);
+
+            bw.WriteUInt32(Magic);
+
+            linker.AddPatchAddr(bw.BaseStream.Position, $"CMAPLen{sectionNum}");
+            bw.WriteUInt32(Length);
+
+            bw.WriteUInt16(CodeBegin);
+            bw.WriteUInt16(CodeEnd);
+            bw.WriteUInt16(MappingMethod);
+            bw.WriteUInt16(Reserved);
+
+            linker.AddPatchAddr(bw.BaseStream.Position, $"CMAP{sectionNum + 1}");
+            bw.WriteUInt32(PtrNext);
+
+            MainForm.Log($"CMAP Entries start {bw.BaseStream.Position}");
+            switch (MappingMethod)
+            {
+                case 0: // Direct
+                    bw.WriteUInt16(Entries[0].Index);
+                    break;
+
+                case 1: // Table
+                    foreach (var entry in Entries)
+                    {
+                        bw.WriteUInt16(entry.Index);
+                    }
+                    break;
+
+                case 2: // Scan
+                    bw.WriteUInt16((ushort)Entries.Count);
+                    foreach (var entry in Entries)
+                    {
+                        entry.Serialize(bw);
+                    }
+                    break;
+            }
+
+            // Padding to 4-byte boundary
+            uint padBytes = 4U - ((uint)bw.BaseStream.Position % 4U);
+            if (padBytes != 4U)
+            {
+                for (uint i = 0; i < padBytes; i++)
+                    bw.WriteByte((byte)0x0);
+            }
+
+            linker.AddLookupValue($"CMAPLen{sectionNum}", (uint)bw.BaseStream.Position - startPos);
+        }
+
     }
 }

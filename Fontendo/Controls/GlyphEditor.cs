@@ -129,8 +129,17 @@ namespace Fontendo.Controls
                 e.Graphics.FillRectangle(brush, pictureBox1.ClientRectangle);
                 return;
             }
+            float scaledWidth;
+            try
+            {
+                scaledWidth = currentGlyph.Width * zoomFactor;
+            }
+            catch
+            {
+                return;
+            }
 
-            float scaledWidth = currentGlyph.Width * zoomFactor;
+
             float scaledHeight = currentGlyph.Height * zoomFactor;
 
             float centerX = pictureBox1.ClientSize.Width / 2f;

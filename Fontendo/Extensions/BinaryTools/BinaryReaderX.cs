@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Fontendo.Extensions
+namespace Fontendo.Extensions.BinaryTools
 {
     public class BinaryReaderX : BinaryReader
     {
@@ -18,7 +18,7 @@ namespace Fontendo.Extensions
         public void SetEndianness(int offset = 0x4)
         {
             bool isLE = ReadEndiannessByte(offset);
-            FlipBytes = (Endianness.IsSystemLittleEndian() != isLE);
+            FlipBytes = Endianness.IsSystemLittleEndian() != isLE;
         }
         public Endianness.Endian GetEndianness()
         {
@@ -45,7 +45,7 @@ namespace Fontendo.Extensions
             return isLE;
         }
 
-        public override UInt16 ReadUInt16()
+        public override ushort ReadUInt16()
         {
             {
                 // Read two bytes
@@ -61,13 +61,13 @@ namespace Fontendo.Extensions
                 else
                 {
                     // Manual big-endian flip
-                    return (ushort)((temp[0] << 8) | temp[1]);
+                    return (ushort)(temp[0] << 8 | temp[1]);
                 }
             }
         }
 
 
-        public override UInt32 ReadUInt32()
+        public override uint ReadUInt32()
         {
             // Read four bytes
             byte[] temp = base.ReadBytes(4);
@@ -82,7 +82,7 @@ namespace Fontendo.Extensions
             else
             {
                 // Manual big-endian flip
-                return (uint)((temp[0] << 24) | (temp[1] << 16) | (temp[2] << 8) | temp[3]);
+                return (uint)(temp[0] << 24 | temp[1] << 16 | temp[2] << 8 | temp[3]);
             }
         }
     }

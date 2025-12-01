@@ -1,6 +1,8 @@
 ﻿using Fontendo.Extensions;
+using Fontendo.Extensions.BinaryTools;
 using Fontendo.Interfaces;
 using System;
+using System.Collections.Generic;
 using System.Drawing.Imaging;
 using System.Runtime.CompilerServices;
 using static Fontendo.Extensions.FontBase;
@@ -33,23 +35,23 @@ namespace Fontendo.Formats.CTR
             {
                 {
                     GlyphProperty.Index,
-                    new FontPropertyListEntryDescriptor(0, "Index", FontPropertyType.UInt16)
+                    new FontPropertyListEntryDescriptor((int)GlyphProperty.Index, "Index", FontPropertyType.UInt16)
                 },
                 {
                     GlyphProperty.Code,
-                    new FontPropertyListEntryDescriptor(1, "Code point", FontPropertyType.UInt16)
+                    new FontPropertyListEntryDescriptor((int)GlyphProperty.Code, "Code point", FontPropertyType.UInt16)
                 },
                 {
                     GlyphProperty.Left,
-                    new FontPropertyListEntryDescriptor(2, "Left", FontPropertyType.SByte,(-0x7F, 0x7F))
+                    new FontPropertyListEntryDescriptor((int)GlyphProperty.Left, "Left", FontPropertyType.SByte,(-0x7F, 0x7F))
                 },
                 {
                     GlyphProperty.GlyphWidth,
-                    new FontPropertyListEntryDescriptor(3, "Glyph width", FontPropertyType.Byte, (0x0, 0xFF))
+                    new FontPropertyListEntryDescriptor((int)GlyphProperty.GlyphWidth, "Glyph width", FontPropertyType.Byte, (0x0, 0xFF))
                 },
                 {
                     GlyphProperty.CharWidth,
-                    new FontPropertyListEntryDescriptor(4, "Char width", FontPropertyType.Byte, (0x0, 0xFF))
+                    new FontPropertyListEntryDescriptor((int)GlyphProperty.CharWidth, "Char width", FontPropertyType.Byte, (0x0, 0xFF))
                 },
             };
 
@@ -60,39 +62,39 @@ namespace Fontendo.Formats.CTR
             {
                 {
                     FontProperty.Endianness,
-                    new FontPropertyListEntryDescriptor(0, "Endianness", FontPropertyType.Bool)
+                    new FontPropertyListEntryDescriptor((int)FontProperty.Endianness, "Endianness", FontPropertyType.Bool)
                 },
                 {
                     FontProperty.CharEncoding,
-                    new FontPropertyListEntryDescriptor(1, "Char encoding", FontPropertyType.CharEncoding)
+                    new FontPropertyListEntryDescriptor((int)FontProperty.CharEncoding, "Char encoding", FontPropertyType.CharEncoding)
                 },
                 {
                     FontProperty.LineFeed,
-                    new FontPropertyListEntryDescriptor(2, "Line feed", FontPropertyType.Byte, (0, 0xFF))
+                    new FontPropertyListEntryDescriptor((int)FontProperty.LineFeed, "Line feed", FontPropertyType.Byte, (0, 0xFF))
                 },
                 {
                     FontProperty.Height,
-                    new FontPropertyListEntryDescriptor(3, "Height", FontPropertyType.Byte, (0, 0xFF))
+                    new FontPropertyListEntryDescriptor((int)FontProperty.Height, "Height", FontPropertyType.Byte, (0, 0xFF))
                 },
                 {
                     FontProperty.Width,
-                    new FontPropertyListEntryDescriptor(4, "Width", FontPropertyType.Byte, (0, 0xFF))
+                    new FontPropertyListEntryDescriptor((int)FontProperty.Width, "Width", FontPropertyType.Byte, (0, 0xFF))
                 },
                 {
                     FontProperty.Ascent,
-                    new FontPropertyListEntryDescriptor(5, "Ascent", FontPropertyType.Byte, (0, 0xFF))
+                    new FontPropertyListEntryDescriptor((int)FontProperty.Ascent, "Ascent", FontPropertyType.Byte, (0, 0xFF))
                 },
                 {
                     FontProperty.Baseline,
-                    new FontPropertyListEntryDescriptor(6, "Baseline", FontPropertyType.Byte, (0, 0xFF))
+                    new FontPropertyListEntryDescriptor((int)FontProperty.Baseline, "Baseline", FontPropertyType.Byte, (0, 0xFF))
                 },
                 {
                     FontProperty.Version,
-                    new FontPropertyListEntryDescriptor(7, "Version", FontPropertyType.UInt16, (1, 0))
+                    new FontPropertyListEntryDescriptor((int)FontProperty.Version, "Version", FontPropertyType.UInt16, (1, 0))
                 },
                 {
                     FontProperty.NtrRvlImageFormat,
-                    new FontPropertyListEntryDescriptor(8, "Image encoding", FontPropertyType.ImageFormat)
+                    new FontPropertyListEntryDescriptor((int)FontProperty.NtrRvlImageFormat, "Image encoding", FontPropertyType.ImageFormat)
                 }
             };
 
@@ -103,37 +105,47 @@ namespace Fontendo.Formats.CTR
         public ActionResult Load(string filename)
         {
             ActionResult result;
+            MainForm.Log($"------------------------------------------");
+            MainForm.Log($"Loading file: {filename}");
 
-            CFNT = new CFNT();
-            FINF = new FINF();
             using (var br = new BinaryReaderX(File.OpenRead(filename)))
             {
+                CFNT = new CFNT(br);
+                FINF = new FINF(br);
                 try
                 {
                     br.SetEndianness();
                     br.BaseStream.Position = 0;
 
                     // CFNT Header
-                    result = CFNT.Parse(br);
+                    MainForm.Log($"CTR Start: {br.BaseStream.Position}");
+                    result = CFNT.Parse();
                     if (!result.Success)
                         return new ActionResult(false, result.Message);
+                    MainForm.Log($"CTR End: {br.BaseStream.Position}");
 
                     // FINF Header
                     br.BaseStream.Position = CFNT.HeaderSize;
-                    result = FINF.Parse(br);
+                    MainForm.Log($"FINF Start: {br.BaseStream.Position}");
+                    result = FINF.Parse();
                     if (!result.Success)
                         return new ActionResult(false, result.Message);
+                    MainForm.Log($"FINF End: {br.BaseStream.Position}");
 
                     // Glyph Header
                     br.BaseStream.Position = FINF.PtrGlyph - 0x8U;
+
                     if (FINF.FontType == 0x0)  //FONT_TYPE_GLYPH, use CGLP
                     {
                         //CGLP is a section that served the same purpose as TGLP on the NTR/DS.
                         //All later font formats such as RFNT, CFNT and FFNT have this CGLP leftover
                         //both in the font converter and the SDK headers...maybe they planned it but
                         //it got replaced with TGLP and monochrome image formats it supports
-                        CGLP = new CGLP();
-                        result = CGLP.Parse(br);
+
+                        MainForm.Log($"CGLP Start: {br.BaseStream.Position}");
+                        CGLP = new CGLP(br, true);
+                        result = CGLP.Parse();
+                        MainForm.Log($"CGLP End: {br.BaseStream.Position}");
                         if (!result.Success)
                             return new ActionResult(false, result.Message);
                         //TODO: Find out if RVL supported CGLP fonts or not, if it did then implement it here
@@ -142,46 +154,62 @@ namespace Fontendo.Formats.CTR
                     }
                     else if (FINF.FontType == 0x1)
                     {
-                        TGLP = new TGLP();
-                        result = TGLP.Parse(br);
+                        MainForm.Log($"TGLP Start: {br.BaseStream.Position}");
+                        TGLP = new TGLP(br);
+                        result = TGLP.Parse();
                         if (!result.Success)
                             return new ActionResult(false, result.Message);
+                        MainForm.Log($"TGLP End: {br.BaseStream.Position}");
                     }
                     else
                     {
                         return new ActionResult(false, $"Unknown font type 0x{FINF.FontType.ToString("X")}");
                     }
+
                     // CWDH data
                     UInt32 nextPtr = FINF.PtrWidth - 0x8;
+                    MainForm.Log($"CWDH Start: {br.BaseStream.Position}");
                     CWDH_Headers = new List<CWDH>();
                     CharWidths = new List<CharWidths>();
+                    int count = 0;
                     while (nextPtr != 0x0)
                     {
                         br.BaseStream.Position = nextPtr;
-                        CWDH cwdh = new CWDH(); //Read the header and the entries
-                        result = cwdh.Parse(br);
+                        MainForm.Log($"CWDH {count} Start: {br.BaseStream.Position}");
+                        CWDH cwdh = new CWDH(br); //Read the header and the entries
+                        result = cwdh.Parse();
+                        MainForm.Log($"CWDH {count} End: {br.BaseStream.Position}");
                         if (!result.Success)
                             return new ActionResult(false, result.Message);
                         CharWidths.AddRange(cwdh.Entries);
                         nextPtr = cwdh.PtrNext; //Set the pointer to the next section
                         CWDH_Headers.Add(cwdh); //Append the header
+                        count++;
                     }
+                    MainForm.Log($"CWDH End: {br.BaseStream.Position}");
 
                     // CMAP data
                     nextPtr = FINF.PtrMap;
                     CMAP_Headers = new List<CMAP>();
                     CharMaps = new List<CMAPEntry>();
+                    MainForm.Log($"CMAP Start: {br.BaseStream.Position} (but go back 0x8 ?)");
+                    count = 0;
                     while (nextPtr != 0x0)
                     {
                         br.BaseStream.Position = nextPtr - 0x8; //This is somewhat of a bodge, but it work nonetheless
-                        CMAP cmap = new CMAP();
-                        result = cmap.Parse(br);
+
+                        MainForm.Log($"CMAP {count} Start: {br.BaseStream.Position}");
+                        CMAP cmap = new CMAP(br);
+                        result = cmap.Parse();
+                        MainForm.Log($"CMAP {count} End: {br.BaseStream.Position}");
                         if (!result.Success)
                             return new ActionResult(false, result.Message);
                         CharMaps.AddRange(cmap.Entries);
                         nextPtr = cmap.PtrNext;
                         CMAP_Headers.Add(cmap); //Append the CMAP header to the list
+                        count++;
                     }
+                    MainForm.Log($"CMAP End: {br.BaseStream.Position}");
 
                     // Decoding textures
                     br.BaseStream.Position = TGLP.SheetPtr;
@@ -195,6 +223,7 @@ namespace Fontendo.Formats.CTR
                     }
                     Sheets = new Sheets(TGLP.SheetWidth, TGLP.SheetHeight);
                     Sheets.Items = new List<Bitmap>();
+                    MainForm.Log($"Sheets start: {br.BaseStream.Position}");
                     for (ushort i = 0; i < TGLP.SheetCount; i++)
                     {
                         byte[] sheetRaw = Codec.DecodeTexture(TGLP.SheetFormat, br, TGLP.SheetWidth, TGLP.SheetHeight);
@@ -217,6 +246,7 @@ namespace Fontendo.Formats.CTR
 
                         Sheets.Items.Add(sheet);
                     }
+                    MainForm.Log($"Sheets End: {br.BaseStream.Position}");
 
                     //Pull sheets apart into individual glyph images
                     if (CharImages != null)
@@ -228,7 +258,6 @@ namespace Fontendo.Formats.CTR
                         CharImages.Clear();
                     }
                     CharImages = new List<CharImage>();
-                    Glyphs = new List<Glyph>();
                     for (int i = 0; i < CharMaps.Count(); i++) //Get glyph count from charMaps, cause there's no better way to do that
                     {
                         //Do some math to figure out where we should start reading the pixels
@@ -245,16 +274,24 @@ namespace Fontendo.Formats.CTR
                         CharImage newImg = new CharImage(i, currentSheet, bmp);
                         // Append Bitmap to list
                         CharImages.Add(newImg);
+                    }
+                    // sort CMAP entries
+                    CharMaps.Sort((a, b) => a.Index.CompareTo(b.Index));
+
+                    // put all glyphs into data
+                    Glyphs = new List<Glyph>();
+                    for (int i = 0; i < CharMaps.Count; i++)
+                    {
                         // add glyph to list
                         var props = new Dictionary<GlyphProperty, PropertyBase>
                         {
                             {
                                 GlyphProperty.Index,
-                                new Property<ushort>(GlyphPropertyDescriptors[GlyphProperty.Index], 0)
+                                new Property<UInt16>(GlyphPropertyDescriptors[GlyphProperty.Index], 0)
                             },
                             {
                                 GlyphProperty.Code,
-                                new Property<ushort>(GlyphPropertyDescriptors[GlyphProperty.Code], CharMaps[i].Code)
+                                new Property<UInt16>(GlyphPropertyDescriptors[GlyphProperty.Code], CharMaps[i].Code)
                             },
                             {
                                 GlyphProperty.Left,
@@ -271,6 +308,16 @@ namespace Fontendo.Formats.CTR
                         };
                         Glyphs.Add(new Glyph(i, props, CharImages[CharImages.Count() - 1].Image));
                     }
+
+                    if (CharMaps.Count() != CharWidths.Count())
+                        return new ActionResult(false, "character maps count does not match character widths count");
+                    if (CharMaps.Count() != Glyphs.Count())
+                        return new ActionResult(false, "character maps count does not match glyph count");
+                    if (CharWidths.Count() != Glyphs.Count())
+                        return new ActionResult(false, "character widths count does not match glyph count");
+
+
+
                     // Set the glyph code point bounds
                     (long Min, long Max) range;
 
@@ -294,9 +341,6 @@ namespace Fontendo.Formats.CTR
                     // Assign the range to the descriptor
                     GlyphPropertyDescriptors[GlyphProperty.Code].ValueRange = range;
 
-                    if (CharMaps.Count() != CharWidths.Count())
-                        return new ActionResult(false, "character maps count does not match character widths count");
-
                     // fill in some other stuff
                     CellSize = new Point(TGLP.CellWidth, TGLP.CellHeight);
                     SheetSize = new Point(TGLP.SheetWidth, TGLP.SheetHeight);
@@ -315,27 +359,27 @@ namespace Fontendo.Formats.CTR
                         },
                         {
                             FontProperty.LineFeed,
-                            new Property<CharEncodings>(FontPropertyDescriptors[FontProperty.LineFeed], (CharEncodings)FINF.LineFeed)
+                            new Property<byte>(FontPropertyDescriptors[FontProperty.LineFeed], FINF.LineFeed)
                         },
                         {
                             FontProperty.Height,
-                            new Property<CharEncodings>(FontPropertyDescriptors[FontProperty.Height], (CharEncodings)FINF.Height)
+                            new Property<byte>(FontPropertyDescriptors[FontProperty.Height], FINF.Height)
                         },
                         {
                             FontProperty.Width,
-                            new Property<CharEncodings>(FontPropertyDescriptors[FontProperty.Width], (CharEncodings)FINF.Width)
+                            new Property<byte>(FontPropertyDescriptors[FontProperty.Width], FINF.Width)
                         },
                         {
                             FontProperty.Ascent,
-                            new Property<CharEncodings>(FontPropertyDescriptors[FontProperty.Ascent], (CharEncodings)FINF.Ascent)
+                            new Property<byte>(FontPropertyDescriptors[FontProperty.Ascent], FINF.Ascent)
                         },
                         {
                             FontProperty.Baseline,
-                            new Property<CharEncodings>(FontPropertyDescriptors[FontProperty.Baseline], (CharEncodings)TGLP.BaselinePos)
+                            new Property<byte>(FontPropertyDescriptors[FontProperty.Baseline], TGLP.BaselinePos)
                         },
                         {
                             FontProperty.Version,
-                            new Property<CharEncodings>(FontPropertyDescriptors[FontProperty.Version], (CharEncodings)CFNT.Version)
+                            new Property<UInt16>(FontPropertyDescriptors[FontProperty.Version], (UInt16)CFNT.Version)
                         },
                         {
                             FontProperty.NtrRvlImageFormat,
@@ -363,8 +407,13 @@ namespace Fontendo.Formats.CTR
 
         public ActionResult Save(string filename)
         {
+            MainForm.Log($"------------------------------------------");
+            MainForm.Log($"Saving file: {filename}");
             try
             {
+                if (CharMaps.Count() != CharWidths.Count())
+                    return new ActionResult(false, "character maps count does not match character widths count");
+
                 // Prepare glyphs for export: sort by code point, set indices, track max char width
                 var encodedGlyphs = new List<Glyph>(Glyphs);
                 encodedGlyphs.Sort((a, b) =>
@@ -388,7 +437,7 @@ namespace Fontendo.Formats.CTR
 
                 // Recalculate sheet geometry (equivalent to recalculateSheetInfo)
 
-                RecalculateSheetInfo(0);
+                RecalculateSheetInfo();
 
                 // Stitch glyph bitmaps into sheet images
                 var cellsPerRow = (uint)(SheetSize.Value.X / (CellSize.Value.X + 1));
@@ -396,7 +445,7 @@ namespace Fontendo.Formats.CTR
                 var cellsPerSheet = cellsPerRow * cellsPerColumn;
                 var numSheets = (uint)Math.Ceiling((double)encodedGlyphs.Count / cellsPerSheet);
 
-                var sheetImgs = new List<Bitmap>(new Bitmap[numSheets]);
+                Bitmap[] sheetImgs = new Bitmap[numSheets];
                 foreach (var g in encodedGlyphs)
                 {
                     var i = GetGlyphPropertyValue<ushort>(g, GlyphProperty.Index);
@@ -408,7 +457,7 @@ namespace Fontendo.Formats.CTR
                     var startY = (int)(currentRow * (CellSize.Value.Y + 1));
 
                     // Create target sheet bitmap if missing
-                    if (sheetImgs[(int)currentSheet] == null)
+                    if (sheetImgs == null || sheetImgs[(int)currentSheet] == null)
                     {
                         var bmp = new Bitmap(SheetSize.Value.X, SheetSize.Value.Y, PixelFormat.Format32bppArgb);
                         using (var gfx = Graphics.FromImage(bmp)) gfx.Clear(Color.Transparent);
@@ -426,8 +475,8 @@ namespace Fontendo.Formats.CTR
                 // Image format taken from FontProperties (NtrRvlImageFormat), converted to platform
                 var generalFmt = GetFontPropertyValue<ImageFormats>(this, FontProperty.NtrRvlImageFormat);
                 var platformFmt = Codec.ConvertGeneralTextureTypeToPlatform(generalFmt);
-                var encodedSheets = new List<byte[]>(sheetImgs.Count);
-                for (int iSheet = 0; iSheet < sheetImgs.Count; iSheet++)
+                var encodedSheets = new List<byte[]>(sheetImgs.Count());
+                for (int iSheet = 0; iSheet < sheetImgs.Count(); iSheet++)
                 {
                     var bmp = sheetImgs[iSheet];
                     // Extract raw ARGB bytes
@@ -451,87 +500,110 @@ namespace Fontendo.Formats.CTR
                 // Build width entries (CWDH) from encodedGlyphs
                 List<CharWidths> widthEntries = CTR.CharWidths.CreateWidthEntries(encodedGlyphs);
 
-                //// Build CMAP entries: Direct, Table, Scan
+                // Build CMAP entries: Direct, Table, Scan
                 List<(Glyph, Glyph)> directEntries = CMAP.CreateDirectEntries(encodedGlyphs);
-                //var tableEntries = CMAP.CreateTableEntries(encodedGlyphs);
-                //var scanEntries = CMAP.CreateScanEntries(encodedGlyphs);
+                var tableEntries = CMAP.CreateTableEntries(encodedGlyphs);
+                var scanEntries = CMAP.CreateScanEntries(encodedGlyphs);
 
-                //// Create headers from current property values
-                //// FINF expects many fields from FontProperties and current state
-                //var finfLineFeed = GetFontPropertyValue<byte>(this, FontProperty.LineFeed);
-                //var finfCharEnc = (byte)GetFontPropertyValue<CharEncodings>(this, FontProperty.CharEncoding);
-                //var finfHeight = GetFontPropertyValue<byte>(this, FontProperty.Height);
-                //var finfWidth = GetFontPropertyValue<byte>(this, FontProperty.Width);
-                //var finfAscent = GetFontPropertyValue<byte>(this, FontProperty.Ascent);
-                //var finfBaseline = GetFontPropertyValue<byte>(this, FontProperty.Baseline);
-                //var cfntVersion = GetFontPropertyValue<ushort>(this, FontProperty.Version);
-                //var endiannessLittle = GetFontPropertyValue<bool>(this, FontProperty.Endianness);
+                // Create headers from current property values
+                // FINF expects many fields from FontProperties and current state
+                var finfLineFeed = GetFontPropertyValue<byte>(this, FontProperty.LineFeed);
+                var finfCharEnc = (byte)GetFontPropertyValue<CharEncodings>(this, FontProperty.CharEncoding);
+                var finfHeight = GetFontPropertyValue<byte>(this, FontProperty.Height);
+                var finfWidth = GetFontPropertyValue<byte>(this, FontProperty.Width);
+                var finfAscent = GetFontPropertyValue<byte>(this, FontProperty.Ascent);
+                var finfBaseline = GetFontPropertyValue<byte>(this, FontProperty.Baseline);
+                var cfntVersion = GetFontPropertyValue<ushort>(this, FontProperty.Version);
+                var endiannessLittle = GetFontPropertyValue<bool>(this, FontProperty.Endianness);
 
-                //// Construct CFNT, FINF, TGLP blocks (matching signatures and constants from your parsers)
-                //var cfnt = new CFNT() { Version = cfntVersion }; // If your CFNT has ctor overload, adjust accordingly
-                //var finf = new FINF()
-                //{
-                //    HeaderSize = 0x20,
-                //    FontType = 0x1,
-                //    LineFeed = finfLineFeed,
-                //    AltCharIndex = 0,                  // matches original hardcoded
-                //    WidthEntryTemplate = widthEntries[0].Clone(), // same as original: template from first glyph
-                //    Encoding = finfCharEnc,
-                //    Height = finfHeight,
-                //    Width = finfWidth,
-                //    Ascent = finfAscent
-                //};
+                // Construct CFNT, FINF, TGLP blocks (matching signatures and constants from your parsers)
+                var cfnt = new CFNT(); // If your CFNT has ctor overload, adjust accordingly
+                var finf = new FINF(
+                    0x20,
+                    0x1,
+                    finfLineFeed,
+                    0x1F,                  // matches original hardcoded
+                    widthEntries[0],       // same as original: template from first glyph
+                    finfCharEnc,
+                    finfHeight,
+                    finfWidth,
+                    finfAscent,
+                    0x464E4946U
+                    );
 
-                //var tglp = new TGLP()
-                //{
-                //    CellWidth = CellSize.x,
-                //    CellHeight = CellSize.Y,
-                //    BaselinePos = finfBaseline,
-                //    MaxCharWidth = maxCharWidth,
-                //    SheetDataSize = encodedSheets[0].Length,
-                //    SheetCount = (ushort)encodedSheets.Count,
-                //    SheetFormat = platformFmt,
-                //    CellsPerRow = (ushort)cellsPerRow,
-                //    CellsPerColumn = (ushort)cellsPerColumn,
-                //    SheetWidth = (ushort)SheetSize.Value.X,
-                //    SheetHeight = (ushort)SheetSize.Value.Y
-                //};
+                var tglp = new TGLP(
+                    (byte)CellSize.Value.X,
+                    (byte)CellSize.Value.Y,
+                    finfBaseline,
+                    maxCharWidth,
+                    (uint)encodedSheets[0].Length,
+                    (ushort)encodedSheets.Count,
+                    platformFmt,
+                    (ushort)cellsPerRow,
+                    (ushort)cellsPerColumn,
+                    (ushort)SheetSize.Value.X,
+                    (ushort)SheetSize.Value.Y,
+                    0x504C4754U
+                );
+                if (CharMaps.Count() != widthEntries.Count())
+                    return new ActionResult(false, "character maps count does not match character widths count");
+                // Create CWDH headers container
+                List<CWDH> cwdhHeaders = new List<CWDH> { new CWDH(widthEntries, 0x48445743U) };
+                
+                // Create CMAP headers
+                var cmapHeaders = new List<CMAP>();
+                foreach (var entry in directEntries)
+                    cmapHeaders.Add(new CMAP(entry, 0x50414D43U));
+                foreach (var entry in tableEntries)
+                    cmapHeaders.Add(new CMAP(0x1, entry, 0x50414D43U));
+                foreach (var entry in scanEntries)
+                    cmapHeaders.Add(new CMAP(0x2, entry, 0x50414D43U));
 
-                //// Create CWDH headers container
-                //var cwdhHeaders = new List<CWDH> { new CWDH(widthEntries) };
+                // Delete old file if exists
+                if (File.Exists(filename)) File.Delete(filename);
 
-                //// Create CMAP headers
-                //var cmapHeaders = new List<CMAP>();
-                //foreach (var pair in directEntries)
-                //    cmapHeaders.Add(new CMAP(pair));
-                //foreach (var table in tableEntries)
-                //    cmapHeaders.Add(new CMAP(type: 0x1, table));
-                //foreach (var scan in scanEntries)
-                //    cmapHeaders.Add(new CMAP(type: 0x2, scan));
+                // Write with correct endianness
+                using (var bw = new BinaryWriterX(filename, endiannessLittle))
+                {
+                    var linker = new BlockLinker();
 
-                //// Delete old file if exists
-                //if (File.Exists(filename)) File.Delete(filename);
+                    MainForm.Log($"CTR Start: {bw.BaseStream.Position}");
+                    cfnt.Serialize(bw, linker);
+                    MainForm.Log($"CTR End: {bw.BaseStream.Position}");
 
-                //// Write with correct endianness
-                //using (var bw = new BinaryWriterX(File.OpenWrite(filename), littleEndian: endiannessLittle))
-                //{
-                //    var linker = new BlockLinker();
+                    MainForm.Log($"FINF Start: {bw.BaseStream.Position}");
+                    finf.Serialize(bw, linker);
+                    MainForm.Log($"FINF End: {bw.BaseStream.Position}");
 
-                //    cfnt.Serialize(bw, linker);
-                //    finf.Serialize(bw, linker);
-                //    tglp.Serialize(bw, linker, encodedSheets, align: 0x80); // CTR alignment
+                    MainForm.Log($"TGLP Start: {bw.BaseStream.Position}");
+                    tglp.Serialize(bw, linker, encodedSheets, align: 0x80); // CTR alignment
 
-                //    linker.AddLookupValue("ptrWidth", bw.BaseStream.Position);
-                //    foreach (var header in cwdhHeaders)
-                //        header.Serialize(bw, linker);
+                    MainForm.Log($"CWHD Start: {bw.BaseStream.Position}");
+                    linker.AddLookupValue("ptrWidth", bw.BaseStream.Position);
+                    int count = 0;
+                    foreach (var header in cwdhHeaders)
+                    {
+                        MainForm.Log($"CWHD {count} Start: {bw.BaseStream.Position}");
+                        header.Serialize(bw, linker);
+                        MainForm.Log($"CWHD {count} End: {bw.BaseStream.Position}");
+                        count++;
+                    }
+                    MainForm.Log($"CWHD End: {bw.BaseStream.Position}");
 
-                //    linker.AddLookupValue("ptrMap", bw.BaseStream.Position + 0x8U);
-                //    foreach (var cmap in cmapHeaders)
-                //        cmap.Serialize(bw, linker);
+                    MainForm.Log($"CMAP Start: {bw.BaseStream.Position}");
+                    linker.AddLookupValue("ptrMap", bw.BaseStream.Position + 0x8U);
+                    count = 0;
+                    foreach (var cmap in cmapHeaders)
+                    {
+                        MainForm.Log($"CMAP {count} Start: {bw.BaseStream.Position}");
+                        cmap.Serialize(bw, linker);
+                        MainForm.Log($"CMAP {count} End: {bw.BaseStream.Position}");
+                        count++;
+                    }
+                    MainForm.Log($"CMAP End: {bw.BaseStream.Position}");
 
-                //    linker.AddLookupValue("fileSize", bw.BaseStream.Position);
-                //    linker.MakeBlockLink(bw);
-                //}
+                    linker.MakeBlockLink(bw);
+                }
 
                 //// Cleanup bitmaps
                 //foreach (var bmp in sheetImgs)
@@ -546,10 +618,10 @@ namespace Fontendo.Formats.CTR
             }
         }
 
-        public void RecalculateSheetInfo(int targetPixelCount)
+        public void RecalculateSheetInfo(int targetPixelCount = 0)
         {
             // Total pixels required for all glyphs (including +1 spacing in both directions)
-            int requiredGlyphPixels = (CellSize.Value.X + 1) * (CellSize.Value.Y + 1) * Glyphs.Count;
+            int requiredGlyphPixels = (CellSize.Value.X + 1) * (CellSize.Value.Y + 1) * Glyphs.Count();
 
             // Track the best (smallest) excess pixel count found
             int bestExcessPixels = int.MaxValue;
