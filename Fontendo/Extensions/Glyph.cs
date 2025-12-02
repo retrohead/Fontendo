@@ -9,13 +9,15 @@ namespace Fontendo.Extensions
         public GlyphPropertyRegistry Properties { get; private set; }
         public Bitmap? Pixmap { get; private set; }
 
+        public int CMAPId { get; set; }
         public int Index { get; set; }
         public int CodePoint { get; set; }
 
 
-        public Glyph(int index, Bitmap pixmap, Dictionary<GlyphProperty, object>? propertyValues = null)
+        public Glyph(int index, int cmap_id, Bitmap pixmap, Dictionary<GlyphProperty, object>? propertyValues = null)
         {
             Index = index;
+            CMAPId = cmap_id;
 
             Properties = new GlyphPropertyRegistry();
 

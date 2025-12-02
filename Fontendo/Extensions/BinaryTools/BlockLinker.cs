@@ -21,15 +21,16 @@ namespace Fontendo.Extensions.BinaryTools
             foreach (var patch in patchLookupTable)
             {
                 bw.SetPosition(patch.Value);
-                Debug.WriteLine($"Patching uint {patch.Key} at 0x{bw.BaseStream.Position:X}");
-                bw.WriteUInt32((UInt32)GetLookupValue(patch.Key));
+                UInt32 val = (UInt32)GetLookupValue(patch.Key);
+                MainForm.Log($"Patching uint {patch.Key} at {bw.BaseStream.Position} with {val}");
+                bw.WriteUInt32(val);
             }
 
             foreach (var patch in shortPatchLookupTable)
             {
                 bw.SetPosition(patch.Value);
-                Debug.WriteLine($"Patching ushort {patch.Key} at 0x{bw.BaseStream.Position:X}");
                 var val = GetLookupValue(patch.Key);
+                MainForm.Log($"Patching ushort {patch.Key} at {bw.BaseStream.Position} with {val}");
                 bw.WriteUInt16((ushort)val);
             }
         }

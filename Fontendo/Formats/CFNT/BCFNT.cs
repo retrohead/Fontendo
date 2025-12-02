@@ -241,7 +241,7 @@ namespace Fontendo.Formats.CTR
                             { GlyphProperty.GlyphWidth, CharWidths[i].GlyphWidth},
                             { GlyphProperty.CharWidth, CharWidths[i].CharWidth }
                         };
-                        Glyphs.Add(new Glyph(i, CharImages[i].Image, props));
+                        Glyphs.Add(new Glyph(i, CharMaps[i].Index, CharImages[i].Image, props));
                     }
 
                     if (CharMaps.Count() != Glyphs.Count())
@@ -406,7 +406,7 @@ namespace Fontendo.Formats.CTR
                 List<CharWidths> widthEntries = CTR.CharWidths.CreateWidthEntries(encodedGlyphs);
 
                 // Build CMAP entries: Direct, Table, Scan
-                List<List<Glyph>> directEntries = CMAP.CreateDirectEntries(encodedGlyphs);
+                List<(Glyph First, Glyph Last)> directEntries = CMAP.CreateDirectEntries(encodedGlyphs);
                 List<List<CMAPEntry>> tableEntries = CMAP.CreateTableEntries(encodedGlyphs);
                 List<List<CMAPEntry>> scanEntries = CMAP.CreateScanEntries(encodedGlyphs);
 
@@ -457,13 +457,16 @@ namespace Fontendo.Formats.CTR
                 
                 // Create CMAP
                 var cmapHeaders = new List<CMAP>();
-                for(var i = 0; i < directEntries.Count; i++)
+                for(var i = 0; i < directEntries.Count(); i++)
                     cmapHeaders.Add(new CMAP(directEntries[i], 0x50414D43U));
-                for (var i = 0; i < tableEntries.Count; i++)
+                for (var i = 0; i < tableEntries.Count(); i++)
                     cmapHeaders.Add(new CMAP(0x1, tableEntries[i], 0x50414D43U));
-                for (var i = 0; i < scanEntries.Count; i++)
+                for (var i = 0; i < scanEntries.Count(); i++)
                     cmapHeaders.Add(new CMAP(0x2, scanEntries[i], 0x50414D43U));
-
+                // sort headers
+                cmapHeaders = cmapHeaders.OrderBy(h => h.MappingMethod)
+                            .ThenBy(h => h.CodeBegin)
+                            .ToList();
                 // Delete old file if exists
                 if (File.Exists(filename)) File.Delete(filename);
 

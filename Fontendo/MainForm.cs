@@ -11,6 +11,7 @@ namespace Fontendo
         public FontBase FontendoFont;
         private double windowLeftPercent = 0.5f;
         public SJISConv SJIS;
+        private bool debugMode = false;
 
         public MainForm()
         {// At application startup, choose which types to support
@@ -270,15 +271,19 @@ namespace Fontendo
         static bool deletelog = true;
         public static void Log(string message)
         {
-            if(deletelog)
+            if(!Self?.debugMode ?? false)
+                return;
+            // get application directory and create/open log file
+            string path = AppDomain.CurrentDomain.BaseDirectory;
+            if (deletelog)
             {
                 deletelog = false;
-                if (File.Exists(Path.Combine("C:\\Users\\kebud\\source\\repos\\Izuto\\sample_files", "fontendo.log")))
+                if (File.Exists(Path.Combine(path, "fontendo.log")))
                 {
-                    File.Delete(Path.Combine("C:\\Users\\kebud\\source\\repos\\Izuto\\sample_files", "fontendo.log"));
+                    File.Delete(Path.Combine(path, "fontendo.log"));
                 }
             }
-            using (var writer = new StreamWriter(Path.Combine("C:\\Users\\kebud\\source\\repos\\Izuto\\sample_files", "fontendo.log"), true))
+            using (var writer = new StreamWriter(Path.Combine(path, "fontendo.log"), true))
             {
                 writer.WriteLine($"[{DateTime.Now}] {message}");
             }
