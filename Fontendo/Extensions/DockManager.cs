@@ -106,16 +106,17 @@ namespace Fontendo.Extensions
                 info.OriginalParent.Controls.SetChildIndex(info.Placeholder, Math.Max(0, index));
             }
         }
-
+        const int DragThreshold = 8; // pixels
         public static void PopOut(Control control)
         {
             if (!_registry.TryGetValue(control, out var info)) return;
             if (info.FloatingForm != null) return;
 
             EnsurePlaceholder(info);
+            
+            // Instead of measuring the control itself, measure the placeholder
+            var placeholderRect = info.Placeholder.RectangleToScreen(info.Placeholder.ClientRectangle);
 
-            // Get the screen position of the control before removing it
-            var screenRect = control.RectangleToScreen(control.ClientRectangle);
 
             // Remove control from its immediate parent (wrapper or table)
             info.OriginalParent.Controls.Remove(control);
@@ -126,23 +127,15 @@ namespace Fontendo.Extensions
                 FormBorderStyle = FormBorderStyle.SizableToolWindow,
                 StartPosition = FormStartPosition.Manual
             };
+            // Tell Windows: "I want this client rect at this location"
+            floatForm.SetBounds(
+                placeholderRect.Left,
+                placeholderRect.Top,
+                placeholderRect.Width,
+                placeholderRect.Height,
+                BoundsSpecified.Location | BoundsSpecified.Size);
 
-            // 1) Make the client area match the original control
-            floatForm.ClientSize = screenRect.Size;
-
-            // 2) Set a provisional location, then measure the client’s actual screen position
-            floatForm.Location = screenRect.Location;
-
-            // 3) Compute the delta between where the client currently is and where it should be
-            //    This accounts for caption/borders/DPI accurately.
-            var clientTopLeft = floatForm.RectangleToScreen(floatForm.ClientRectangle).Location;
-            var dx = screenRect.Left - clientTopLeft.X;
-            var dy = screenRect.Top - clientTopLeft.Y;
-
-            // 4) Apply the delta so the client area aligns perfectly
-            floatForm.Location = new Point(floatForm.Left + dx, floatForm.Top + dy);
-
-            // 5) Optional: nudge a bit so it doesn’t overlap the placeholder instantly
+            // Apply your intended offset
             const int offset = 16;
             floatForm.Location = new Point(floatForm.Left + offset, floatForm.Top + offset);
 
@@ -153,48 +146,78 @@ namespace Fontendo.Extensions
 
             info.FloatingForm = floatForm;
 
-            // Highlight placeholders while moving
+            // Track drag state for threshold logic
+            Point dragOrigin = Point.Empty;
+            bool isDragging = false;
+            bool movedEnough = false;
+
             // Highlight placeholders while moving
             floatForm.Move += (s, e) =>
             {
-                foreach (var kvp in _registry.Values)
+                // Only consider moves while mouse is down (actual drag), not when the owner form moves
+                if (Control.MouseButtons != MouseButtons.None)
                 {
-                    if (kvp.Placeholder != null)
+                    if (!isDragging)
                     {
-                        var screenRect = kvp.Placeholder.RectangleToScreen(kvp.Placeholder.ClientRectangle);
-
-                        if (screenRect.IntersectsWith(floatForm.Bounds))
-                        {
-                            kvp.Placeholder.BackColor = Color.LightBlue; // highlight target
-                        }
-                        else
-                        {
-                            kvp.Placeholder.BackColor = Color.LightGray; // reset
-                        }
+                        isDragging = true;
+                        movedEnough = false;
+                        dragOrigin = floatForm.Location;
+                    }
+                    else if (!movedEnough)
+                    {
+                        int dx = floatForm.Left - dragOrigin.X;
+                        int dy = floatForm.Top - dragOrigin.Y;
+                        if ((dx * dx + dy * dy) >= DragThreshold * DragThreshold) // Euclidean threshold
+                            movedEnough = true;
                     }
                 }
-            };
 
-            // Fires when the user releases the mouse after dragging the window
+                // Optional: only highlight placeholders after threshold to reduce jitter
+                foreach (var kvp in _registry.Values)
+                {
+                    if (kvp.Placeholder == null) continue;
+                    var rect = kvp.Placeholder.RectangleToScreen(kvp.Placeholder.ClientRectangle);
+                    kvp.Placeholder.BackColor = (movedEnough && rect.IntersectsWith(floatForm.Bounds))
+                        ? Color.LightBlue
+                        : Color.LightGray;
+                }
+            };
+            // End of drag: only redock if movedEnough and overlapping a placeholder
             floatForm.MouseCaptureChanged += (s, e) =>
             {
-                foreach (var kvp in _registry)
+                try
                 {
-                    var info = kvp.Value;
-                    if (info.Placeholder != null)
-                    {
-                        var screenRect = info.Placeholder.RectangleToScreen(info.Placeholder.ClientRectangle);
+                    if (!movedEnough)
+                        return; // ignore slight bumps / unintended drags
 
-                        if (screenRect.IntersectsWith(floatForm.Bounds))
+                    foreach (var kvp in _registry)
+                    {
+                        var i = kvp.Value;
+                        if (i.Placeholder == null || i.Placeholder.IsDisposed) continue;
+
+                        var rect = i.Placeholder.RectangleToScreen(i.Placeholder.ClientRectangle);
+                        if (rect.IntersectsWith(floatForm.Bounds))
                         {
-                            Redock(kvp.Key);
-                            // Close the floating form itself
+                            // Redock into the matched placeholder
+                            i.Placeholder.Controls.Add(kvp.Key);
+                            kvp.Key.Dock = DockStyle.Fill;
+
                             floatForm.Close();
                             break;
                         }
                     }
                 }
+                finally
+                {
+                    // Reset drag state
+                    isDragging = false;
+                    movedEnough = false;
+                    dragOrigin = Point.Empty;
+                }
             };
+
+            floatForm.FormClosed += (s, e) => Redock(control); // keep your existing fallback
+            info.FloatingForm = floatForm;
 
             floatForm.Show(info.OriginalParent.FindForm());
         }
@@ -209,18 +232,19 @@ namespace Fontendo.Extensions
 
             if (info.OwnerTable != null && info.CellHost != null)
             {
-                if (info.Placeholder != null && info.OwnerTable.Controls.Contains(info.Placeholder))
-                {
-                    info.OwnerTable.Controls.Remove(info.Placeholder);
-                    info.Placeholder.Dispose();
-                    info.Placeholder = null; // 👈 reset so EnsurePlaceholder can recreate later
-                }
 
                 if (!info.OwnerTable.Controls.Contains(info.CellHost))
                     info.OwnerTable.Controls.Add(info.CellHost);
 
                 info.OwnerTable.SetCellPosition(info.CellHost,
                     new TableLayoutPanelCellPosition(info.Col, info.Row));
+
+                if (info.Placeholder != null && info.OwnerTable.Controls.Contains(info.Placeholder))
+                {
+                    info.OwnerTable.Controls.Remove(info.Placeholder);
+                    info.Placeholder.Dispose();
+                    info.Placeholder = null; // 👈 reset so EnsurePlaceholder can recreate later
+                }
 
                 if (!info.OriginalParent.Controls.Contains(control))
                     info.OriginalParent.Controls.Add(control);
