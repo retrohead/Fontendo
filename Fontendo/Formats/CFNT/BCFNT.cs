@@ -35,15 +35,15 @@ namespace Fontendo.Formats.CTR
         public BCFNT()
         {
             Properties = new FontPropertyRegistry();
-            Properties.AddProperty(FontProperty.Endianness, "Endianness", PropertyValueType.Bool);
-            Properties.AddProperty(FontProperty.CharEncoding, "Char encoding", PropertyValueType.CharEncoding);
-            Properties.AddProperty(FontProperty.LineFeed, "Line feed", PropertyValueType.Byte, (0, 0xFF));
-            Properties.AddProperty(FontProperty.Height, "Height", PropertyValueType.Byte, (0, 0xFF));
-            Properties.AddProperty(FontProperty.Width, "Width", PropertyValueType.Byte, (0, 0xFF));
-            Properties.AddProperty(FontProperty.Ascent, "Ascent", PropertyValueType.Byte, (0, 0xFF));
-            Properties.AddProperty(FontProperty.Baseline, "Baseline", PropertyValueType.Byte, (0, 0xFF));
-            Properties.AddProperty(FontProperty.Version, "Version", PropertyValueType.UInt32, (0, 0xFFFFFFFF));
-            Properties.AddProperty(FontProperty.NtrRvlImageFormat, "Image encoding", PropertyValueType.ImageFormat);
+            Properties.AddProperty(FontProperty.Endianness, "Endianness", PropertyValueType.Bool, EditorType.EndiannessPicker);
+            Properties.AddProperty(FontProperty.CharEncoding, "Char encoding", PropertyValueType.CharEncoding, EditorType.Label);
+            Properties.AddProperty(FontProperty.LineFeed, "Line feed", PropertyValueType.Byte, EditorType.NumberBox, (0, 0xFF));
+            Properties.AddProperty(FontProperty.Height, "Height", PropertyValueType.Byte, EditorType.NumberBox, (0, 0xFF));
+            Properties.AddProperty(FontProperty.Width, "Width", PropertyValueType.Byte, EditorType.NumberBox, (0, 0xFF));
+            Properties.AddProperty(FontProperty.Ascent, "Ascent", PropertyValueType.Byte, EditorType.NumberBox, (0, 0xFF));
+            Properties.AddProperty(FontProperty.Baseline, "Baseline", PropertyValueType.Byte, EditorType.NumberBox, (0, 0xFF));
+            Properties.AddProperty(FontProperty.Version, "Version", PropertyValueType.UInt32, EditorType.Label, (0, 0xFFFFFFFF));
+            Properties.AddProperty(FontProperty.NtrRvlImageFormat, "Image encoding", PropertyValueType.ImageFormat, EditorType.Label);
         }
 
         public ITextureCodec Codec { get; set; } = TextureCodecFactory.Create(TextureCodecFactory.Platform.CTR);

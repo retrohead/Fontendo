@@ -55,10 +55,17 @@ namespace Fontendo.FontProperties
             /// </summary>
             public (long Min, long Max)? ValueRange { get; set; }
 
+            /// <summary>
+            /// Optional preferred control type for editing this property.
+            /// Can be EditorType.None if no editing is intended.
+            /// </summary>
+            public EditorType PreferredControl { get; set; }
+
             public FontPropertyListEntryDescriptor(
                 int index,
                 string name,
                 PropertyValueType propType,
+                EditorType preferredControl,
                 (long Min, long Max)? valueRange = null
                 )
             {
@@ -66,6 +73,7 @@ namespace Fontendo.FontProperties
                 Name = name;
                 PropType = propType;
                 ValueRange = valueRange;
+                PreferredControl = preferredControl;
             }
 
             /// <summary>
@@ -100,9 +108,10 @@ namespace Fontendo.FontProperties
                 string name,
                 T value,
                 PropertyValueType valueType,
+                EditorType preferredControl,
                 (long Min, long Max)? valueRange = null)
             {
-                Descriptor = new FontPropertyListEntryDescriptor(index, name, valueType, valueRange);
+                Descriptor = new FontPropertyListEntryDescriptor(index, name, valueType, preferredControl, valueRange);
                 Value = value;
             }
         }
@@ -123,12 +132,14 @@ namespace Fontendo.FontProperties
             public void AddProperty(FontProperty propType,
                                     string name,
                                     PropertyValueType valueType,
+                                    EditorType preferredControl,
                                     (long Min, long Max)? range = null)
             {
                 var descriptor = new FontPropertyListEntryDescriptor(
                     index: (int)propType,
                     name: name,
                     propType: valueType,
+                    preferredControl: preferredControl,
                     valueRange: range);
 
                 FontPropertyDescriptors[propType] = descriptor;

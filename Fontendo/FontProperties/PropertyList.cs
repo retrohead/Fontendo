@@ -30,5 +30,18 @@ namespace Fontendo.FontProperties
             StdPairUInt32UInt32,
             Separator
         }
+        public enum EditorType
+        {
+            None,               // No preferred editor
+            TextBox,            // Simple text input
+            ComboBox,           // Dropdown selection
+            Slider,             // Numeric slider
+            CheckBox,           // Boolean toggle
+            NumberBox,          // Number selection
+            ColorPicker,        // Color selection
+            CodePointPicker,    // Custom code point picker
+            EndiannessPicker,   // Custom endianess picker
+            Label               // Read only label
+        }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using static Fontendo.FontProperties.PropertyList;
 
 namespace Fontendo.FontProperties
 {
@@ -27,17 +28,24 @@ namespace Fontendo.FontProperties
             public PropertyList.PropertyValueType PropType { get; set; }
             public (long Min, long Max)? ValueRange { get; set; }
 
+            /// <summary>
+            /// Optional preferred control type for editing this property.
+            /// Can be EditorType.None if no editing is intended.
+            /// </summary>
+            public EditorType PreferredControl { get; set; }
+
             public GlyphPropertyDescriptor(
                 int index,
                 string name,
                 PropertyList.PropertyValueType propType,
-                object? defaultValue = null,
+                EditorType preferredControl = EditorType.None,
                 (long Min, long Max)? valueRange = null)
             {
                 Index = index;
                 Name = name;
                 PropType = propType;
                 ValueRange = valueRange;
+                PreferredControl = preferredControl;
             }
 
             /// <summary>
@@ -70,10 +78,11 @@ namespace Fontendo.FontProperties
                 int index,
                 string name,
                 T value,
-                PropertyList.PropertyValueType valueType,
+                EditorType preferredControl,
+                PropertyValueType valueType,
                 (long Min, long Max)? valueRange = null)
             {
-                Descriptor = new GlyphPropertyDescriptor(index, name, valueType, value, valueRange);
+                Descriptor = new GlyphPropertyDescriptor(index, name, valueType, preferredControl, valueRange);
                 Value = value;
             }
 
@@ -94,13 +103,15 @@ namespace Fontendo.FontProperties
 
             public void AddProperty(GlyphProperty prop,
                                     string name,
-                                    PropertyList.PropertyValueType valueType,
+                                    PropertyValueType valueType,
+                                    EditorType preferredControl,
                                     (long Min, long Max)? range = null)
             {
                 var descriptor = new GlyphPropertyDescriptor(
                     index: (int)prop,
                     name: name,
                     propType: valueType,
+                    preferredControl: preferredControl,
                     valueRange: range);
 
                 GlyphPropertyDescriptors[prop] = descriptor;

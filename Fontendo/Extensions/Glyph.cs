@@ -22,11 +22,11 @@ namespace Fontendo.Extensions
             Properties = new GlyphPropertyRegistry();
 
             Properties = new GlyphPropertyRegistry();
-            Properties.AddProperty(GlyphProperty.Index, "Index", PropertyValueType.UInt16);
-            Properties.AddProperty(GlyphProperty.Code, "Code point", PropertyValueType.UInt16);
-            Properties.AddProperty(GlyphProperty.Left, "Left", PropertyValueType.SByte, (-0x7F, 0x7F));
-            Properties.AddProperty(GlyphProperty.GlyphWidth, "Glyph width", PropertyValueType.Byte, (0x0, 0xFF));
-            Properties.AddProperty(GlyphProperty.CharWidth, "Char width", PropertyValueType.Byte, (0x0, 0xFF));
+            Properties.AddProperty(GlyphProperty.Index, "Index", PropertyValueType.UInt16, EditorType.None);
+            Properties.AddProperty(GlyphProperty.Code, "Code point", PropertyValueType.UInt16, EditorType.CodePointPicker);
+            Properties.AddProperty(GlyphProperty.Left, "Left", PropertyValueType.SByte, EditorType.NumberBox, (-0x7F, 0x7F));
+            Properties.AddProperty(GlyphProperty.GlyphWidth, "Glyph width", PropertyValueType.Byte, EditorType.NumberBox, (0x0, 0xFF));
+            Properties.AddProperty(GlyphProperty.CharWidth, "Char width", PropertyValueType.Byte, EditorType.NumberBox, (0x0, 0xFF));
 
             if(propertyValues != null)
             {
