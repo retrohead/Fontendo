@@ -1,5 +1,7 @@
 ﻿using Fontendo.Extensions;
+using System.Text;
 using System.Windows.Forms;
+using static Fontendo.Extensions.FontBase;
 using static Fontendo.FontProperties.PropertyList;
 
 namespace Fontendo.Controls
@@ -33,6 +35,8 @@ namespace Fontendo.Controls
 
         public void ShowGlyphDetails(Glyph? glyph)
         {
+            // Register legacy encodings (including Shift-JIS)
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             if (MainForm.Self == null) return;
             if (glyph == null)
             {
@@ -41,6 +45,37 @@ namespace Fontendo.Controls
             }
             ShowGlyphImage(glyph);
             BuildPropertiesPanel(panelGlyphProperties, glyph);
+
+            CharEncodings enc = MainForm.Self.FontendoFont.Font.Properties.GetValue<CharEncodings>(FontProperties.FontPropertyList.FontProperty.CharEncoding);
+
+            UInt16 code = glyph.Properties.GetValue<UInt16>(FontProperties.GlyphProperties.GlyphProperty.Code);
+            string dchar = "";
+            lblGlyphSymbol.Text = "";
+            switch (enc)
+            {
+                case CharEncodings.UTF8:
+                case CharEncodings.UTF16:
+                case CharEncodings.CP1252:
+                    break;
+                case CharEncodings.ShiftJIS:
+                    try
+                    {
+                        code = MainForm.Self.SJIS.CodeToUTF16(code); MainForm.Self.SJIS.CodeToUTF16(code);
+                    } catch
+                    {
+                        dchar = "";
+                    }
+                    break;
+                case CharEncodings.Num:
+                    return;
+
+            }
+            UInt16[] chr = { code, 0x0000 };
+            // Convert to bytes (2 bytes per UInt16)
+            byte[] bytes = new byte[chr.Length * 2];
+            Buffer.BlockCopy(chr, 0, bytes, 0, bytes.Length);
+            string unicodechar = Encoding.Unicode.GetString(bytes);
+            lblGlyphSymbol.Text = unicodechar;
         }
 
         private void ShowGlyphImage(Glyph? glyph)
@@ -101,17 +136,19 @@ namespace Fontendo.Controls
             {
                 Dock = DockStyle.Fill,
                 ColumnCount = 2,
-                RowCount = glyph.Properties.GlyphPropertyDescriptors.Where(d => d.Value.PreferredControl != EditorType.None).Count() + 1, // +1 for blank row
+                RowCount = glyph.Properties.GlyphPropertyDescriptors.Where(d => d.Value.PreferredControl != EditorType.None).Count() + 2, // +2 for blank row at end and padding at start
                 Margin = Padding.Empty,
                 Padding = Padding.Empty,
                 AutoSize = false
             };
+            // padding at start
+            table.RowStyles.Add(new RowStyle(SizeType.Absolute, 10));
 
             // Column styles: first fixed 100px, second fills remaining
-            table.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 100));
+            table.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 80));
             table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
 
-            int rowIndex = 0;
+            int rowIndex = 1;
 
             foreach (var kvp in glyph.Properties.GlyphPropertyDescriptors)
             {
@@ -124,24 +161,22 @@ namespace Fontendo.Controls
                         Text = descriptor.Name,
                         Dock = DockStyle.Fill,
                         TextAlign = ContentAlignment.MiddleLeft,
-                        Margin = Padding.Empty
+                        Margin = new Padding(3, 0, 0, 5)
                     };
                     table.Controls.Add(label, 0, rowIndex);
                 }
 
                 Control? editor = null;
-
                 switch (descriptor.PreferredControl)
                 {
                     case EditorType.CodePointPicker:
-                        editor = new HexNumericUpDown
+                        UInt16 val = (UInt16)(glyph.Properties.GlyphPropertyValues[kvp.Key] ?? descriptor.ValueRange.Value.Min);
+                        editor = new HexNumericUpDown()
                         {
                             Dock = DockStyle.Fill,
                             Minimum = descriptor.ValueRange.Value.Min,
                             Maximum = descriptor.ValueRange.Value.Max,
-                            Value = Convert.ToDecimal(
-                                glyph.Properties.GlyphPropertyValues[kvp.Key] ?? descriptor.ValueRange.Value.Min
-                            )
+                            Text = "0x" + val.ToString("X4")
                         };
                         break;
 
@@ -159,6 +194,7 @@ namespace Fontendo.Controls
                             Dock = DockStyle.Fill,
                             Minimum = descriptor.ValueRange.Value.Min,
                             Maximum = descriptor.ValueRange.Value.Max,
+                            TextAlign = HorizontalAlignment.Right,
                             Value = Convert.ToDecimal(
                                 glyph.Properties.GlyphPropertyValues[kvp.Key] ?? descriptor.ValueRange.Value.Min
                             )
@@ -211,7 +247,7 @@ namespace Fontendo.Controls
 
                 if (editor != null)
                 {
-                    editor.Margin = Padding.Empty;
+                    editor.Padding = new Padding(0, 7, 0, 0);
                     table.Controls.Add(editor, 1, rowIndex);
 
                     // Fix row height to 32px
@@ -222,6 +258,8 @@ namespace Fontendo.Controls
 
             // Add final blank row that stretches
             table.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+            table.Dock = DockStyle.Top;
+            table.AutoSize = true;
 
             panel.Controls.Add(table);
         }
@@ -280,6 +318,12 @@ namespace Fontendo.Controls
         private void button1_Click(object sender, EventArgs e)
         {
             DockManager.PopOut(panelGlyphPropertyContainer);
+        }
+
+        private void panelGlyphPropertiesScrollablePanel_Resize(object sender, EventArgs e)
+        {
+            panelGlyphProperties.Height = panelGlyphPropertiesScrollablePanel.ClientSize.Height;
+            panelGlyphProperties.Width = panelGlyphPropertiesScrollablePanel.ClientSize.Width;
         }
     }
 }

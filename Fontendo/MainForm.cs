@@ -9,8 +9,8 @@ namespace Fontendo
     {
         public static MainForm? Self;
         public FontBase FontendoFont;
-        private double windowLeftPercent = 0.5f;
         public SJISConv SJIS;
+        public UnicodeNames UnicodeNames;
         private bool debugMode = false;
 
         public MainForm()
@@ -21,12 +21,13 @@ namespace Fontendo
             });
             RecentFiles.Initialize();
             SJIS = new SJISConv();
+            UnicodeNames = new UnicodeNames();
 
             InitializeComponent();
             Self = this;
             FontendoFont = new FontBase(Platform.CTR);
-            splitContainer1_SplitterMoved(this, null);
             colorPickerBgColour.SelectedColor = Properties.Settings.Default.FontBackgroundColor;
+            splitContainer2.SplitterDistance = 434;
         }
 
         private void btnBrowseFont_Click(object sender, EventArgs e)
@@ -173,19 +174,6 @@ namespace Fontendo
             {
                 MessageBox.Show(this, "Font saved successfully.", "Font Saved", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
-        }
-
-        private void splitContainer1_SplitterMoved(object sender, SplitterEventArgs? e)
-        {
-            windowLeftPercent = (double)splitContainer1.Panel1.Width / (double)(splitContainer1.Panel1.Width + splitContainer1.Panel2.Width);
-        }
-
-        private void MainForm_ResizeEnd(object sender, EventArgs e)
-        {
-            int totalWidth = splitContainer1.Panel1.Width + splitContainer1.Panel2.Width;
-            int newLeftWidth = (int)(totalWidth * windowLeftPercent);
-            // Apply the width
-            splitContainer1.SplitterDistance = newLeftWidth;
         }
 
         private void colorPickerBgColour_ColorChanged(object sender, EventArgs e)

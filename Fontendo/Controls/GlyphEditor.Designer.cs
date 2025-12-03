@@ -34,19 +34,24 @@
             trackBarZoom = new TrackBar();
             panelGlyphPropertyContainer = new Panel();
             tableLayoutPanel3 = new TableLayoutPanel();
+            panelGlyphPropertiesScrollablePanel = new Panel();
             panelGlyphProperties = new Panel();
-            panel1 = new Panel();
+            panelGlyphHeader = new Panel();
             tableLayoutPanel4 = new TableLayoutPanel();
             label1 = new Label();
             button1 = new Button();
+            tableLayoutPanel5 = new TableLayoutPanel();
+            lblGlyphSymbol = new Label();
             tableLayoutPanel1.SuspendLayout();
             tableLayoutPanel2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
             ((System.ComponentModel.ISupportInitialize)trackBarZoom).BeginInit();
             panelGlyphPropertyContainer.SuspendLayout();
             tableLayoutPanel3.SuspendLayout();
-            panel1.SuspendLayout();
+            panelGlyphPropertiesScrollablePanel.SuspendLayout();
+            panelGlyphHeader.SuspendLayout();
             tableLayoutPanel4.SuspendLayout();
+            tableLayoutPanel5.SuspendLayout();
             SuspendLayout();
             // 
             // tableLayoutPanel1
@@ -55,7 +60,8 @@
             tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
             tableLayoutPanel1.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 150F));
             tableLayoutPanel1.Controls.Add(tableLayoutPanel2, 1, 0);
-            tableLayoutPanel1.Controls.Add(panelGlyphPropertyContainer, 0, 0);
+            tableLayoutPanel1.Controls.Add(panelGlyphPropertyContainer, 0, 1);
+            tableLayoutPanel1.Controls.Add(tableLayoutPanel5, 0, 0);
             tableLayoutPanel1.Dock = DockStyle.Fill;
             tableLayoutPanel1.Location = new Point(0, 0);
             tableLayoutPanel1.Name = "tableLayoutPanel1";
@@ -109,21 +115,21 @@
             // 
             // panelGlyphPropertyContainer
             // 
-            panelGlyphPropertyContainer.BorderStyle = BorderStyle.Fixed3D;
+            tableLayoutPanel1.SetColumnSpan(panelGlyphPropertyContainer, 2);
             panelGlyphPropertyContainer.Controls.Add(tableLayoutPanel3);
             panelGlyphPropertyContainer.Dock = DockStyle.Fill;
-            panelGlyphPropertyContainer.Location = new Point(3, 3);
+            panelGlyphPropertyContainer.Location = new Point(0, 182);
+            panelGlyphPropertyContainer.Margin = new Padding(0);
             panelGlyphPropertyContainer.Name = "panelGlyphPropertyContainer";
-            tableLayoutPanel1.SetRowSpan(panelGlyphPropertyContainer, 2);
-            panelGlyphPropertyContainer.Size = new Size(256, 288);
+            panelGlyphPropertyContainer.Size = new Size(412, 112);
             panelGlyphPropertyContainer.TabIndex = 3;
             // 
             // tableLayoutPanel3
             // 
             tableLayoutPanel3.ColumnCount = 1;
             tableLayoutPanel3.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            tableLayoutPanel3.Controls.Add(panelGlyphProperties, 0, 1);
-            tableLayoutPanel3.Controls.Add(panel1, 0, 0);
+            tableLayoutPanel3.Controls.Add(panelGlyphPropertiesScrollablePanel, 0, 1);
+            tableLayoutPanel3.Controls.Add(panelGlyphHeader, 0, 0);
             tableLayoutPanel3.Dock = DockStyle.Fill;
             tableLayoutPanel3.Location = new Point(0, 0);
             tableLayoutPanel3.Margin = new Padding(0);
@@ -131,27 +137,42 @@
             tableLayoutPanel3.RowCount = 2;
             tableLayoutPanel3.RowStyles.Add(new RowStyle(SizeType.Absolute, 20F));
             tableLayoutPanel3.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            tableLayoutPanel3.Size = new Size(252, 284);
+            tableLayoutPanel3.Size = new Size(412, 112);
             tableLayoutPanel3.TabIndex = 0;
+            // 
+            // panelGlyphPropertiesScrollablePanel
+            // 
+            panelGlyphPropertiesScrollablePanel.BackColor = SystemColors.Control;
+            panelGlyphPropertiesScrollablePanel.Controls.Add(panelGlyphProperties);
+            panelGlyphPropertiesScrollablePanel.Dock = DockStyle.Fill;
+            panelGlyphPropertiesScrollablePanel.Location = new Point(0, 20);
+            panelGlyphPropertiesScrollablePanel.Margin = new Padding(0);
+            panelGlyphPropertiesScrollablePanel.Name = "panelGlyphPropertiesScrollablePanel";
+            panelGlyphPropertiesScrollablePanel.Size = new Size(412, 92);
+            panelGlyphPropertiesScrollablePanel.TabIndex = 5;
+            panelGlyphPropertiesScrollablePanel.Resize += panelGlyphPropertiesScrollablePanel_Resize;
             // 
             // panelGlyphProperties
             // 
-            panelGlyphProperties.Dock = DockStyle.Fill;
-            panelGlyphProperties.Location = new Point(3, 23);
+            panelGlyphProperties.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            panelGlyphProperties.BackColor = SystemColors.Control;
+            panelGlyphProperties.Dock = DockStyle.Top;
+            panelGlyphProperties.Location = new Point(0, 0);
             panelGlyphProperties.Name = "panelGlyphProperties";
-            panelGlyphProperties.Size = new Size(246, 258);
-            panelGlyphProperties.TabIndex = 2;
+            panelGlyphProperties.Size = new Size(412, 90);
+            panelGlyphProperties.TabIndex = 3;
             // 
-            // panel1
+            // panelGlyphHeader
             // 
-            panel1.BackColor = SystemColors.ControlDarkDark;
-            panel1.Controls.Add(tableLayoutPanel4);
-            panel1.Dock = DockStyle.Fill;
-            panel1.Location = new Point(0, 0);
-            panel1.Margin = new Padding(0);
-            panel1.Name = "panel1";
-            panel1.Size = new Size(252, 20);
-            panel1.TabIndex = 3;
+            panelGlyphHeader.BackColor = SystemColors.ControlDarkDark;
+            panelGlyphHeader.BorderStyle = BorderStyle.FixedSingle;
+            panelGlyphHeader.Controls.Add(tableLayoutPanel4);
+            panelGlyphHeader.Dock = DockStyle.Fill;
+            panelGlyphHeader.Location = new Point(0, 0);
+            panelGlyphHeader.Margin = new Padding(0);
+            panelGlyphHeader.Name = "panelGlyphHeader";
+            panelGlyphHeader.Size = new Size(412, 20);
+            panelGlyphHeader.TabIndex = 3;
             // 
             // tableLayoutPanel4
             // 
@@ -166,7 +187,7 @@
             tableLayoutPanel4.Name = "tableLayoutPanel4";
             tableLayoutPanel4.RowCount = 1;
             tableLayoutPanel4.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            tableLayoutPanel4.Size = new Size(252, 20);
+            tableLayoutPanel4.Size = new Size(410, 18);
             tableLayoutPanel4.TabIndex = 0;
             // 
             // label1
@@ -182,13 +203,47 @@
             // 
             // button1
             // 
-            button1.Location = new Point(235, 3);
+            button1.BackColor = SystemColors.ControlLight;
+            button1.Dock = DockStyle.Fill;
+            button1.FlatAppearance.BorderSize = 0;
+            button1.FlatStyle = FlatStyle.Flat;
+            button1.Location = new Point(390, 0);
+            button1.Margin = new Padding(0);
             button1.Name = "button1";
-            button1.Size = new Size(14, 14);
+            button1.Size = new Size(20, 18);
             button1.TabIndex = 1;
-            button1.Text = "btnGlyphPropertiesPopOut";
-            button1.UseVisualStyleBackColor = true;
+            button1.Text = "^";
+            button1.UseVisualStyleBackColor = false;
             button1.Click += button1_Click;
+            // 
+            // tableLayoutPanel5
+            // 
+            tableLayoutPanel5.ColumnCount = 2;
+            tableLayoutPanel5.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            tableLayoutPanel5.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            tableLayoutPanel5.Controls.Add(lblGlyphSymbol, 1, 0);
+            tableLayoutPanel5.Dock = DockStyle.Fill;
+            tableLayoutPanel5.Location = new Point(3, 3);
+            tableLayoutPanel5.Name = "tableLayoutPanel5";
+            tableLayoutPanel5.RowCount = 2;
+            tableLayoutPanel5.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
+            tableLayoutPanel5.RowStyles.Add(new RowStyle(SizeType.Percent, 50F));
+            tableLayoutPanel5.Size = new Size(256, 176);
+            tableLayoutPanel5.TabIndex = 4;
+            // 
+            // lblGlyphSymbol
+            // 
+            lblGlyphSymbol.AutoSize = true;
+            lblGlyphSymbol.BorderStyle = BorderStyle.Fixed3D;
+            lblGlyphSymbol.Dock = DockStyle.Fill;
+            lblGlyphSymbol.Font = new Font("Segoe UI", 36F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            lblGlyphSymbol.Location = new Point(131, 7);
+            lblGlyphSymbol.Margin = new Padding(3, 7, 3, 0);
+            lblGlyphSymbol.Name = "lblGlyphSymbol";
+            lblGlyphSymbol.Size = new Size(122, 81);
+            lblGlyphSymbol.TabIndex = 0;
+            lblGlyphSymbol.Text = "A";
+            lblGlyphSymbol.TextAlign = ContentAlignment.MiddleCenter;
             // 
             // GlyphEditor
             // 
@@ -204,9 +259,12 @@
             ((System.ComponentModel.ISupportInitialize)trackBarZoom).EndInit();
             panelGlyphPropertyContainer.ResumeLayout(false);
             tableLayoutPanel3.ResumeLayout(false);
-            panel1.ResumeLayout(false);
+            panelGlyphPropertiesScrollablePanel.ResumeLayout(false);
+            panelGlyphHeader.ResumeLayout(false);
             tableLayoutPanel4.ResumeLayout(false);
             tableLayoutPanel4.PerformLayout();
+            tableLayoutPanel5.ResumeLayout(false);
+            tableLayoutPanel5.PerformLayout();
             ResumeLayout(false);
         }
 
@@ -216,12 +274,15 @@
         private PictureBox pictureBox1;
         private TableLayoutPanel tableLayoutPanel2;
         private TrackBar trackBarZoom;
-        private Panel panelGlyphProperties;
         private Panel panelGlyphPropertyContainer;
         private TableLayoutPanel tableLayoutPanel3;
-        private Panel panel1;
+        private Panel panelGlyphHeader;
         private TableLayoutPanel tableLayoutPanel4;
         private Label label1;
         private Button button1;
+        private Panel panelGlyphPropertiesScrollablePanel;
+        private Panel panelGlyphProperties;
+        private TableLayoutPanel tableLayoutPanel5;
+        private Label lblGlyphSymbol;
     }
 }

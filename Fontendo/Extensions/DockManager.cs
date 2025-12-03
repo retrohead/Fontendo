@@ -13,6 +13,8 @@ namespace Fontendo.Extensions
             public Control? CellHost;            // The control that occupies the TLP cell (either the control itself or its wrapper)
             public int Row;
             public int Col;
+            public int RowSpan;
+            public int ColSpan;
             public Control? Placeholder;
             public Form? FloatingForm;
         }
@@ -50,6 +52,8 @@ namespace Fontendo.Extensions
                     info.CellHost = control;
                     info.Row = tlp.GetRow(control);
                     info.Col = tlp.GetColumn(control);
+                    info.RowSpan = tlp.GetRowSpan(control);
+                    info.ColSpan = tlp.GetColumnSpan(control);
                 }
                 else if (parent.Parent == tlp)
                 {
@@ -57,6 +61,8 @@ namespace Fontendo.Extensions
                     info.CellHost = parent;
                     info.Row = tlp.GetRow(parent);
                     info.Col = tlp.GetColumn(parent);
+                    info.RowSpan = tlp.GetRowSpan(parent);
+                    info.ColSpan = tlp.GetColumnSpan(parent);
                 }
                 else
                 {
@@ -66,6 +72,8 @@ namespace Fontendo.Extensions
                     info.CellHost = p ?? control;
                     info.Row = tlp.GetRow(info.CellHost);
                     info.Col = tlp.GetColumn(info.CellHost);
+                    info.RowSpan = tlp.GetRowSpan(info.CellHost);
+                    info.ColSpan = tlp.GetColumnSpan(info.CellHost);
                 }
             }
             else
@@ -73,6 +81,8 @@ namespace Fontendo.Extensions
                 info.CellHost = null;
                 info.Row = -1;
                 info.Col = -1;
+                info.RowSpan = -1;
+                info.ColSpan = -1;
             }
 
             _registry[control] = info;
@@ -92,6 +102,8 @@ namespace Fontendo.Extensions
                 info.OwnerTable.Controls.Add(info.Placeholder);
                 info.OwnerTable.SetCellPosition(info.Placeholder,
                     new TableLayoutPanelCellPosition(info.Col, info.Row));
+                info.OwnerTable.SetColumnSpan(info.Placeholder, info.ColSpan);
+                info.OwnerTable.SetRowSpan(info.Placeholder, info.RowSpan);
             }
             else
             {
@@ -124,22 +136,41 @@ namespace Fontendo.Extensions
             var floatForm = new Form
             {
                 Text = control.Name,
-                FormBorderStyle = FormBorderStyle.SizableToolWindow,
-                StartPosition = FormStartPosition.Manual
+                FormBorderStyle = FormBorderStyle.Fixed3D,
+                StartPosition = FormStartPosition.Manual,
+                MinimizeBox = false,
+                MaximizeBox = false,
+                Icon = Properties.Resources.fontendo_logo
             };
             // Tell Windows: "I want this client rect at this location"
+            int minHeight = 300;
             floatForm.SetBounds(
                 placeholderRect.Left,
                 placeholderRect.Top,
-                placeholderRect.Width,
-                placeholderRect.Height,
+                info.OriginalParent.Width + 50,
+                placeholderRect.Height < minHeight ? minHeight : placeholderRect.Height + 50,
                 BoundsSpecified.Location | BoundsSpecified.Size);
 
             // Apply your intended offset
             const int offset = 16;
             floatForm.Location = new Point(floatForm.Left + offset, floatForm.Top + offset);
-
             control.Dock = DockStyle.Fill;
+
+            // if there is a table inside the control, hide the first row
+            if (control.Controls[0].GetType() == typeof(TableLayoutPanel))
+            {
+                TableLayoutPanel tbl = (TableLayoutPanel)control.Controls[0];
+                var scrollpanel = tbl.Controls[1];
+                var contentpanel = scrollpanel.Controls[0];
+                var label = contentpanel.Controls[0];
+                tbl.RowStyles[0].Height = 1;
+                // check the first control in the table to see if its it label, if so use the contents for the form header
+                if (label.GetType() == typeof(Label))
+                {
+                    floatForm.Text = label.Text;
+                }
+            }
+
             floatForm.Controls.Add(control);
 
             floatForm.FormClosed += (s, e) => Redock(control);
@@ -229,6 +260,12 @@ namespace Fontendo.Extensions
 
             info.FloatingForm.Controls.Remove(control);
             info.FloatingForm = null;
+
+            // if there is a table inside the control, show the first row
+            if (control.Controls[0].GetType() == typeof(TableLayoutPanel))
+            {
+                ((TableLayoutPanel)control.Controls[0]).RowStyles[0].Height = 20;
+            }
 
             if (info.OwnerTable != null && info.CellHost != null)
             {
