@@ -1,4 +1,6 @@
-﻿namespace Fontendo
+﻿using System.Windows.Forms.Design.Behavior;
+
+namespace Fontendo
 {
     partial class MainForm
     {
@@ -34,6 +36,15 @@
             textFontFilePath = new TextBox();
             btnBrowseFont = new Button();
             menuStrip1 = new MenuStrip();
+            fileToolStripMenuItem = new ToolStripMenuItem();
+            openToolStripMenuItem = new ToolStripMenuItem();
+            saveToolStripMenuItem = new ToolStripMenuItem();
+            saveAsToolStripMenuItem = new ToolStripMenuItem();
+            toolStripSeparator1 = new ToolStripSeparator();
+            recentFilesToolStripMenuItem = new ToolStripMenuItem();
+            noRecentItemsToolStripMenuItem = new ToolStripMenuItem();
+            toolStripSeparator2 = new ToolStripSeparator();
+            exitToolStripMenuItem = new ToolStripMenuItem();
             splitContainerMain = new SplitContainer();
             splitContainerLeft = new SplitContainer();
             dockablePanelFont = new Fontendo.Controls.DockablePanel();
@@ -46,8 +57,15 @@
             dockablePanelGlyph = new Fontendo.Controls.DockablePanel();
             panel1 = new Panel();
             pictureBox2 = new PictureBox();
+            contextMenuGlyph = new ContextMenuStrip(components);
+            contextMenuSheet = new ContextMenuStrip(components);
             imageListSheets = new ImageList(components);
+            exportSheetToolStripMenuItem = new ToolStripMenuItem();
+            replaceSheetToolStripMenuItem = new ToolStripMenuItem();
+            exportGlyphToolStripMenuItem = new ToolStripMenuItem();
+            replaceGlyphToolStripMenuItem = new ToolStripMenuItem();
             tableLayoutPanel1.SuspendLayout();
+            menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)splitContainerMain).BeginInit();
             splitContainerMain.Panel1.SuspendLayout();
             splitContainerMain.Panel2.SuspendLayout();
@@ -64,6 +82,8 @@
             panelCharacterListBorder.SuspendLayout();
             panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)pictureBox2).BeginInit();
+            contextMenuGlyph.SuspendLayout();
+            contextMenuSheet.SuspendLayout();
             SuspendLayout();
             // 
             // tableLayoutPanel1
@@ -113,11 +133,72 @@
             // 
             menuStrip1.BackColor = SystemColors.Menu;
             menuStrip1.Dock = DockStyle.Fill;
+            menuStrip1.Items.AddRange(new ToolStripItem[] { fileToolStripMenuItem });
             menuStrip1.Location = new Point(0, 0);
             menuStrip1.Name = "menuStrip1";
             menuStrip1.Size = new Size(798, 32);
             menuStrip1.TabIndex = 5;
             menuStrip1.Text = "menuStrip1";
+            // 
+            // fileToolStripMenuItem
+            // 
+            fileToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { openToolStripMenuItem, saveToolStripMenuItem, saveAsToolStripMenuItem, toolStripSeparator1, recentFilesToolStripMenuItem, toolStripSeparator2, exitToolStripMenuItem });
+            fileToolStripMenuItem.Name = "fileToolStripMenuItem";
+            fileToolStripMenuItem.Size = new Size(37, 28);
+            fileToolStripMenuItem.Text = "File";
+            fileToolStripMenuItem.DropDownOpening += fileToolStripMenuItem_DropDownOpening;
+            // 
+            // openToolStripMenuItem
+            // 
+            openToolStripMenuItem.Name = "openToolStripMenuItem";
+            openToolStripMenuItem.Size = new Size(136, 22);
+            openToolStripMenuItem.Text = "Open";
+            openToolStripMenuItem.Click += openToolStripMenuItem_Click;
+            // 
+            // saveToolStripMenuItem
+            // 
+            saveToolStripMenuItem.Name = "saveToolStripMenuItem";
+            saveToolStripMenuItem.Size = new Size(136, 22);
+            saveToolStripMenuItem.Text = "Save";
+            saveToolStripMenuItem.Click += saveToolStripMenuItem_Click;
+            // 
+            // saveAsToolStripMenuItem
+            // 
+            saveAsToolStripMenuItem.Name = "saveAsToolStripMenuItem";
+            saveAsToolStripMenuItem.Size = new Size(136, 22);
+            saveAsToolStripMenuItem.Text = "Save As...";
+            saveAsToolStripMenuItem.Click += saveAsToolStripMenuItem_Click;
+            // 
+            // toolStripSeparator1
+            // 
+            toolStripSeparator1.Name = "toolStripSeparator1";
+            toolStripSeparator1.Size = new Size(133, 6);
+            // 
+            // recentFilesToolStripMenuItem
+            // 
+            recentFilesToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { noRecentItemsToolStripMenuItem });
+            recentFilesToolStripMenuItem.Name = "recentFilesToolStripMenuItem";
+            recentFilesToolStripMenuItem.Size = new Size(136, 22);
+            recentFilesToolStripMenuItem.Text = "Recent Files";
+            // 
+            // noRecentItemsToolStripMenuItem
+            // 
+            noRecentItemsToolStripMenuItem.Enabled = false;
+            noRecentItemsToolStripMenuItem.Name = "noRecentItemsToolStripMenuItem";
+            noRecentItemsToolStripMenuItem.Size = new Size(161, 22);
+            noRecentItemsToolStripMenuItem.Text = "No Recent Items";
+            // 
+            // toolStripSeparator2
+            // 
+            toolStripSeparator2.Name = "toolStripSeparator2";
+            toolStripSeparator2.Size = new Size(133, 6);
+            // 
+            // exitToolStripMenuItem
+            // 
+            exitToolStripMenuItem.Name = "exitToolStripMenuItem";
+            exitToolStripMenuItem.Size = new Size(136, 22);
+            exitToolStripMenuItem.Text = "Exit";
+            exitToolStripMenuItem.Click += exitToolStripMenuItem_Click;
             // 
             // splitContainerMain
             // 
@@ -215,7 +296,7 @@
             splitContainerRight.Panel2.Controls.Add(dockablePanelGlyph);
             splitContainerRight.Panel2MinSize = 170;
             splitContainerRight.Size = new Size(391, 430);
-            splitContainerRight.SplitterDistance = 122;
+            splitContainerRight.SplitterDistance = 110;
             splitContainerRight.SplitterWidth = 7;
             splitContainerRight.TabIndex = 0;
             // 
@@ -226,7 +307,7 @@
             panelCharacterListBorder.Dock = DockStyle.Fill;
             panelCharacterListBorder.Location = new Point(0, 0);
             panelCharacterListBorder.Name = "panelCharacterListBorder";
-            panelCharacterListBorder.Size = new Size(122, 430);
+            panelCharacterListBorder.Size = new Size(110, 430);
             panelCharacterListBorder.TabIndex = 0;
             // 
             // listViewCharacters
@@ -239,7 +320,7 @@
             listViewCharacters.Location = new Point(0, 0);
             listViewCharacters.Margin = new Padding(0);
             listViewCharacters.Name = "listViewCharacters";
-            listViewCharacters.Size = new Size(118, 426);
+            listViewCharacters.Size = new Size(106, 426);
             listViewCharacters.TabIndex = 7;
             listViewCharacters.UseCompatibleStateImageBehavior = false;
             listViewCharacters.SelectedIndexChanged += listViewCharacters_SelectedIndexChanged;
@@ -257,7 +338,7 @@
             dockablePanelGlyph.HeaderText = "Dockable Panel";
             dockablePanelGlyph.Location = new Point(0, 0);
             dockablePanelGlyph.Name = "dockablePanelGlyph";
-            dockablePanelGlyph.Size = new Size(262, 430);
+            dockablePanelGlyph.Size = new Size(274, 430);
             dockablePanelGlyph.TabIndex = 0;
             // 
             // panel1
@@ -281,11 +362,51 @@
             pictureBox2.TabIndex = 11;
             pictureBox2.TabStop = false;
             // 
+            // contextMenuGlyph
+            // 
+            contextMenuGlyph.Items.AddRange(new ToolStripItem[] { exportGlyphToolStripMenuItem, replaceGlyphToolStripMenuItem });
+            contextMenuGlyph.Name = "contextMenuGlyph";
+            contextMenuGlyph.Size = new Size(181, 70);
+            // 
+            // contextMenuSheet
+            // 
+            contextMenuSheet.Items.AddRange(new ToolStripItem[] { exportSheetToolStripMenuItem, replaceSheetToolStripMenuItem });
+            contextMenuSheet.Name = "contextMenuSheet";
+            contextMenuSheet.Size = new Size(148, 48);
+            // 
             // imageListSheets
             // 
             imageListSheets.ColorDepth = ColorDepth.Depth32Bit;
             imageListSheets.ImageSize = new Size(16, 16);
             imageListSheets.TransparentColor = Color.Transparent;
+            // 
+            // exportSheetToolStripMenuItem
+            // 
+            exportSheetToolStripMenuItem.Name = "exportSheetToolStripMenuItem";
+            exportSheetToolStripMenuItem.Size = new Size(147, 22);
+            exportSheetToolStripMenuItem.Text = "Export Sheet";
+            exportSheetToolStripMenuItem.Click += exportSheetToolStripMenuItem_Click;
+            // 
+            // replaceSheetToolStripMenuItem
+            // 
+            replaceSheetToolStripMenuItem.Name = "replaceSheetToolStripMenuItem";
+            replaceSheetToolStripMenuItem.Size = new Size(147, 22);
+            replaceSheetToolStripMenuItem.Text = "Replace Sheet";
+            replaceSheetToolStripMenuItem.Click += replaceSheetToolStripMenuItem_Click;
+            // 
+            // exportGlyphToolStripMenuItem
+            // 
+            exportGlyphToolStripMenuItem.Name = "exportGlyphToolStripMenuItem";
+            exportGlyphToolStripMenuItem.Size = new Size(180, 22);
+            exportGlyphToolStripMenuItem.Text = "Export Glyph";
+            exportGlyphToolStripMenuItem.Click += exportGlyphToolStripMenuItem_Click;
+            // 
+            // replaceGlyphToolStripMenuItem
+            // 
+            replaceGlyphToolStripMenuItem.Name = "replaceGlyphToolStripMenuItem";
+            replaceGlyphToolStripMenuItem.Size = new Size(180, 22);
+            replaceGlyphToolStripMenuItem.Text = "Replace Glyph";
+            replaceGlyphToolStripMenuItem.Click += replaceGlyphToolStripMenuItem_Click;
             // 
             // MainForm
             // 
@@ -301,6 +422,8 @@
             Shown += MainForm_Shown;
             tableLayoutPanel1.ResumeLayout(false);
             tableLayoutPanel1.PerformLayout();
+            menuStrip1.ResumeLayout(false);
+            menuStrip1.PerformLayout();
             splitContainerMain.Panel1.ResumeLayout(false);
             splitContainerMain.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)splitContainerMain).EndInit();
@@ -317,6 +440,8 @@
             panelCharacterListBorder.ResumeLayout(false);
             panel1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)pictureBox2).EndInit();
+            contextMenuGlyph.ResumeLayout(false);
+            contextMenuSheet.ResumeLayout(false);
             ResumeLayout(false);
         }
 
@@ -349,9 +474,9 @@
         private Panel panelCharacterListBorder;
         private ListView listViewCharacters;
         private ContextMenuStrip contextMenuGlyph;
-        private ToolStripMenuItem replaceGlyphToolStripMenuItem;
-        private ToolStripMenuItem exportGlyphToolStripMenuItem;
         private ContextMenuStrip contextMenuSheet;
+        private ToolStripMenuItem exportGlyphToolStripMenuItem;
+        private ToolStripMenuItem replaceGlyphToolStripMenuItem;
         private ToolStripMenuItem exportSheetToolStripMenuItem;
         private ToolStripMenuItem replaceSheetToolStripMenuItem;
     }
