@@ -10,6 +10,20 @@ namespace Fontendo.Controls
     public class HexNumericUpDown : NumericUpDown
     {
         private TextBox? innerBox;
+        private long _value;
+        public long HexValue
+        {
+            get
+            {
+                return _value;
+            }
+            set
+            {
+                _value = value;
+                UpdateEditText();
+            }
+        }
+
         public HexNumericUpDown()
         {
             Minimum = 0;
@@ -28,7 +42,7 @@ namespace Fontendo.Controls
         protected override void UpdateEditText()
         {
             int digits = (int)Math.Ceiling(Math.Log((double)Maximum + 1, 16));
-            Text = $"0x{((long)Value).ToString($"X{digits}")}";
+            Text = $"0x{((long)HexValue).ToString($"X{digits}")}";
         }
 
         protected override void ValidateEditText()
@@ -36,8 +50,8 @@ namespace Fontendo.Controls
             string raw = Text.Trim().Replace("0x", "");
             if (long.TryParse(raw, System.Globalization.NumberStyles.HexNumber, null, out var parsed))
             {
-                if (parsed >= (long)Minimum && parsed <= (long)Maximum)
-                    Value = parsed;
+                if (parsed >= (long)Minimum && parsed <= (long)Maximum && HexValue != parsed)
+                    HexValue = parsed;
             }
             else
             {

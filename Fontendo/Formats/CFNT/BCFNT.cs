@@ -233,15 +233,15 @@ namespace Fontendo.Formats.CTR
                     Glyphs = new List<Glyph>();
                     for (int i = 0; i < CharMaps.Count(); i++)
                     {
-                        var props = new Dictionary<GlyphProperty, object>
-                        {
-                            { GlyphProperty.Index, i },
-                            { GlyphProperty.Code, CharMaps[i].Code },
-                            { GlyphProperty.Left, CharWidths[i].Left },
-                            { GlyphProperty.GlyphWidth, CharWidths[i].GlyphWidth},
-                            { GlyphProperty.CharWidth, CharWidths[i].CharWidth }
-                        };
-                        Glyphs.Add(new Glyph(i, CharMaps[i].Index, CharImages[i].Image, props));
+                        Glyph glyph = new Glyph(CharImages[i].Sheet, i, CharMaps[i].Index);
+                        glyph.Settings.Index = i;
+                        glyph.Settings.CodePoint = CharMaps[i].Code;
+                        glyph.Settings.Left = CharWidths[i].Left;
+                        glyph.Settings.GlyphWidth = CharWidths[i].GlyphWidth;
+                        glyph.Settings.CharWidth = CharWidths[i].CharWidth;
+                        glyph.Settings.Image = CharImages[i].Image;
+                        Glyphs.Add(glyph);
+
                     }
 
                     if (CharMaps.Count() != Glyphs.Count())
@@ -271,7 +271,7 @@ namespace Fontendo.Formats.CTR
 
                     // Assign the range to the descriptors
                     foreach(var g in Glyphs)
-                        g.Properties.UpdateValueRange(GlyphProperty.Code, range);
+                        g.Settings.UpdateValueRange(GlyphProperty.Code, range);
 
                     // fill in some other stuff
                     CellSize = new Point(TGLP.CellWidth, TGLP.CellHeight);
@@ -320,8 +320,8 @@ namespace Fontendo.Formats.CTR
                 encodedGlyphs.Sort((a, b) =>
                 {
                     // Assuming helper reads value from glyph props
-                    var codeA = a.Properties.GetValue<UInt16>(GlyphProperty.Code);
-                    var codeB = b.Properties.GetValue<UInt16>(GlyphProperty.Code);
+                    var codeA = a.Settings.GetValue<UInt16>(GlyphProperty.Code);
+                    var codeB = b.Settings.GetValue<UInt16>(GlyphProperty.Code);
                     return codeA.CompareTo(codeB);
                 });
 
@@ -330,8 +330,8 @@ namespace Fontendo.Formats.CTR
                 ushort index = 0;
                 foreach (var g in encodedGlyphs)
                 {
-                    g.Properties.SetValue(GlyphProperty.Index, index);
-                    var cw = g.Properties.GetValue<byte>(GlyphProperty.CharWidth);
+                    g.Settings.Index = index;
+                    var cw = g.Settings.GetValue<byte>(GlyphProperty.CharWidth);
                     if (cw > maxCharWidth) maxCharWidth = cw;
                     index++;
                 }
@@ -357,7 +357,7 @@ namespace Fontendo.Formats.CTR
 
                 foreach (var g in Glyphs)
                 {
-                    var i = g.Properties.GetValue<ushort>(GlyphProperty.Index);
+                    var i = g.Settings.GetValue<ushort>(GlyphProperty.Index);
                     var currentSheet = i / (cellsPerRow * cellsPerColumn);
                     var i2 = i - (currentSheet * cellsPerRow * cellsPerColumn);
                     var currentRow = i2 / cellsPerRow;
@@ -372,7 +372,7 @@ namespace Fontendo.Formats.CTR
                     // Draw glyph image onto the sheet
                     using (var gfx = Graphics.FromImage(sheetImgs[(int)currentSheet]))
                     {
-                        gfx.DrawImage(g.Pixmap, new Rectangle(startX, startY, g.Pixmap.Width, g.Pixmap.Height));
+                        gfx.DrawImage(g.Settings.Image, new Rectangle(startX, startY, g.Settings.Image.Width, g.Settings.Image.Height));
                     }
                 }
                 sheetImgs[0].Save("C:\\Users\\kebud\\source\\repos\\Izuto\\sample_files\\sheet0.png");
@@ -594,8 +594,8 @@ namespace Fontendo.Formats.CTR
             {
                 foreach (var glyph in Glyphs)
                 {
-                    if(glyph.Pixmap != null)
-                        glyph.Pixmap.Dispose();
+                    if(glyph.Settings.Image != null)
+                        glyph.Settings.Image.Dispose();
                 }
                 Glyphs.Clear();
             }

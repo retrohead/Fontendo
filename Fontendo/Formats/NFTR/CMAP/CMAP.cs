@@ -25,13 +25,13 @@ namespace Fontendo.Formats.CTR
         {
             this.Magic = Magic;
             this.Length = 0x0U;
-            this.CodeBegin = Entries.First.Properties.GetValue<UInt16>(GlyphProperty.Code);
-            this.CodeEnd = Entries.Last.Properties.GetValue<UInt16>(GlyphProperty.Code);
+            this.CodeBegin = Entries.First.Settings.GetValue<UInt16>(GlyphProperty.Code);
+            this.CodeEnd = Entries.Last.Settings.GetValue<UInt16>(GlyphProperty.Code);
             this.MappingMethod = 0; //Direct
             this.Reserved = 0;
             this.PtrNext = 0x0U;
             this.Entries = new List<CMAPEntry>();
-            this.Entries.Add(new CMAPEntry(CodeBegin, Entries.First.Properties.GetValue<UInt16>(GlyphProperty.Index)));
+            this.Entries.Add(new CMAPEntry(CodeBegin, Entries.First.Settings.GetValue<UInt16>(GlyphProperty.Index)));
         }
         public CMAP(UInt16 MappingMethod, List<CMAPEntry> Entries, UInt32 Magic = 0x434D4150U)
         {
@@ -158,7 +158,7 @@ namespace Fontendo.Formats.CTR
                     break;
                 pos = (int)r.Second + 1;
 
-                int spanLength = glyphs[(int)r.Second].Properties.GetValue<UInt16>(GlyphProperty.Code) - glyphs[(int)r.First].Properties.GetValue<UInt16>(GlyphProperty.Code) + 1;
+                int spanLength = glyphs[(int)r.Second].Settings.GetValue<UInt16>(GlyphProperty.Code) - glyphs[(int)r.First].Settings.GetValue<UInt16>(GlyphProperty.Code) + 1;
                 if (spanLength >= 80)
                 {
                     // Add the pair of glyphs marking the stride
@@ -196,7 +196,7 @@ namespace Fontendo.Formats.CTR
                 if(r1.First == glyphs.Count() - 1 || r1.First == null || r1.Second == null)
                     break;
 
-                int num1 = glyphs[(int)r1.Second].Properties.GetValue<UInt16>(GlyphProperty.Code) - glyphs[(int)r1.First].Properties.GetValue<UInt16>(GlyphProperty.Code) + 1;
+                int num1 = glyphs[(int)r1.Second].Settings.GetValue<UInt16>(GlyphProperty.Code) - glyphs[(int)r1.First].Settings.GetValue<UInt16>(GlyphProperty.Code) + 1;
                 int num2 = 0;
 
                 while (true)
@@ -213,8 +213,8 @@ namespace Fontendo.Formats.CTR
                         {
                             if (r2.First != null && r2.Second != null)
                             {
-                                int num5 = glyphs[(int)r2.Second].Properties.GetValue<UInt16>(GlyphProperty.Code) - glyphs[(int)r2.First].Properties.GetValue<UInt16>(GlyphProperty.Code) + 1;
-                                int num6 = glyphs[(int)r2.First].Properties.GetValue<UInt16>(GlyphProperty.Code) - glyphs[(int)r1.Second].Properties.GetValue<UInt16>(GlyphProperty.Code) - 1;
+                                int num5 = glyphs[(int)r2.Second].Settings.GetValue<UInt16>(GlyphProperty.Code) - glyphs[(int)r2.First].Settings.GetValue<UInt16>(GlyphProperty.Code) + 1;
+                                int num6 = glyphs[(int)r2.First].Settings.GetValue<UInt16>(GlyphProperty.Code) - glyphs[(int)r1.Second].Settings.GetValue<UInt16>(GlyphProperty.Code) - 1;
                                 int num7 = num1 + num5;
                                 int num8 = num7 + num2 + num6;
                                 num3 = (float)num7 / num8;
@@ -229,8 +229,8 @@ namespace Fontendo.Formats.CTR
                         {
                             if (r3.First != null && r3.Second != null)
                             {
-                                int num5 = glyphs[(int)r3.Second].Properties.GetValue<UInt16>(GlyphProperty.Code) - glyphs[(int)r3.First].Properties.GetValue<UInt16>(GlyphProperty.Code) + 1;
-                                int num6 = glyphs[(int)r1.First].Properties.GetValue<UInt16>(GlyphProperty.Code) - glyphs[(int)r3.Second].Properties.GetValue<UInt16>(GlyphProperty.Code) - 1;
+                                int num5 = glyphs[(int)r3.Second].Settings.GetValue<UInt16>(GlyphProperty.Code) - glyphs[(int)r3.First].Settings.GetValue<UInt16>(GlyphProperty.Code) + 1;
+                                int num6 = glyphs[(int)r1.First].Settings.GetValue<UInt16>(GlyphProperty.Code) - glyphs[(int)r3.Second].Settings.GetValue<UInt16>(GlyphProperty.Code) - 1;
                                 int num7 = num1 + num5;
                                 int num8 = num7 + num2 + num6;
                                 num4 = (float)num7 / num8;
@@ -242,8 +242,8 @@ namespace Fontendo.Formats.CTR
                     {
                         if (num3 >= 0.5f && r2.First != null && r2.Second != null && r1.Second != null)
                         {
-                            int num5 = glyphs[(int)r2.Second].Properties.GetValue<UInt16>(GlyphProperty.Code) - glyphs[(int)r2.First].Properties.GetValue<UInt16>(GlyphProperty.Code) + 1;
-                            int num6 = glyphs[(int)r2.First].Properties.GetValue<UInt16>(GlyphProperty.Code) - glyphs[(int)r1.Second].Properties.GetValue<UInt16>(GlyphProperty.Code) - 1;
+                            int num5 = glyphs[(int)r2.Second].Settings.GetValue<UInt16>(GlyphProperty.Code) - glyphs[(int)r2.First].Settings.GetValue<UInt16>(GlyphProperty.Code) + 1;
+                            int num6 = glyphs[(int)r2.First].Settings.GetValue<UInt16>(GlyphProperty.Code) - glyphs[(int)r1.Second].Settings.GetValue<UInt16>(GlyphProperty.Code) - 1;
                             num1 += num5;
                             num2 += num6;
                             r1.Second = r2.Second;
@@ -252,8 +252,8 @@ namespace Fontendo.Formats.CTR
                     }
                     else if (num4 >= 0.5f && r3.First != null && r3.Second != null)
                     {
-                        int num5 = glyphs[(int)r3.Second].Properties.GetValue<UInt16>(GlyphProperty.Code) - glyphs[(int)r3.First].Properties.GetValue<UInt16>(GlyphProperty.Code) + 1;
-                        int num6 = glyphs[(int)r1.First].Properties.GetValue<UInt16>(GlyphProperty.Code) - glyphs[(int)r3.Second].Properties.GetValue<UInt16>(GlyphProperty.Code) - 1;
+                        int num5 = glyphs[(int)r3.Second].Settings.GetValue<UInt16>(GlyphProperty.Code) - glyphs[(int)r3.First].Settings.GetValue<UInt16>(GlyphProperty.Code) + 1;
+                        int num6 = glyphs[(int)r1.First].Settings.GetValue<UInt16>(GlyphProperty.Code) - glyphs[(int)r3.Second].Settings.GetValue<UInt16>(GlyphProperty.Code) - 1;
                         num1 += num5;
                         num2 += num6;
                         r1.First = r3.First;
@@ -267,8 +267,8 @@ namespace Fontendo.Formats.CTR
                 }
                 else if(r1.Second != null)
                 {
-                    UInt16 code1 = glyphs[(int)r1.First].Properties.GetValue<UInt16>(GlyphProperty.Code);
-                    UInt16 code2 = glyphs[(int)r1.Second].Properties.GetValue<UInt16>(GlyphProperty.Code);
+                    UInt16 code1 = glyphs[(int)r1.First].Settings.GetValue<UInt16>(GlyphProperty.Code);
+                    UInt16 code2 = glyphs[(int)r1.Second].Settings.GetValue<UInt16>(GlyphProperty.Code);
                     UInt16 length = (UInt16)(code2 - code1 + 1);
 
                     var entries = new List<CMAPEntry>();
@@ -277,7 +277,7 @@ namespace Fontendo.Formats.CTR
                         var glyph = GetGlyphByCodePoint(glyphs, (UInt16)(code1 + offset));
                         if (glyph != null)
                         {
-                            entries.Add(new CMAPEntry(glyph.Properties.GetValue<UInt16>(GlyphProperty.Code), glyph.Properties.GetValue<UInt16>(GlyphProperty.Index)));
+                            entries.Add(new CMAPEntry(glyph.Settings.GetValue<UInt16>(GlyphProperty.Code), glyph.Settings.GetValue<UInt16>(GlyphProperty.Index)));
                         }
                         else
                         {
@@ -306,15 +306,15 @@ namespace Fontendo.Formats.CTR
             if (posIndex == lastIndex + 1)
                 return false;
             r = new Stride();
-            ushort code = (ushort)(glyphs[posIndex].Properties.GetValue<UInt16>(GlyphProperty.Code) + 1U);
-            ushort index = (ushort)(glyphs[posIndex].Properties.GetValue<UInt16>(GlyphProperty.Index) + 1U);
+            ushort code = (ushort)(glyphs[posIndex].Settings.GetValue<UInt16>(GlyphProperty.Code) + 1U);
+            ushort index = (ushort)(glyphs[posIndex].Settings.GetValue<UInt16>(GlyphProperty.Index) + 1U);
 
             int node = posIndex;
             int next = node + 1;
 
             for(var next2 = node+1; next != lastIndex + 1 &&
-                   glyphs[next].Properties.GetValue<UInt16>(GlyphProperty.Code) == code &&
-                   glyphs[next].Properties.GetValue<UInt16>(GlyphProperty.Index) == index; index++)
+                   glyphs[next].Settings.GetValue<UInt16>(GlyphProperty.Code) == code &&
+                   glyphs[next].Settings.GetValue<UInt16>(GlyphProperty.Index) == index; index++)
             {
                 node = next2;
                 next = node + 1;
@@ -336,11 +336,11 @@ namespace Fontendo.Formats.CTR
             if (prev1 == beginIndex)
                 return false;
 
-            ushort code = (ushort)(glyphs[prev1].Properties.GetValue<UInt16>(GlyphProperty.Code) - 1U);
+            ushort code = (ushort)(glyphs[prev1].Settings.GetValue<UInt16>(GlyphProperty.Code) - 1U);
 
             int prev2 = prev1 - 1;
             while (prev2 >= beginIndex &&
-                   glyphs[prev2].Properties.GetValue<UInt16>(GlyphProperty.Code) == code)
+                   glyphs[prev2].Settings.GetValue<UInt16>(GlyphProperty.Code) == code)
             {
                 prev2--;
                 code--;
@@ -361,7 +361,7 @@ namespace Fontendo.Formats.CTR
         {
             foreach (var g in glyphs)
             {
-                if (g.Properties.GetValue<UInt16>(GlyphProperty.Code) == codePoint)
+                if (g.Settings.GetValue<UInt16>(GlyphProperty.Code) == codePoint)
                     return g;
             }
             return null;
@@ -378,8 +378,8 @@ namespace Fontendo.Formats.CTR
             foreach (var g in glyphs)
             {
                 entries.Add(new CMAPEntry(
-                    g.Properties.GetValue<UInt16>(GlyphProperty.Code), 
-                    g.Properties.GetValue<UInt16>(GlyphProperty.Index))
+                    g.Settings.GetValue<UInt16>(GlyphProperty.Code), 
+                    g.Settings.GetValue<UInt16>(GlyphProperty.Index))
                 );
             }
 

@@ -13,6 +13,8 @@ namespace Fontendo.Controls
         private Bitmap? currentGlyph;
         private bool userHasSetZoom = false;
         private bool suppressZoomEvent = false;
+        Glyph? LoadedGlyph;
+
 
         private Color glyphBackground = Color.White;
         public Color GlyphBackground
@@ -21,16 +23,23 @@ namespace Fontendo.Controls
             set
             {
                 glyphBackground = value;
-                if (currentGlyph == null)
-                    pictureBox1.BackColor = GlyphBackground;
-                else
-                    pictureBox1.Invalidate(); // force redraw with new background
+                try
+                {
+                    if (currentGlyph == null)
+                        pictureBoxGlyph.BackColor = GlyphBackground;
+                    else
+                        pictureBoxGlyph.Invalidate(); // force redraw with new background
+                }
+                catch
+                {
+                    // ignore errors during background update
+
+                }
             }
         }
         public GlyphEditor()
         {
             InitializeComponent();
-            DockManager.Register(panelGlyphPropertyContainer);
         }
 
         public void ShowGlyphDetails(Glyph? glyph)
@@ -48,7 +57,7 @@ namespace Fontendo.Controls
 
             CharEncodings enc = MainForm.Self.FontendoFont.Font.Properties.GetValue<CharEncodings>(FontProperties.FontPropertyList.FontProperty.CharEncoding);
 
-            UInt16 code = glyph.Properties.GetValue<UInt16>(FontProperties.GlyphProperties.GlyphProperty.Code);
+            UInt16 code = glyph.Settings.CodePoint;
             string dchar = "";
             lblGlyphSymbol.Text = "";
             switch (enc)
@@ -61,7 +70,8 @@ namespace Fontendo.Controls
                     try
                     {
                         code = MainForm.Self.SJIS.CodeToUTF16(code); MainForm.Self.SJIS.CodeToUTF16(code);
-                    } catch
+                    }
+                    catch
                     {
                         dchar = "";
                     }
@@ -80,15 +90,15 @@ namespace Fontendo.Controls
 
         private void ShowGlyphImage(Glyph? glyph)
         {
-            pictureBox1.Image = null; // prevent auto-draw
-
+            pictureBoxGlyph.Image = null; // prevent auto-draw
+            LoadedGlyph = glyph;
             if (glyph == null)
             {
                 ClearGlyphDetails();
                 return;
             }
 
-            currentGlyph = glyph.Pixmap;
+            currentGlyph = glyph.Settings.Image;
             if (currentGlyph == null)
             {
                 ClearGlyphDetails();
@@ -96,8 +106,8 @@ namespace Fontendo.Controls
             }
 
             // Compute max zoom so image fits inside PictureBox
-            float scaleX = (float)pictureBox1.Width / currentGlyph.Width;
-            float scaleY = (float)pictureBox1.Height / currentGlyph.Height;
+            float scaleX = (float)pictureBoxGlyph.Width / currentGlyph.Width;
+            float scaleY = (float)pictureBoxGlyph.Height / currentGlyph.Height;
             maxZoomFactor = Math.Min(scaleX, scaleY);
 
             // Configure TrackBar range
@@ -119,7 +129,7 @@ namespace Fontendo.Controls
                 zoomFactor = trackBarZoom.Value / 100f;
             }
 
-            pictureBox1.Invalidate();
+            pictureBoxGlyph.Invalidate();
         }
 
         public void ClearGlyphDetails()
@@ -127,16 +137,19 @@ namespace Fontendo.Controls
 
         }
 
+
         public void BuildPropertiesPanel(Panel panel, Glyph glyph)
         {
+            foreach (Control c in panel.Controls)
+                c.DataBindings.Clear();
             panel.Controls.Clear();
-            panel.AutoScroll = true;
+            //panel.AutoScroll = true;
 
             var table = new TableLayoutPanel
             {
                 Dock = DockStyle.Fill,
                 ColumnCount = 2,
-                RowCount = glyph.Properties.GlyphPropertyDescriptors.Where(d => d.Value.PreferredControl != EditorType.None).Count() + 2, // +2 for blank row at end and padding at start
+                RowCount = glyph.Settings.PropertyDescriptors.Where(d => d.Value.PreferredControl != EditorType.None).Count() + 2, // +2 for blank row at end and padding at start
                 Margin = Padding.Empty,
                 Padding = Padding.Empty,
                 AutoSize = false
@@ -145,12 +158,12 @@ namespace Fontendo.Controls
             table.RowStyles.Add(new RowStyle(SizeType.Absolute, 10));
 
             // Column styles: first fixed 100px, second fills remaining
-            table.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 80));
+            table.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 75));
             table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
 
             int rowIndex = 1;
 
-            foreach (var kvp in glyph.Properties.GlyphPropertyDescriptors)
+            foreach (var kvp in glyph.Settings.PropertyDescriptors)
             {
                 var descriptor = kvp.Value;
 
@@ -161,89 +174,14 @@ namespace Fontendo.Controls
                         Text = descriptor.Name,
                         Dock = DockStyle.Fill,
                         TextAlign = ContentAlignment.MiddleLeft,
-                        Margin = new Padding(3, 0, 0, 5)
+                        Margin = new Padding(3, 0, 0, 0)
                     };
+                    label.Font = new Font(label.Font.FontFamily, 8);
                     table.Controls.Add(label, 0, rowIndex);
                 }
-
-                Control? editor = null;
-                switch (descriptor.PreferredControl)
-                {
-                    case EditorType.CodePointPicker:
-                        UInt16 val = (UInt16)(glyph.Properties.GlyphPropertyValues[kvp.Key] ?? descriptor.ValueRange.Value.Min);
-                        editor = new HexNumericUpDown()
-                        {
-                            Dock = DockStyle.Fill,
-                            Minimum = descriptor.ValueRange.Value.Min,
-                            Maximum = descriptor.ValueRange.Value.Max,
-                            Text = "0x" + val.ToString("X4")
-                        };
-                        break;
-
-                    case EditorType.TextBox:
-                        editor = new TextBox
-                        {
-                            Dock = DockStyle.Fill,
-                            Text = glyph.Properties.GlyphPropertyValues[kvp.Key]?.ToString() ?? string.Empty
-                        };
-                        break;
-
-                    case EditorType.NumberBox:
-                        editor = new NumericUpDown
-                        {
-                            Dock = DockStyle.Fill,
-                            Minimum = descriptor.ValueRange.Value.Min,
-                            Maximum = descriptor.ValueRange.Value.Max,
-                            TextAlign = HorizontalAlignment.Right,
-                            Value = Convert.ToDecimal(
-                                glyph.Properties.GlyphPropertyValues[kvp.Key] ?? descriptor.ValueRange.Value.Min
-                            )
-                        };
-                        break;
-
-                    case EditorType.ComboBox:
-                        editor = new ComboBox
-                        {
-                            Dock = DockStyle.Fill,
-                            DropDownStyle = ComboBoxStyle.DropDownList
-                        };
-                        // TODO: populate items based on descriptor metadata
-                        break;
-
-                    case EditorType.Slider:
-                        editor = new TrackBar
-                        {
-                            Dock = DockStyle.Fill,
-                            Minimum = (int)(descriptor.ValueRange?.Min ?? 0),
-                            Maximum = (int)(descriptor.ValueRange?.Max ?? 100),
-                            Value = Convert.ToInt32(glyph.Properties.GlyphPropertyValues[kvp.Key] ?? 0)
-                        };
-                        break;
-
-                    case EditorType.CheckBox:
-                        editor = new CheckBox
-                        {
-                            Dock = DockStyle.Left,
-                            Checked = Convert.ToBoolean(glyph.Properties.GlyphPropertyValues[kvp.Key] ?? false)
-                        };
-                        break;
-
-                    case EditorType.ColorPicker:
-                        editor = new Button
-                        {
-                            Dock = DockStyle.Left,
-                            Text = "Pick Color"
-                        };
-                        editor.Click += (s, e) =>
-                        {
-                            using var dlg = new ColorDialog();
-                            if (dlg.ShowDialog() == DialogResult.OK)
-                            {
-                                glyph.Properties.SetValue(kvp.Key, dlg.Color.ToArgb());
-                            }
-                        };
-                        break;
-                }
+                Control? editor;
+                glyph.Settings.GetBindingForObject(kvp.Key, out var binding);
+                editor = CreateControlForEditorType(kvp.Value.PreferredControl, descriptor, binding);
 
                 if (editor != null)
                 {
@@ -251,7 +189,7 @@ namespace Fontendo.Controls
                     table.Controls.Add(editor, 1, rowIndex);
 
                     // Fix row height to 32px
-                    table.RowStyles.Add(new RowStyle(SizeType.Absolute, 32));
+                    table.RowStyles.Add(new RowStyle(SizeType.Absolute, 28));
                     rowIndex++;
                 }
             }
@@ -272,7 +210,7 @@ namespace Fontendo.Controls
             if (suppressZoomEvent) return; // ignore programmatic changes
             userHasSetZoom = true; // only set when user actually moves the slider
             zoomFactor = trackBarZoom.Value / 100f;
-            pictureBox1.Invalidate();
+            pictureBoxGlyph.Invalidate();
         }
 
         private void pictureBox1_Paint(object? sender, PaintEventArgs? e)
@@ -280,7 +218,7 @@ namespace Fontendo.Controls
             if (currentGlyph == null)
             {
                 using var brush = new SolidBrush(SystemColors.ControlLight);
-                e.Graphics.FillRectangle(brush, pictureBox1.ClientRectangle);
+                e.Graphics.FillRectangle(brush, pictureBoxGlyph.ClientRectangle);
                 return;
             }
             float scaledWidth;
@@ -296,15 +234,15 @@ namespace Fontendo.Controls
 
             float scaledHeight = currentGlyph.Height * zoomFactor;
 
-            float centerX = pictureBox1.ClientSize.Width / 2f;
-            float centerY = pictureBox1.ClientSize.Height / 2f;
+            float centerX = pictureBoxGlyph.ClientSize.Width / 2f;
+            float centerY = pictureBoxGlyph.ClientSize.Height / 2f;
 
             float drawX = centerX - scaledWidth / 2f;
             float drawY = centerY - scaledHeight / 2f;
 
             // Fill full background
             using var bgBrush = new SolidBrush(SystemColors.ControlLight);
-            e.Graphics.FillRectangle(bgBrush, pictureBox1.ClientRectangle);
+            e.Graphics.FillRectangle(bgBrush, pictureBoxGlyph.ClientRectangle);
 
             // Fill glyph background
             using var glyphBrush = new SolidBrush(glyphBackground);
@@ -315,15 +253,30 @@ namespace Fontendo.Controls
             e.Graphics.DrawImage(currentGlyph, drawX, drawY, scaledWidth, scaledHeight);
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private void btnExport_Click(object sender, EventArgs e)
         {
-            DockManager.PopOut(panelGlyphPropertyContainer);
+            if (LoadedGlyph == null) return;
+
+            int digits = (int)Math.Ceiling(Math.Log((double)LoadedGlyph.Settings.CodePoint + 1, 16));
+            string fileName = FileSystemHelper.BrowseForSaveFile(FileSystemHelper.FileType.Png, "Export Glyph Image", $"0x{((long)LoadedGlyph.Settings.CodePoint).ToString($"X{digits}")}.png");
+            if (fileName == "") return;
+            LoadedGlyph.Settings.Image?.Save(fileName);
         }
 
-        private void panelGlyphPropertiesScrollablePanel_Resize(object sender, EventArgs e)
+        private void btnImport_Click(object sender, EventArgs e)
         {
-            panelGlyphProperties.Height = panelGlyphPropertiesScrollablePanel.ClientSize.Height;
-            panelGlyphProperties.Width = panelGlyphPropertiesScrollablePanel.ClientSize.Width;
+            if (LoadedGlyph == null || LoadedGlyph.Settings.Image == null) return;
+            string fileName = FileSystemHelper.BrowseForFile(FileSystemHelper.FileType.Png, "Import Glyph Image");
+            if (fileName == "") return;
+            Bitmap bmp = new Bitmap(fileName);
+            if(bmp.Width != LoadedGlyph.Settings.Image.Width || bmp.Height != LoadedGlyph.Settings.Image.Height)
+            {
+                MessageBox.Show("The selected image file does not match the size of the loaded glyph image", "File Error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                return;
+            }
+            LoadedGlyph.Settings.Image = bmp;
+            ShowGlyphDetails(LoadedGlyph);
+            MainForm.Self.UpdateFontImages();
         }
     }
 }

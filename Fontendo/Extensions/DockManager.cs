@@ -1,142 +1,197 @@
-﻿using System;
+﻿using Fontendo.Controls;
+using Microsoft.Win32;
+using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
+using Timer = System.Windows.Forms.Timer;
 
 namespace Fontendo.Extensions
 {
     public static class DockManager
     {
-        private class DockInfo
+
+        private class CollapseTimer
         {
-            public Control OriginalParent = null!;
-            public TableLayoutPanel? OwnerTable;
-            public Control? CellHost;            // The control that occupies the TLP cell (either the control itself or its wrapper)
+            public Timer Timer = null!;
+            public SplitContainer Container = null!;
+            public bool Hide;
+            public int TargetSize;
+            const int step = 30; // pixels per tick
+
+            public CollapseTimer(SplitContainer? Container)
+            {
+                if(Container == null)
+                    return;
+                this.Container = Container;
+                Timer = new Timer();
+                Timer.Tick += CollapseTimer_Tick;
+                Timer.Interval = 1;
+            }
+
+            private void CollapseTimer_Tick(object? sender, EventArgs e)
+            {
+                int current = Container.SplitterDistance;
+                if (Math.Abs(current - TargetSize) <= step)
+                {
+                    Container.SplitterDistance = TargetSize;
+                    Timer.Stop();
+                    Timer.Dispose();
+                }
+                else
+                {
+                    Container.SplitterDistance += (current < TargetSize ? step : -step);
+                }
+            }
+        }
+        private class PlaceHolderInfo
+        {
+            public Control ParentControl = null!;
+            public Control? Placeholder = null!;
+            // helpers for when parent is TableLayoutPanel
+            public TableLayoutPanel? OwnerTable = null;
             public int Row;
             public int Col;
             public int RowSpan;
             public int ColSpan;
-            public Control? Placeholder;
-            public Form? FloatingForm;
+            public DockInfo? AttachedDockInfo;
+            public bool IsShowing = false;
+            // timer for expanding split container
+            public CollapseTimer? TimerInfo;
+
+            public PlaceHolderInfo(Control ParentControl) 
+            {
+                this.ParentControl = ParentControl;
+                if (ParentControl.GetType() == typeof(SplitterPanel))
+                    TimerInfo = new CollapseTimer(ParentControl.Parent as SplitContainer);
+            }
         }
 
-        private static readonly Dictionary<Control, DockInfo> _registry = new();
+        private class DockInfo
+        {
+            public DockablePanel DockPanel = null!;
+            public UserControl ContentControl = null!;
+            public Form? FloatingForm = null!;
+            public string Name = null!;
+            public PlaceHolderInfo? PlaceHolderInfo;
+            // orig min width for split container panel
+            public int ParentOrigMinWidth = -1;
+
+            // Track drag state for threshold logic for floating form
+            public Point dragOrigin = Point.Empty;
+            public bool isDragging = false;
+            public bool movedEnough = false;
+        }
+
+        private static readonly Dictionary<Control, DockInfo> _dock_registry = new();
+        private static readonly List<PlaceHolderInfo> _placeholder_registry = new();
+
 
         /// <summary>
         /// Register a dockable control after layout is stable (Form.Shown or after TableLayoutPanel.Layout).
         /// </summary>
-        public static void Register(Control control)
+        public static void Register(DockablePanel DockPanel, UserControl ContentControl, string Name)
         {
-            var parent = control.Parent ?? throw new InvalidOperationException("Control must have a parent before registering.");
+            var parent = DockPanel.Parent ?? throw new InvalidOperationException("Control must have a parent before registering.");
+
+            // initialize the dock panel
+            DockPanel.InitializePanel(Name, ContentControl);
+            var info = new DockInfo()
+            {
+                DockPanel = DockPanel,
+                Name = Name,
+                ContentControl = ContentControl
+            };
+
 
             // Find the owning TableLayoutPanel (if any)
             TableLayoutPanel? tlp = null;
             Control? chain = parent;
-            while (chain != null)
-            {
-                if (chain is TableLayoutPanel t) { tlp = t; break; }
-                chain = chain.Parent;
-            }
+            if (chain is TableLayoutPanel t)
+                tlp = t;
 
-            var info = new DockInfo
+            // initilize the placeholder info
+            var plinfo = new PlaceHolderInfo(parent)
             {
-                OriginalParent = parent,
-                OwnerTable = tlp
+                OwnerTable = tlp,
+                AttachedDockInfo = info,
+                IsShowing = true,
             };
 
             // Determine the actual cell host and cell coordinates
             if (tlp != null)
             {
-                if (parent == tlp)
-                {
-                    // Control is directly in the table cell
-                    info.CellHost = control;
-                    info.Row = tlp.GetRow(control);
-                    info.Col = tlp.GetColumn(control);
-                    info.RowSpan = tlp.GetRowSpan(control);
-                    info.ColSpan = tlp.GetColumnSpan(control);
-                }
-                else if (parent.Parent == tlp)
-                {
-                    // Control is inside a wrapper that sits in the table cell
-                    info.CellHost = parent;
-                    info.Row = tlp.GetRow(parent);
-                    info.Col = tlp.GetColumn(parent);
-                    info.RowSpan = tlp.GetRowSpan(parent);
-                    info.ColSpan = tlp.GetColumnSpan(parent);
-                }
-                else
-                {
-                    // Nested deeper: find the first ancestor that is directly hosted by the table
-                    Control? p = parent;
-                    while (p != null && p.Parent != tlp) p = p.Parent;
-                    info.CellHost = p ?? control;
-                    info.Row = tlp.GetRow(info.CellHost);
-                    info.Col = tlp.GetColumn(info.CellHost);
-                    info.RowSpan = tlp.GetRowSpan(info.CellHost);
-                    info.ColSpan = tlp.GetColumnSpan(info.CellHost);
-                }
+                // dock panel is a table cell
+                plinfo.Row = tlp.GetRow(DockPanel);
+                plinfo.Col = tlp.GetColumn(DockPanel);
+                plinfo.RowSpan = tlp.GetRowSpan(DockPanel);
+                plinfo.ColSpan = tlp.GetColumnSpan(DockPanel);
             }
             else
             {
-                info.CellHost = null;
-                info.Row = -1;
-                info.Col = -1;
-                info.RowSpan = -1;
-                info.ColSpan = -1;
+                plinfo.Row = -1;
+                plinfo.Col = -1;
+                plinfo.RowSpan = -1;
+                plinfo.ColSpan = -1;
             }
-
-            _registry[control] = info;
+            info.PlaceHolderInfo = plinfo;
+            _dock_registry[ContentControl] = info;
+            _placeholder_registry.Add(plinfo);
         }
 
         private static void EnsurePlaceholder(DockInfo info)
         {
-            if (info.Placeholder != null) return;
+            if(info.PlaceHolderInfo == null || info.PlaceHolderInfo.Placeholder != null)
+                return; // already exists
 
-            if (info.OwnerTable != null && info.CellHost != null)
+            if (info.PlaceHolderInfo.OwnerTable != null)
             {
-                info.Placeholder = new Panel
+                info.PlaceHolderInfo.Placeholder = new Panel
                 {
                     Dock = DockStyle.Fill,
                     BackColor = Color.LightGray // 👈 make it visible
                 };
-                info.OwnerTable.Controls.Add(info.Placeholder);
-                info.OwnerTable.SetCellPosition(info.Placeholder,
-                    new TableLayoutPanelCellPosition(info.Col, info.Row));
-                info.OwnerTable.SetColumnSpan(info.Placeholder, info.ColSpan);
-                info.OwnerTable.SetRowSpan(info.Placeholder, info.RowSpan);
+                info.PlaceHolderInfo.OwnerTable.Controls.Add(info.PlaceHolderInfo.Placeholder);
+                info.PlaceHolderInfo.OwnerTable.SetCellPosition(info.PlaceHolderInfo.Placeholder,
+                    new TableLayoutPanelCellPosition(info.PlaceHolderInfo.Col, info.PlaceHolderInfo.Row));
+                info.PlaceHolderInfo.OwnerTable.SetColumnSpan(info.PlaceHolderInfo.Placeholder, info.PlaceHolderInfo.ColSpan);
+                info.PlaceHolderInfo.OwnerTable.SetRowSpan(info.PlaceHolderInfo.Placeholder, info.PlaceHolderInfo.RowSpan);
             }
             else
             {
                 // Simple container: keep order
-                int index = info.OriginalParent.Controls.GetChildIndex(info.CellHost ?? info.OriginalParent);
-                info.Placeholder = new Panel
+                int index = info.PlaceHolderInfo.ParentControl.Controls.GetChildIndex(info.DockPanel);
+                info.PlaceHolderInfo.Placeholder = new Panel
                 {
                     Dock = DockStyle.Fill,
                     BackColor = Color.LightGray // 👈 visible placeholder
                 };
-                info.OriginalParent.Controls.Add(info.Placeholder);
-                info.OriginalParent.Controls.SetChildIndex(info.Placeholder, Math.Max(0, index));
+                info.PlaceHolderInfo.ParentControl.Controls.Add(info.PlaceHolderInfo.Placeholder);
+                info.PlaceHolderInfo.ParentControl.Controls.SetChildIndex(info.PlaceHolderInfo.Placeholder, Math.Max(0, index));
             }
+
+
         }
         const int DragThreshold = 8; // pixels
         public static void PopOut(Control control)
         {
-            if (!_registry.TryGetValue(control, out var info)) return;
+            if (!_dock_registry.TryGetValue(control, out var info)) return;
             if (info.FloatingForm != null) return;
+            if(info.PlaceHolderInfo == null) return;
 
             EnsurePlaceholder(info);
             
             // Instead of measuring the control itself, measure the placeholder
-            var placeholderRect = info.Placeholder.RectangleToScreen(info.Placeholder.ClientRectangle);
+            var placeholderRect = info.PlaceHolderInfo.Placeholder.RectangleToScreen(info.PlaceHolderInfo.Placeholder.ClientRectangle);
 
-
+            DockablePanel dockablePanel = info.DockPanel;
             // Remove control from its immediate parent (wrapper or table)
-            info.OriginalParent.Controls.Remove(control);
+            info.PlaceHolderInfo.ParentControl.Controls.Remove(dockablePanel);
+            dockablePanel.Controls.Remove(info.ContentControl);
 
             var floatForm = new Form
             {
-                Text = control.Name,
-                FormBorderStyle = FormBorderStyle.Fixed3D,
+                Text = info.DockPanel.HeaderText,
+                FormBorderStyle = FormBorderStyle.Sizable,
                 StartPosition = FormStartPosition.Manual,
                 MinimizeBox = false,
                 MaximizeBox = false,
@@ -147,165 +202,236 @@ namespace Fontendo.Extensions
             floatForm.SetBounds(
                 placeholderRect.Left,
                 placeholderRect.Top,
-                info.OriginalParent.Width + 50,
+                info.PlaceHolderInfo.ParentControl.Width + 50,
                 placeholderRect.Height < minHeight ? minHeight : placeholderRect.Height + 50,
                 BoundsSpecified.Location | BoundsSpecified.Size);
 
-            // Apply your intended offset
+            // Apply intended offset
             const int offset = 16;
             floatForm.Location = new Point(floatForm.Left + offset, floatForm.Top + offset);
             control.Dock = DockStyle.Fill;
-
-            // if there is a table inside the control, hide the first row
-            if (control.Controls[0].GetType() == typeof(TableLayoutPanel))
-            {
-                TableLayoutPanel tbl = (TableLayoutPanel)control.Controls[0];
-                var scrollpanel = tbl.Controls[1];
-                var contentpanel = scrollpanel.Controls[0];
-                var label = contentpanel.Controls[0];
-                tbl.RowStyles[0].Height = 1;
-                // check the first control in the table to see if its it label, if so use the contents for the form header
-                if (label.GetType() == typeof(Label))
-                {
-                    floatForm.Text = label.Text;
-                }
-            }
-
             floatForm.Controls.Add(control);
 
             floatForm.FormClosed += (s, e) => Redock(control);
 
             info.FloatingForm = floatForm;
 
-            // Track drag state for threshold logic
-            Point dragOrigin = Point.Empty;
-            bool isDragging = false;
-            bool movedEnough = false;
-
             // Highlight placeholders while moving
-            floatForm.Move += (s, e) =>
+            floatForm.Move += FloatingForm_Move;
+            // redocking logic
+            floatForm.MouseCaptureChanged += FloatForm_MouseCaptureChanged;
+            floatForm.FormClosed += (s, e) => Redock(control);
+
+            // finalize
+            info.FloatingForm = floatForm;
+            UpdateSplitContainer(info.PlaceHolderInfo, true, false);
+            floatForm.Show(info.PlaceHolderInfo.ParentControl.FindForm());
+        }
+
+        private static void FloatForm_MouseCaptureChanged(object? sender, EventArgs e)
+        {
+            if (sender is not Form floatForm) return;
+            if (floatForm.Controls.Count == 0) return;
+            if (!_dock_registry.TryGetValue(floatForm.Controls[0], out var info)) return;
+            if (info.FloatingForm == null) return;
+            if (info.PlaceHolderInfo == null) return;
+
+            // End of drag: only redock if movedEnough and overlapping a placeholder
+            try
             {
-                // Only consider moves while mouse is down (actual drag), not when the owner form moves
-                if (Control.MouseButtons != MouseButtons.None)
+                if (!info.movedEnough)
+                    return; // ignore slight bumps / unintended drags
+
+                foreach (var plh in _placeholder_registry)
                 {
-                    if (!isDragging)
+                    if (plh.Placeholder == null || plh.Placeholder.IsDisposed) continue;
+
+                    var rect = plh.Placeholder.RectangleToScreen(plh.Placeholder.ClientRectangle);
+                    if (rect.IntersectsWith(floatForm.Bounds))
                     {
-                        isDragging = true;
-                        movedEnough = false;
-                        dragOrigin = floatForm.Location;
+                        info.PlaceHolderInfo.AttachedDockInfo = null; // detach from old placeholder
+                        info.PlaceHolderInfo = plh; // set to drop into the new placeholder
+                        floatForm.Close();
+                        break;
                     }
-                    else if (!movedEnough)
+                }
+            }
+            finally
+            {
+                // Reset drag state
+                info.isDragging = false;
+                info.movedEnough = false;
+                info.dragOrigin = Point.Empty;
+            }
+        }
+
+        private static void FloatingForm_Move(object? sender, EventArgs e)
+        {
+            if (sender is not Form floatForm) return;
+            if(floatForm.Controls.Count == 0) return;
+            if (!_dock_registry.TryGetValue(floatForm.Controls[0], out var info)) return;
+            if (info.FloatingForm == null) return;
+            if (info.PlaceHolderInfo == null) return;
+
+            // Only consider moves while mouse is down (actual drag), not when the owner form moves
+            if (Control.MouseButtons != MouseButtons.None)
+                {
+                    if (!info.isDragging)
                     {
-                        int dx = floatForm.Left - dragOrigin.X;
-                        int dy = floatForm.Top - dragOrigin.Y;
+                        info.isDragging = true;
+                        info.movedEnough = false;
+                        info.dragOrigin = floatForm.Location;
+                    }
+                    else if (!info.movedEnough)
+                    {
+                        int dx = floatForm.Left - info.dragOrigin.X;
+                        int dy = floatForm.Top - info.dragOrigin.Y;
                         if ((dx * dx + dy * dy) >= DragThreshold * DragThreshold) // Euclidean threshold
-                            movedEnough = true;
+                            info.movedEnough = true;
                     }
                 }
 
                 // Optional: only highlight placeholders after threshold to reduce jitter
-                foreach (var kvp in _registry.Values)
+                foreach (var kvp in _placeholder_registry)
                 {
                     if (kvp.Placeholder == null) continue;
                     var rect = kvp.Placeholder.RectangleToScreen(kvp.Placeholder.ClientRectangle);
-                    kvp.Placeholder.BackColor = (movedEnough && rect.IntersectsWith(floatForm.Bounds))
-                        ? Color.LightBlue
-                        : Color.LightGray;
-                }
-            };
-            // End of drag: only redock if movedEnough and overlapping a placeholder
-            floatForm.MouseCaptureChanged += (s, e) =>
-            {
-                try
-                {
-                    if (!movedEnough)
-                        return; // ignore slight bumps / unintended drags
-
-                    foreach (var kvp in _registry)
+                    if (info.movedEnough && rect.IntersectsWith(floatForm.Bounds))
                     {
-                        var i = kvp.Value;
-                        if (i.Placeholder == null || i.Placeholder.IsDisposed) continue;
-
-                        var rect = i.Placeholder.RectangleToScreen(i.Placeholder.ClientRectangle);
-                        if (rect.IntersectsWith(floatForm.Bounds))
-                        {
-                            // Redock into the matched placeholder
-                            i.Placeholder.Controls.Add(kvp.Key);
-                            kvp.Key.Dock = DockStyle.Fill;
-
-                            floatForm.Close();
-                            break;
-                        }
+                        kvp.Placeholder.BackColor = Color.LightBlue;
+                        UpdateSplitContainer(kvp, false, false);
+                    }
+                    else
+                    {
+                        kvp.Placeholder.BackColor = Color.LightGray;
+                        UpdateSplitContainer(kvp, true, false);
                     }
                 }
-                finally
+        }
+
+        private static void UpdateSplitContainer(PlaceHolderInfo info, bool hide, bool docking)
+        {
+            if (info.AttachedDockInfo == null)
+                return;
+            // if the original parent is a split container, shrink the panel down
+            if (info.ParentControl.GetType() == typeof(SplitterPanel))
+            {
+                SplitContainer? cont = (SplitContainer?)info.ParentControl.Parent;
+                if (cont == null) throw new Exception("Split container panel does not have a parent, odd! :)");
+                if (info.AttachedDockInfo.ParentOrigMinWidth == -1)
                 {
-                    // Reset drag state
-                    isDragging = false;
-                    movedEnough = false;
-                    dragOrigin = Point.Empty;
+                    info.AttachedDockInfo.ParentOrigMinWidth = (cont.Panel1 == info.ParentControl) ? cont.Panel1MinSize : cont.Panel2MinSize;
                 }
-            };
+                if(cont.Panel1 == info.ParentControl)
+                {
+                    cont.Panel1MinSize = 0;
+                }
+                else
+                {
+                    cont.Panel2MinSize = 0;
+                }
+                if (!info.IsShowing && hide) return; // already hidden and want to hide
+                if (info.IsShowing && !hide) return; // already shown and dont want to hide
+                info.IsShowing = !info.IsShowing;
+                if (docking)
+                {
+                    // dont animate if docking, just pop straight in
+                    if (cont.Panel1 == info.ParentControl)
+                    {
+                        var dinfo = info.AttachedDockInfo;
+                        info.AttachedDockInfo = null;
+                        cont.SplitterDistance = info.AttachedDockInfo.ParentOrigMinWidth;
+                        cont.Panel1MinSize = dinfo.ParentOrigMinWidth;
+                        info.AttachedDockInfo = dinfo;
+                    }
+                    else
+                    {
+                        // detatch control from dock to stop it resizing
+                        var dinfo = info.AttachedDockInfo;
+                        info.AttachedDockInfo = null;
+                        cont.SplitterDistance = cont.Panel1.Width + cont.Panel2.Width - dinfo.ParentOrigMinWidth;
+                        cont.Panel2MinSize = dinfo.ParentOrigMinWidth;
+                        info.AttachedDockInfo = dinfo;
+                    }
+                }
+                else
+                {
+                    AnimateCollapse(info, cont, hide, cont.Panel1 == info.ParentControl, info.AttachedDockInfo.ParentOrigMinWidth);
+                }
+            }
+        }
 
-            floatForm.FormClosed += (s, e) => Redock(control); // keep your existing fallback
-            info.FloatingForm = floatForm;
-
-            floatForm.Show(info.OriginalParent.FindForm());
+        private static void AnimateCollapse(PlaceHolderInfo info, SplitContainer cont, bool hide, bool panel1, int minWidth)
+        {
+            if(info.TimerInfo == null) return;
+            if(info.TimerInfo.Timer.Enabled)
+            {
+                info.TimerInfo.Timer.Stop();
+            }
+            info.TimerInfo.TargetSize = hide ? 0 : minWidth; // collapsed vs expanded size
+            if (!panel1)
+            {
+                if (hide)
+                    info.TimerInfo.TargetSize = cont.Panel1.Width + cont.Panel2.Width;
+                else
+                    info.TimerInfo.TargetSize = cont.Panel1.Width - minWidth;
+            }
+            info.TimerInfo.Timer.Start();
         }
 
         public static void Redock(Control control)
         {
-            if (!_registry.TryGetValue(control, out var info)) return;
+            if (!_dock_registry.TryGetValue(control, out var info)) return;
             if (info.FloatingForm == null) return;
+            if (info.PlaceHolderInfo == null) throw new Exception("No placeholder info to drop into");
 
             info.FloatingForm.Controls.Remove(control);
+            info.DockPanel.Reattach(control);
             info.FloatingForm = null;
 
-            // if there is a table inside the control, show the first row
-            if (control.Controls[0].GetType() == typeof(TableLayoutPanel))
-            {
-                ((TableLayoutPanel)control.Controls[0]).RowStyles[0].Height = 20;
-            }
-
-            if (info.OwnerTable != null && info.CellHost != null)
+            if (info.PlaceHolderInfo.OwnerTable != null)
             {
 
-                if (!info.OwnerTable.Controls.Contains(info.CellHost))
-                    info.OwnerTable.Controls.Add(info.CellHost);
+                if (!info.PlaceHolderInfo.OwnerTable.Controls.Contains(info.DockPanel))
+                    info.PlaceHolderInfo.OwnerTable.Controls.Add(info.DockPanel);
 
-                info.OwnerTable.SetCellPosition(info.CellHost,
-                    new TableLayoutPanelCellPosition(info.Col, info.Row));
+                info.PlaceHolderInfo.OwnerTable.SetCellPosition(info.DockPanel,
+                    new TableLayoutPanelCellPosition(info.PlaceHolderInfo.Col, info.PlaceHolderInfo.Row));
 
-                if (info.Placeholder != null && info.OwnerTable.Controls.Contains(info.Placeholder))
+                info.PlaceHolderInfo.OwnerTable.SetColumnSpan(info.DockPanel, info.PlaceHolderInfo.ColSpan);
+                info.PlaceHolderInfo.OwnerTable.SetRowSpan(info.DockPanel, info.PlaceHolderInfo.RowSpan);
+
+                if (info.PlaceHolderInfo.Placeholder != null && info.PlaceHolderInfo.OwnerTable.Controls.Contains(info.PlaceHolderInfo.Placeholder))
                 {
-                    info.OwnerTable.Controls.Remove(info.Placeholder);
-                    info.Placeholder.Dispose();
-                    info.Placeholder = null; // 👈 reset so EnsurePlaceholder can recreate later
+                    info.PlaceHolderInfo.OwnerTable.Controls.Remove(info.PlaceHolderInfo.Placeholder);
+                    info.PlaceHolderInfo.Placeholder.Dispose();
+                    info.PlaceHolderInfo.Placeholder = null; // 👈 reset so EnsurePlaceholder can recreate later
                 }
 
-                if (!info.OriginalParent.Controls.Contains(control))
-                    info.OriginalParent.Controls.Add(control);
-                control.Dock = DockStyle.Fill;
+                if (!info.PlaceHolderInfo.ParentControl.Controls.Contains(info.DockPanel))
+                    info.PlaceHolderInfo.ParentControl.Controls.Add(info.DockPanel);
+                info.DockPanel.Dock = DockStyle.Fill;
             }
             else
             {
-                int index = info.Placeholder != null
-                    ? info.OriginalParent.Controls.GetChildIndex(info.Placeholder)
-                    : info.OriginalParent.Controls.Count;
+                int index = info.PlaceHolderInfo.Placeholder != null
+                    ? info.PlaceHolderInfo.ParentControl.Controls.GetChildIndex(info.PlaceHolderInfo.Placeholder)
+                    : info.PlaceHolderInfo.ParentControl.Controls.Count;
 
-                if (info.Placeholder != null && info.OriginalParent.Controls.Contains(info.Placeholder))
+                if (info.PlaceHolderInfo.Placeholder != null && info.PlaceHolderInfo.ParentControl.Controls.Contains(info.PlaceHolderInfo.Placeholder))
                 {
-                    info.OriginalParent.Controls.Remove(info.Placeholder);
-                    info.Placeholder.Dispose();
-                    info.Placeholder = null; // 👈 reset
+                    info.PlaceHolderInfo.ParentControl.Controls.Remove(info.PlaceHolderInfo.Placeholder);
+                    info.PlaceHolderInfo.Placeholder.Dispose();
+                    info.PlaceHolderInfo.Placeholder = null; // 👈 reset
                 }
 
-                if (!info.OriginalParent.Controls.Contains(control))
-                    info.OriginalParent.Controls.Add(control);
+                if (!info.PlaceHolderInfo.ParentControl.Controls.Contains(info.DockPanel))
+                    info.PlaceHolderInfo.ParentControl.Controls.Add(info.DockPanel);
 
-                info.OriginalParent.Controls.SetChildIndex(control, Math.Max(0, index));
-                control.Dock = DockStyle.Fill;
+                info.PlaceHolderInfo.ParentControl.Controls.SetChildIndex(info.DockPanel, Math.Max(0, index));
             }
+            info.PlaceHolderInfo.AttachedDockInfo = info;
+            UpdateSplitContainer(info.PlaceHolderInfo, false, true);
         }
 
 

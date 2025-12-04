@@ -1,6 +1,7 @@
+using Fontendo.Controls;
 using Fontendo.Extensions;
 using Microsoft.VisualBasic.Logging;
-using static FileSystem;
+using static FileSystemHelper;
 using static Fontendo.Extensions.FontBase;
 
 namespace Fontendo
@@ -11,11 +12,13 @@ namespace Fontendo
         public FontBase FontendoFont;
         public SJISConv SJIS;
         public UnicodeNames UnicodeNames;
+        public GlyphEditor GlyphEditor = new GlyphEditor();
+        public FontEditor FontEditor = new FontEditor();
         private bool debugMode = false;
 
         public MainForm()
         {// At application startup, choose which types to support
-            FileSystem.Initialize(new List<FileType>
+            FileSystemHelper.Initialize(new List<FileType>
             {
                 FileType.BinaryCrustFont
             });
@@ -27,12 +30,14 @@ namespace Fontendo
             Self = this;
             FontendoFont = new FontBase(Platform.CTR);
             colorPickerBgColour.SelectedColor = Properties.Settings.Default.FontBackgroundColor;
-            splitContainer2.SplitterDistance = 434;
+            splitContainerRight.SplitterDistance = 434;
+            DockManager.Register(dockablePanelGlyph, GlyphEditor, "Glyph Properties");
+            DockManager.Register(dockablePanelFont, FontEditor, "Font Properties");
         }
 
         private void btnBrowseFont_Click(object sender, EventArgs e)
         {
-            string filename = FileSystem.BrowseForFile("Select a font file");
+            string filename = FileSystemHelper.BrowseForSupportedFile("Select a font file");
             if (string.IsNullOrEmpty(filename)) return;
             textFontFilePath.Text = filename;
             ActionResult result = FontendoFont.LoadFont(textFontFilePath.Text);
@@ -44,6 +49,7 @@ namespace Fontendo
             }
             RecentFiles.Add(textFontFilePath.Text);
             ListFontSheets();
+            FontEditor.ShowFontDetails(FontendoFont.Font);
         }
 
         private void ListFontSheets()
@@ -78,7 +84,7 @@ namespace Fontendo
             if (listViewSheets.Items.Count > 0)
                 listViewSheets.Items[0].Selected = true;
 
-            splitContainer1.Panel1MinSize = sheets.Width + 50;
+            splitContainerMain.Panel1MinSize = sheets.Width + 50;
         }
 
         private void openToolStripMenuItem_Click(object sender, EventArgs e)
@@ -101,7 +107,7 @@ namespace Fontendo
                 recentFilesToolStripMenuItem.DropDownItems.Clear();
                 foreach (var item in RecentFiles.Items)
                 {
-                    ToolStripMenuItem newItem = new ToolStripMenuItem() { Text = FileSystem.ShortenPath(item.FilePath), Tag = item, ToolTipText = item.FilePath };
+                    ToolStripMenuItem newItem = new ToolStripMenuItem() { Text = FileSystemHelper.ShortenPath(item.FilePath), Tag = item, ToolTipText = item.FilePath };
                     newItem.Click += RecentItem_Click;
                     recentFilesToolStripMenuItem.DropDownItems.Add(newItem);
                 }
@@ -138,6 +144,7 @@ namespace Fontendo
             textFontFilePath.Text = ((RecentFiles.RecentFile)item.Tag).FilePath;
             RecentFiles.Add(textFontFilePath.Text);
             ListFontSheets();
+            FontEditor.ShowFontDetails(FontendoFont.Font);
         }
 
         private void saveToolStripMenuItem_Click(object sender, EventArgs e)
@@ -159,7 +166,7 @@ namespace Fontendo
         {
             if (!FontendoFont.IsLoaded()) return;
 
-            string filepath = FileSystem.BrowseForSaveFile(
+            string filepath = FileSystemHelper.BrowseForSaveFile(
                 FontendoFont.LoadedFontFileType,
                 "Save font file",
                 Path.GetFileName(FontendoFont.LoadedFontFilePath)
@@ -190,7 +197,7 @@ namespace Fontendo
         {
             listViewSheets.BackColor = color;
             listViewCharacters.BackColor = color;
-            glyphEditor1.GlyphBackground = color;
+            GlyphEditor.GlyphBackground = color;
             // Decide font colour based on lumiance
             double luminance = Fontendo.Extensions.ColorHelper.GetLuminance(color);
             listViewSheets.ForeColor = luminance < 0.5 ? Color.White : Color.Black;
@@ -218,20 +225,20 @@ namespace Fontendo
             imageListCharacters.Images.Clear();
 
             // Get all CharImages belonging to this sheet
-            var charsForSheet = FontendoFont.Font.CharImages?.Where(c => c.Sheet.Equals(sheetIndex));
-            if (charsForSheet != null)
+            var glyphsForSheet = FontendoFont.Font.Glyphs?.Where(g => g.Sheet.Equals(sheetIndex));
+            if (glyphsForSheet != null)
             {
-                foreach (var charImg in charsForSheet)
+                foreach (var glyph in glyphsForSheet)
                 {
                     // Add the bitmap to the ImageList
-                    imageListCharacters.Images.Add(charImg.Image);
+                    imageListCharacters.Images.Add(glyph.Settings.Image);
 
                     // Add a ListViewItem with metadata
                     var item = new ListViewItem
                     {
                         ImageIndex = imageListCharacters.Images.Count - 1,
-                        Text = $"Char {charImg.Index}",
-                        Tag = charImg // keep reference to the CharImage object
+                        Text = $"Char {glyph.Index}",
+                        Tag = glyph // keep reference to the CharImage object
                     };
 
                     listViewCharacters.Items.Add(item);
@@ -244,16 +251,11 @@ namespace Fontendo
 
         private void listViewCharacters_SelectedIndexChanged(object sender, EventArgs e)
         {
-            glyphEditor1.ClearGlyphDetails();
+            GlyphEditor.ClearGlyphDetails();
             if (listViewCharacters.SelectedItems.Count == 0) return;
-            CharImage? img = (CharImage?)listViewCharacters.SelectedItems[0].Tag;
-            if (img == null) return;
-            int? index = FontendoFont.Font.CharImages?.IndexOf(img);
-            if (index == null || index < 0) return;
-            var glyph = FontendoFont.Font.Glyphs?.FirstOrDefault(g => g.Index.Equals(index));
-            if (index < 0 || glyph == null)
-                return;
-            glyphEditor1.ShowGlyphDetails(glyph);
+            Glyph? glyph = (Glyph?)listViewCharacters.SelectedItems[0].Tag;
+            if (glyph == null) return;
+            GlyphEditor.ShowGlyphDetails(glyph);
         }
 
         static bool deletelog = true;
@@ -275,6 +277,15 @@ namespace Fontendo
             {
                 writer.WriteLine($"[{DateTime.Now}] {message}");
             }
+        }
+
+        internal void UpdateFontImages()
+        {
+            Glyph? glyph = (Glyph?)listViewCharacters.SelectedItems[0].Tag;
+            int index = listViewCharacters.SelectedItems[0].ImageIndex;
+            imageListCharacters.Images[index] = glyph.Settings.Image;
+            listViewCharacters.LargeImageList = imageListCharacters;
+            listViewCharacters.Refresh();
         }
     }
 }

@@ -21,6 +21,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Update="Controls\FontEditor.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
     <Compile Update="Controls\SaturationTrackBar.cs">
       <SubType>Component</SubType>
     </Compile>

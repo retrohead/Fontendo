@@ -34,7 +34,7 @@ namespace Fontendo.Extensions
 
         public IFontendoFont Font;
         public ITextureCodec TextureCodec;
-        public FileSystem.FileType LoadedFontFileType;
+        public FileSystemHelper.FileType LoadedFontFileType;
         public string LoadedFontFilePath = "";
         public enum Platform
         {
@@ -100,8 +100,8 @@ namespace Fontendo.Extensions
         }
         public ActionResult LoadFont(string path)
         {
-            FileSystem.FileType fontFileType = FileSystem.GetFileTypeFromPath(path);
-            if (fontFileType == FileSystem.FileType.All)
+            FileSystemHelper.FileType fontFileType = FileSystemHelper.GetFileTypeFromPath(path);
+            if (fontFileType == FileSystemHelper.FileType.All)
                 return new ActionResult(false, "File extension is not recognised");
             ActionResult result = Font.Load(path);
             // TODO: verify the font is of the expected type

@@ -15,7 +15,8 @@ namespace Fontendo.FontProperties
             Code,
             Left,
             GlyphWidth,
-            CharWidth
+            CharWidth,
+            Image
         }
 
         /// <summary>
@@ -119,6 +120,8 @@ namespace Fontendo.FontProperties
 
             public T GetValue<T>(GlyphProperty prop)
             {
+                if (GlyphPropertyValues[prop].GetType() == typeof(T))
+                    return (T)GlyphPropertyValues[prop];
                 return (T)Convert.ChangeType(GlyphPropertyValues[prop], typeof(T));
             }
 

@@ -31,26 +31,26 @@ namespace Fontendo.Controls
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ColorPickerForm));
             tableLayoutPanel2 = new TableLayoutPanel();
+            numBlue = new NumericUpDown();
+            numericGreen = new NumericUpDown();
+            numRed = new NumericUpDown();
+            numBright = new NumericUpDown();
+            numSat = new NumericUpDown();
             label7 = new Label();
-            textBrightnessVal = new TextBox();
             label6 = new Label();
             label5 = new Label();
             label4 = new Label();
-            textHueVal = new TextBox();
             redBar = new TrackBar();
             greenBar = new TrackBar();
             blueBar = new TrackBar();
             label1 = new Label();
             label2 = new Label();
             label3 = new Label();
-            textRedVal = new TextBox();
-            textGreenVal = new TextBox();
-            textBlueVal = new TextBox();
             saturationTrackBar1 = new SaturationTrackBar();
-            textSaturationVal = new TextBox();
             hueTrackBar1 = new HueTrackBar();
             brightnessTrackBar1 = new BrightnessTrackBar();
             textHex = new TextBox();
+            numHue = new NumericUpDown();
             tableLayoutPanel1 = new TableLayoutPanel();
             btnConfirm = new Button();
             btnCancel = new Button();
@@ -59,9 +59,15 @@ namespace Fontendo.Controls
             previewPanel = new Panel();
             pictureBox1 = new PictureBox();
             tableLayoutPanel2.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)numBlue).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)numericGreen).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)numRed).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)numBright).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)numSat).BeginInit();
             ((System.ComponentModel.ISupportInitialize)redBar).BeginInit();
             ((System.ComponentModel.ISupportInitialize)greenBar).BeginInit();
             ((System.ComponentModel.ISupportInitialize)blueBar).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)numHue).BeginInit();
             tableLayoutPanel1.SuspendLayout();
             tableLayoutPanel3.SuspendLayout();
             tableLayoutPanel4.SuspendLayout();
@@ -74,26 +80,26 @@ namespace Fontendo.Controls
             tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 80F));
             tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 50F));
             tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            tableLayoutPanel2.Controls.Add(numBlue, 1, 5);
+            tableLayoutPanel2.Controls.Add(numericGreen, 1, 4);
+            tableLayoutPanel2.Controls.Add(numRed, 1, 3);
+            tableLayoutPanel2.Controls.Add(numBright, 1, 2);
+            tableLayoutPanel2.Controls.Add(numSat, 1, 1);
             tableLayoutPanel2.Controls.Add(label7, 0, 6);
-            tableLayoutPanel2.Controls.Add(textBrightnessVal, 1, 2);
             tableLayoutPanel2.Controls.Add(label6, 0, 2);
             tableLayoutPanel2.Controls.Add(label5, 0, 1);
             tableLayoutPanel2.Controls.Add(label4, 0, 0);
-            tableLayoutPanel2.Controls.Add(textHueVal, 1, 0);
             tableLayoutPanel2.Controls.Add(redBar, 2, 3);
             tableLayoutPanel2.Controls.Add(greenBar, 2, 4);
             tableLayoutPanel2.Controls.Add(blueBar, 2, 5);
             tableLayoutPanel2.Controls.Add(label1, 0, 3);
             tableLayoutPanel2.Controls.Add(label2, 0, 4);
             tableLayoutPanel2.Controls.Add(label3, 0, 5);
-            tableLayoutPanel2.Controls.Add(textRedVal, 1, 3);
-            tableLayoutPanel2.Controls.Add(textGreenVal, 1, 4);
-            tableLayoutPanel2.Controls.Add(textBlueVal, 1, 5);
             tableLayoutPanel2.Controls.Add(saturationTrackBar1, 2, 1);
-            tableLayoutPanel2.Controls.Add(textSaturationVal, 1, 1);
             tableLayoutPanel2.Controls.Add(hueTrackBar1, 2, 0);
             tableLayoutPanel2.Controls.Add(brightnessTrackBar1, 2, 2);
             tableLayoutPanel2.Controls.Add(textHex, 2, 6);
+            tableLayoutPanel2.Controls.Add(numHue, 1, 0);
             tableLayoutPanel2.Location = new Point(3, 103);
             tableLayoutPanel2.Name = "tableLayoutPanel2";
             tableLayoutPanel2.RowCount = 8;
@@ -108,6 +114,49 @@ namespace Fontendo.Controls
             tableLayoutPanel2.Size = new Size(302, 229);
             tableLayoutPanel2.TabIndex = 1;
             // 
+            // numBlue
+            // 
+            numBlue.Location = new Point(83, 163);
+            numBlue.Maximum = new decimal(new int[] { 255, 0, 0, 0 });
+            numBlue.Name = "numBlue";
+            numBlue.Size = new Size(44, 23);
+            numBlue.TabIndex = 25;
+            numBlue.ValueChanged += ColourNumericUpDown_RGB_ValueChanged;
+            // 
+            // numericGreen
+            // 
+            numericGreen.Location = new Point(83, 131);
+            numericGreen.Maximum = new decimal(new int[] { 255, 0, 0, 0 });
+            numericGreen.Name = "numericGreen";
+            numericGreen.Size = new Size(44, 23);
+            numericGreen.TabIndex = 24;
+            numericGreen.ValueChanged += ColourNumericUpDown_RGB_ValueChanged;
+            // 
+            // numRed
+            // 
+            numRed.Location = new Point(83, 99);
+            numRed.Maximum = new decimal(new int[] { 255, 0, 0, 0 });
+            numRed.Name = "numRed";
+            numRed.Size = new Size(44, 23);
+            numRed.TabIndex = 23;
+            numRed.ValueChanged += ColourNumericUpDown_RGB_ValueChanged;
+            // 
+            // numBright
+            // 
+            numBright.Location = new Point(83, 67);
+            numBright.Name = "numBright";
+            numBright.Size = new Size(44, 23);
+            numBright.TabIndex = 22;
+            numBright.ValueChanged += ColourNumericUpDown_HSB_ValueChanged;
+            // 
+            // numSat
+            // 
+            numSat.Location = new Point(83, 35);
+            numSat.Name = "numSat";
+            numSat.Size = new Size(44, 23);
+            numSat.TabIndex = 21;
+            numSat.ValueChanged += ColourNumericUpDown_HSB_ValueChanged;
+            // 
             // label7
             // 
             label7.AutoSize = true;
@@ -117,16 +166,6 @@ namespace Fontendo.Controls
             label7.Size = new Size(28, 15);
             label7.TabIndex = 19;
             label7.Text = "Hex";
-            // 
-            // textBrightnessVal
-            // 
-            textBrightnessVal.BackColor = SystemColors.ControlLight;
-            textBrightnessVal.Dock = DockStyle.Fill;
-            textBrightnessVal.Enabled = false;
-            textBrightnessVal.Location = new Point(83, 67);
-            textBrightnessVal.Name = "textBrightnessVal";
-            textBrightnessVal.Size = new Size(44, 23);
-            textBrightnessVal.TabIndex = 17;
             // 
             // label6
             // 
@@ -158,15 +197,6 @@ namespace Fontendo.Controls
             label4.TabIndex = 10;
             label4.Text = "Hue";
             // 
-            // textHueVal
-            // 
-            textHueVal.BackColor = SystemColors.ControlLight;
-            textHueVal.Enabled = false;
-            textHueVal.Location = new Point(83, 3);
-            textHueVal.Name = "textHueVal";
-            textHueVal.Size = new Size(44, 23);
-            textHueVal.TabIndex = 3;
-            // 
             // redBar
             // 
             redBar.Dock = DockStyle.Fill;
@@ -175,7 +205,7 @@ namespace Fontendo.Controls
             redBar.Name = "redBar";
             redBar.Size = new Size(166, 26);
             redBar.TabIndex = 0;
-            redBar.ValueChanged += OnColourValueChanged;
+            redBar.ValueChanged += ColourSlider_RGB_ValueChanged;
             // 
             // greenBar
             // 
@@ -185,7 +215,7 @@ namespace Fontendo.Controls
             greenBar.Name = "greenBar";
             greenBar.Size = new Size(166, 26);
             greenBar.TabIndex = 1;
-            greenBar.ValueChanged += OnColourValueChanged;
+            greenBar.ValueChanged += ColourSlider_RGB_ValueChanged;
             // 
             // blueBar
             // 
@@ -195,7 +225,7 @@ namespace Fontendo.Controls
             blueBar.Name = "blueBar";
             blueBar.Size = new Size(166, 26);
             blueBar.TabIndex = 2;
-            blueBar.ValueChanged += OnColourValueChanged;
+            blueBar.ValueChanged += ColourSlider_RGB_ValueChanged;
             // 
             // label1
             // 
@@ -227,36 +257,6 @@ namespace Fontendo.Controls
             label3.TabIndex = 6;
             label3.Text = "Blue";
             // 
-            // textRedVal
-            // 
-            textRedVal.BackColor = SystemColors.ControlLight;
-            textRedVal.Dock = DockStyle.Fill;
-            textRedVal.Enabled = false;
-            textRedVal.Location = new Point(83, 99);
-            textRedVal.Name = "textRedVal";
-            textRedVal.Size = new Size(44, 23);
-            textRedVal.TabIndex = 7;
-            // 
-            // textGreenVal
-            // 
-            textGreenVal.BackColor = SystemColors.ControlLight;
-            textGreenVal.Dock = DockStyle.Fill;
-            textGreenVal.Enabled = false;
-            textGreenVal.Location = new Point(83, 131);
-            textGreenVal.Name = "textGreenVal";
-            textGreenVal.Size = new Size(44, 23);
-            textGreenVal.TabIndex = 8;
-            // 
-            // textBlueVal
-            // 
-            textBlueVal.BackColor = SystemColors.ControlLight;
-            textBlueVal.Dock = DockStyle.Fill;
-            textBlueVal.Enabled = false;
-            textBlueVal.Location = new Point(83, 163);
-            textBlueVal.Name = "textBlueVal";
-            textBlueVal.Size = new Size(44, 23);
-            textBlueVal.TabIndex = 9;
-            // 
             // saturationTrackBar1
             // 
             saturationTrackBar1.Hue = 0;
@@ -266,17 +266,7 @@ namespace Fontendo.Controls
             saturationTrackBar1.Size = new Size(166, 26);
             saturationTrackBar1.TabIndex = 11;
             saturationTrackBar1.Text = "saturationTrackBar1";
-            saturationTrackBar1.SaturationChanged += OnColourHSBValueChanged;
-            // 
-            // textSaturationVal
-            // 
-            textSaturationVal.BackColor = SystemColors.ControlLight;
-            textSaturationVal.Dock = DockStyle.Fill;
-            textSaturationVal.Enabled = false;
-            textSaturationVal.Location = new Point(83, 35);
-            textSaturationVal.Name = "textSaturationVal";
-            textSaturationVal.Size = new Size(44, 23);
-            textSaturationVal.TabIndex = 13;
+            saturationTrackBar1.SaturationChanged += ColourSlider_HSB_ValueChanged;
             // 
             // hueTrackBar1
             // 
@@ -286,7 +276,7 @@ namespace Fontendo.Controls
             hueTrackBar1.Size = new Size(166, 26);
             hueTrackBar1.TabIndex = 14;
             hueTrackBar1.Text = "hueTrackBar1";
-            hueTrackBar1.HueChanged += OnColourHSBValueChanged;
+            hueTrackBar1.HueChanged += ColourSlider_HSB_ValueChanged;
             // 
             // brightnessTrackBar1
             // 
@@ -298,7 +288,7 @@ namespace Fontendo.Controls
             brightnessTrackBar1.Size = new Size(166, 26);
             brightnessTrackBar1.TabIndex = 15;
             brightnessTrackBar1.Text = "brightnessTrackBar1";
-            brightnessTrackBar1.BrightnessChanged += OnColourHSBValueChanged;
+            brightnessTrackBar1.BrightnessChanged += ColourSlider_HSB_ValueChanged;
             // 
             // textHex
             // 
@@ -311,6 +301,15 @@ namespace Fontendo.Controls
             textHex.TextChanged += textHex_TextChanged;
             textHex.KeyDown += textHex_KeyDown;
             textHex.Leave += textHex_Leave;
+            // 
+            // numHue
+            // 
+            numHue.Location = new Point(83, 3);
+            numHue.Maximum = new decimal(new int[] { 360, 0, 0, 0 });
+            numHue.Name = "numHue";
+            numHue.Size = new Size(44, 23);
+            numHue.TabIndex = 20;
+            numHue.ValueChanged += ColourNumericUpDown_HSB_ValueChanged;
             // 
             // tableLayoutPanel1
             // 
@@ -426,9 +425,15 @@ namespace Fontendo.Controls
             FormClosed += ColorPickerForm_FormClosed;
             tableLayoutPanel2.ResumeLayout(false);
             tableLayoutPanel2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)numBlue).EndInit();
+            ((System.ComponentModel.ISupportInitialize)numericGreen).EndInit();
+            ((System.ComponentModel.ISupportInitialize)numRed).EndInit();
+            ((System.ComponentModel.ISupportInitialize)numBright).EndInit();
+            ((System.ComponentModel.ISupportInitialize)numSat).EndInit();
             ((System.ComponentModel.ISupportInitialize)redBar).EndInit();
             ((System.ComponentModel.ISupportInitialize)greenBar).EndInit();
             ((System.ComponentModel.ISupportInitialize)blueBar).EndInit();
+            ((System.ComponentModel.ISupportInitialize)numHue).EndInit();
             tableLayoutPanel1.ResumeLayout(false);
             tableLayoutPanel3.ResumeLayout(false);
             tableLayoutPanel4.ResumeLayout(false);
@@ -446,20 +451,14 @@ namespace Fontendo.Controls
         private Label label1;
         private Label label2;
         private Label label3;
-        private TextBox textRedVal;
-        private TextBox textGreenVal;
-        private TextBox textBlueVal;
         private TableLayoutPanel tableLayoutPanel1;
         private Button btnConfirm;
         private Button btnCancel;
-        private TextBox textHueVal;
         private TableLayoutPanel tableLayoutPanel3;
         private Label label5;
         private Label label4;
         private SaturationTrackBar saturationTrackBar1;
-        private TextBox textSaturationVal;
         private HueTrackBar hueTrackBar1;
-        private TextBox textBrightnessVal;
         private Label label6;
         private BrightnessTrackBar brightnessTrackBar1;
         private Label label7;
@@ -467,5 +466,11 @@ namespace Fontendo.Controls
         private TableLayoutPanel tableLayoutPanel4;
         private Panel previewPanel;
         private PictureBox pictureBox1;
+        private NumericUpDown numHue;
+        private NumericUpDown numSat;
+        private NumericUpDown numBlue;
+        private NumericUpDown numericGreen;
+        private NumericUpDown numRed;
+        private NumericUpDown numBright;
     }
 }

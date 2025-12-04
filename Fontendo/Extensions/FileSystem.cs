@@ -1,9 +1,7 @@
 ﻿using Fontendo;
 using System.Security.Cryptography;
-using System.Windows.Forms;
-using static FileSystem;
 
-public class FileSystem
+public class FileSystemHelper
 {
     public enum FileType
     {
@@ -17,7 +15,11 @@ public class FileSystem
         Json,
         Xml,
         Binary,
-        Archive
+        Archive,
+        /* specific images */
+        Png,
+        Jpg,
+        Bmp
     }
 
     public class FileTypeInfo
@@ -65,6 +67,9 @@ public class FileSystem
                     // standard files
                     { FileType.Text,   new FileTypeInfo("Text", "*.txt") },
                     { FileType.Image,  new FileTypeInfo("Image", "*.png", "*.jpg", "*.jpeg", "*.bmp") },
+                    { FileType.Png,    new FileTypeInfo("PNG Image", "*.png") },
+                    { FileType.Jpg,    new FileTypeInfo("JPEG Image", "*.jpg", "*.jpeg") },
+                    { FileType.Bmp,    new FileTypeInfo("Bitmap Image", "*.bmp") },
                     { FileType.Json,   new FileTypeInfo("JSON", "*.json") },
                     { FileType.Xml,    new FileTypeInfo("XML", "*.xml") },
                     { FileType.Binary, new FileTypeInfo("Binary", "*.bin") },
@@ -132,7 +137,7 @@ public class FileSystem
     /// </summary>
     /// <param name="title">Dialog title (e.g. "Select a file").</param>
     /// <returns>Full path of the selected file, or empty string if cancelled.</returns>
-    public static string BrowseForFile(string title = "Select a file")
+    public static string BrowseForSupportedFile(string title = "Select a file")
     {
         if (SupportedFileTypes.Count == 0) throw new NotImplementedException("FileSystem has not been initialized with any supported file types, make sure to run FileSystem.Initialize()");
         string filePath = string.Empty;
@@ -148,9 +153,13 @@ public class FileSystem
             if (kvp.Key == FileType.All) continue; // skip duplicate
             filters.Add(kvp.Value.ToFilter());
         }
+        return OpenFileDialog(filters, title);
+    }
 
+    private static string OpenFileDialog(List<string> filters, string title)
+    {
+        string filePath = "";
         string filter = string.Join("|", filters);
-
         using (OpenFileDialog openFileDialog = new OpenFileDialog())
         {
             openFileDialog.Filter = filter;
@@ -164,6 +173,23 @@ public class FileSystem
         }
 
         return filePath;
+    }
+
+    /// <summary>
+    /// Opens a file browser dialog with a filter for a particular file type.
+    /// </summary>
+    /// <param name="title">Dialog title (e.g. "Select a file").</param>
+    /// <returns>Full path of the selected file, or empty string if cancelled.</returns>
+    public static string BrowseForFile(FileType fileType = FileType.All, string title = "Select a file")
+    {
+        string filePath = string.Empty;
+
+        // Build filter string: All files first, then each supported type
+        var filters = new List<string>
+        {
+            FileTypes.GetFilter(fileType)
+        };
+        return OpenFileDialog(filters, title);
     }
 
     /// <summary>

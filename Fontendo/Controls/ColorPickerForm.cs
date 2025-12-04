@@ -49,20 +49,20 @@ namespace Fontendo.Controls
                 blueBar.Value = InitialColor.B;
             }
             UpdatingColors = false;
-            OnColourValueChanged(this, EventArgs.Empty);
-            OnColourHSBValueChanged(this, EventArgs.Empty);
+            ColourSlider_RGB_ValueChanged(this, EventArgs.Empty);
+            ColourSlider_HSB_ValueChanged(this, EventArgs.Empty);
         }
 
         private static bool UpdatingColors = false;
-        private void OnColourValueChanged(object sender, EventArgs e)
+        private void ColourSlider_RGB_ValueChanged(object sender, EventArgs e)
         {
             if (UpdatingColors)
                 return;
             UpdatingColors = true;
             {
-                textRedVal.Text = redBar.Value.ToString();
-                textGreenVal.Text = greenBar.Value.ToString();
-                textBlueVal.Text = blueBar.Value.ToString();
+                numRed.Value = redBar.Value;
+                numericGreen.Value = greenBar.Value;
+                numBlue.Value = blueBar.Value;
                 SelectedColor = Color.FromArgb(redBar.Value, greenBar.Value, blueBar.Value);
 
                 hueTrackBar1.Hue = (int)Math.Round(ColorHelper.GetHueFromColor(SelectedColor));
@@ -70,9 +70,9 @@ namespace Fontendo.Controls
                 brightnessTrackBar1.Brightness = (int)Math.Round(ColorHelper.GetBrightnessFromColor(SelectedColor) * 100);
 
                 // update the hsb boxes
-                textHueVal.Text = hueTrackBar1.Hue.ToString();
-                textSaturationVal.Text = saturationTrackBar1.Saturation.ToString();
-                textBrightnessVal.Text = brightnessTrackBar1.Brightness.ToString();
+                numHue.Value = hueTrackBar1.Hue;
+                numSat.Value = saturationTrackBar1.Saturation;
+                numBright.Value = brightnessTrackBar1.Brightness;
             }
             UpdatingColors = false;
 
@@ -80,32 +80,18 @@ namespace Fontendo.Controls
             previewPanel.BackColor = SelectedColor;
         }
 
-        private void btnConfirm_Click(object sender, EventArgs e)
-        {
-            SelectedColor = previewPanel.BackColor;
-            DialogResult = DialogResult.OK;
-            Close();
-        }
-
-        private void btnCancel_Click(object sender, EventArgs e)
-        {
-            SelectedColor = InitialColor;
-            DialogResult = DialogResult.Cancel;
-            Close();
-        }
-
-        private void OnColourHSBValueChanged(object sender, EventArgs e)
+        private void ColourSlider_HSB_ValueChanged(object sender, EventArgs e)
         {
             if (UpdatingColors)
                 return;
-            // tell the other bars about the change
+            // tell the other bars about the hue change
             saturationTrackBar1.Hue = hueTrackBar1.Hue;
             brightnessTrackBar1.Hue = hueTrackBar1.Hue;
 
-            // update the text boxes
-            textHueVal.Text = hueTrackBar1.Hue.ToString();
-            textSaturationVal.Text = saturationTrackBar1.Saturation.ToString();
-            textBrightnessVal.Text = brightnessTrackBar1.Brightness.ToString();
+            // update the numeric hue boxes
+            numHue.Value = hueTrackBar1.Hue;
+            numSat.Value = saturationTrackBar1.Saturation;
+            numBright.Value = brightnessTrackBar1.Brightness;
 
             // Convert hue to RGB (full brightness)
             Color rgbColor = ColorHelper.GetColorFromHsb(
@@ -114,10 +100,69 @@ namespace Fontendo.Controls
                 (double)brightnessTrackBar1.Brightness / 100
             );
 
-            // Update text boxes with RGB values
-            textRedVal.Text = rgbColor.R.ToString();
-            textGreenVal.Text = rgbColor.G.ToString();
-            textBlueVal.Text = rgbColor.B.ToString();
+            // Update numeric boxes with RGB values
+            numRed.Value = rgbColor.R;
+            numericGreen.Value = rgbColor.G;
+            numBlue.Value = rgbColor.B;
+            textHex.Text = ColorHelper.ColorToHex(rgbColor);
+
+            // update preview panel
+            SelectedColor = Color.FromArgb(rgbColor.R, rgbColor.G, rgbColor.B);
+        }
+
+        private void ColourNumericUpDown_RGB_ValueChanged(object sender, EventArgs e)
+        {
+            if (UpdatingColors)
+                return;
+            UpdatingColors = true;
+            {
+                redBar.Value = (int)numRed.Value;
+                greenBar.Value = (int)numericGreen.Value;
+                blueBar.Value = (int)numBlue.Value;
+                SelectedColor = Color.FromArgb(redBar.Value, greenBar.Value, blueBar.Value);
+
+                hueTrackBar1.Hue = (int)Math.Round(ColorHelper.GetHueFromColor(SelectedColor));
+                saturationTrackBar1.Saturation = (int)Math.Round(ColorHelper.GetSaturationFromColor(SelectedColor) * 100);
+                brightnessTrackBar1.Brightness = (int)Math.Round(ColorHelper.GetBrightnessFromColor(SelectedColor) * 100);
+
+                // update the hsb boxes
+                numHue.Value = hueTrackBar1.Hue;
+                numSat.Value = saturationTrackBar1.Saturation;
+                numBright.Value = brightnessTrackBar1.Brightness;
+            }
+            UpdatingColors = false;
+
+            // update preview panel
+            previewPanel.BackColor = SelectedColor;
+        }
+
+        private void ColourNumericUpDown_HSB_ValueChanged(object sender, EventArgs e)
+        {
+            if (UpdatingColors)
+                return;
+
+
+            // tell the other bars about the hue change
+            saturationTrackBar1.Hue = hueTrackBar1.Hue;
+            brightnessTrackBar1.Hue = hueTrackBar1.Hue;
+
+            // update the sliders
+            hueTrackBar1.Hue = (int)numHue.Value;
+            saturationTrackBar1.Saturation = (int)numSat.Value;
+            brightnessTrackBar1.Brightness = (int)numBright.Value;
+
+            // Convert hue to RGB (full brightness)
+            Color rgbColor = ColorHelper.GetColorFromHsb(
+                hueTrackBar1.Hue,
+                (double)saturationTrackBar1.Saturation / 100,
+                (double)brightnessTrackBar1.Brightness / 100
+            );
+
+            // update the numeric hue boxes
+            numHue.Value = hueTrackBar1.Hue;
+            numSat.Value = saturationTrackBar1.Saturation;
+            numBright.Value = brightnessTrackBar1.Brightness;
+
             textHex.Text = ColorHelper.ColorToHex(rgbColor);
 
             // update preview panel
@@ -165,6 +210,20 @@ namespace Fontendo.Controls
         private void textHex_Leave(object sender, EventArgs e)
         {
             textHex_KeyDown(sender, null);
+        }
+
+        private void btnConfirm_Click(object sender, EventArgs e)
+        {
+            SelectedColor = previewPanel.BackColor;
+            DialogResult = DialogResult.OK;
+            Close();
+        }
+
+        private void btnCancel_Click(object sender, EventArgs e)
+        {
+            SelectedColor = InitialColor;
+            DialogResult = DialogResult.Cancel;
+            Close();
         }
     }
 }

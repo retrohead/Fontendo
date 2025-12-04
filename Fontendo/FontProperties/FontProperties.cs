@@ -1,4 +1,5 @@
-﻿using static Fontendo.FontProperties.PropertyList;
+﻿using System.ComponentModel;
+using static Fontendo.FontProperties.PropertyList;
 
 namespace Fontendo.FontProperties
 {
@@ -85,34 +86,6 @@ namespace Fontendo.FontProperties
                     throw new ArgumentException("Min cannot be greater than Max.");
 
                 ValueRange = range;
-            }
-        }
-
-
-        /// <summary>
-        /// Strongly-typed property entry with value payload and shared descriptor.
-        /// </summary>
-        public class FontPropertyEntry<T>
-        {
-            public FontPropertyListEntryDescriptor Descriptor { get; protected set; }
-            public T Value { get; set; }
-
-            public FontPropertyEntry(FontPropertyListEntryDescriptor descriptor, T value)
-            {
-                Descriptor = descriptor ?? throw new ArgumentNullException(nameof(descriptor));
-                Value = value;
-            }
-
-            public FontPropertyEntry(
-                int index,
-                string name,
-                T value,
-                PropertyValueType valueType,
-                EditorType preferredControl,
-                (long Min, long Max)? valueRange = null)
-            {
-                Descriptor = new FontPropertyListEntryDescriptor(index, name, valueType, preferredControl, valueRange);
-                Value = value;
             }
         }
 

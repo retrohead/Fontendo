@@ -51,9 +51,9 @@ namespace Fontendo.Formats.CTR
             foreach (var glyph in glyphs)
             {
                 // Assuming glyph.Props is a List<PropertyBase> in the same order as in your Load
-                var leftProp = glyph.Properties.GetValue<sbyte>(GlyphProperty.Left);
-                var glyphWidthProp = glyph.Properties.GetValue<byte>(GlyphProperty.GlyphWidth);
-                var charWidthProp = glyph.Properties.GetValue<byte>(GlyphProperty.CharWidth);
+                var leftProp = glyph.Settings.GetValue<sbyte>(GlyphProperty.Left);
+                var glyphWidthProp = glyph.Settings.GetValue<byte>(GlyphProperty.GlyphWidth);
+                var charWidthProp = glyph.Settings.GetValue<byte>(GlyphProperty.CharWidth);
 
                 entries.Add(new CharWidths(leftProp, glyphWidthProp, charWidthProp));
             }
