@@ -34,24 +34,13 @@
             textFontFilePath = new TextBox();
             btnBrowseFont = new Button();
             menuStrip1 = new MenuStrip();
-            fileToolStripMenuItem = new ToolStripMenuItem();
-            openToolStripMenuItem = new ToolStripMenuItem();
-            saveToolStripMenuItem = new ToolStripMenuItem();
-            saveAsToolStripMenuItem = new ToolStripMenuItem();
-            toolStripSeparator1 = new ToolStripSeparator();
-            recentFilesToolStripMenuItem = new ToolStripMenuItem();
-            noRecentItemsToolStripMenuItem = new ToolStripMenuItem();
-            toolStripSeparator2 = new ToolStripSeparator();
-            exitToolStripMenuItem = new ToolStripMenuItem();
             splitContainerMain = new SplitContainer();
             splitContainerLeft = new SplitContainer();
             dockablePanelFont = new Fontendo.Controls.DockablePanel();
             panelSheetListBorder = new Panel();
-            tableLayoutPanelSheets = new TableLayoutPanel();
             listViewSheets = new ListView();
-            colorPickerBgColour = new Fontendo.Controls.ColorPickerButton();
             splitContainerRight = new SplitContainer();
-            tableLayoutPanel2 = new TableLayoutPanel();
+            panelCharacterListBorder = new Panel();
             listViewCharacters = new ListView();
             imageListCharacters = new ImageList(components);
             dockablePanelGlyph = new Fontendo.Controls.DockablePanel();
@@ -59,7 +48,6 @@
             pictureBox2 = new PictureBox();
             imageListSheets = new ImageList(components);
             tableLayoutPanel1.SuspendLayout();
-            menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)splitContainerMain).BeginInit();
             splitContainerMain.Panel1.SuspendLayout();
             splitContainerMain.Panel2.SuspendLayout();
@@ -69,12 +57,11 @@
             splitContainerLeft.Panel2.SuspendLayout();
             splitContainerLeft.SuspendLayout();
             panelSheetListBorder.SuspendLayout();
-            tableLayoutPanelSheets.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)splitContainerRight).BeginInit();
             splitContainerRight.Panel1.SuspendLayout();
             splitContainerRight.Panel2.SuspendLayout();
             splitContainerRight.SuspendLayout();
-            tableLayoutPanel2.SuspendLayout();
+            panelCharacterListBorder.SuspendLayout();
             panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)pictureBox2).BeginInit();
             SuspendLayout();
@@ -126,72 +113,11 @@
             // 
             menuStrip1.BackColor = SystemColors.Menu;
             menuStrip1.Dock = DockStyle.Fill;
-            menuStrip1.Items.AddRange(new ToolStripItem[] { fileToolStripMenuItem });
             menuStrip1.Location = new Point(0, 0);
             menuStrip1.Name = "menuStrip1";
             menuStrip1.Size = new Size(798, 32);
             menuStrip1.TabIndex = 5;
             menuStrip1.Text = "menuStrip1";
-            // 
-            // fileToolStripMenuItem
-            // 
-            fileToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { openToolStripMenuItem, saveToolStripMenuItem, saveAsToolStripMenuItem, toolStripSeparator1, recentFilesToolStripMenuItem, toolStripSeparator2, exitToolStripMenuItem });
-            fileToolStripMenuItem.Name = "fileToolStripMenuItem";
-            fileToolStripMenuItem.Size = new Size(37, 28);
-            fileToolStripMenuItem.Text = "File";
-            fileToolStripMenuItem.DropDownOpening += fileToolStripMenuItem_DropDownOpening;
-            // 
-            // openToolStripMenuItem
-            // 
-            openToolStripMenuItem.Name = "openToolStripMenuItem";
-            openToolStripMenuItem.Size = new Size(136, 22);
-            openToolStripMenuItem.Text = "Open";
-            openToolStripMenuItem.Click += openToolStripMenuItem_Click;
-            // 
-            // saveToolStripMenuItem
-            // 
-            saveToolStripMenuItem.Name = "saveToolStripMenuItem";
-            saveToolStripMenuItem.Size = new Size(136, 22);
-            saveToolStripMenuItem.Text = "Save";
-            saveToolStripMenuItem.Click += saveToolStripMenuItem_Click;
-            // 
-            // saveAsToolStripMenuItem
-            // 
-            saveAsToolStripMenuItem.Name = "saveAsToolStripMenuItem";
-            saveAsToolStripMenuItem.Size = new Size(136, 22);
-            saveAsToolStripMenuItem.Text = "Save As...";
-            saveAsToolStripMenuItem.Click += saveAsToolStripMenuItem_Click;
-            // 
-            // toolStripSeparator1
-            // 
-            toolStripSeparator1.Name = "toolStripSeparator1";
-            toolStripSeparator1.Size = new Size(133, 6);
-            // 
-            // recentFilesToolStripMenuItem
-            // 
-            recentFilesToolStripMenuItem.DropDownItems.AddRange(new ToolStripItem[] { noRecentItemsToolStripMenuItem });
-            recentFilesToolStripMenuItem.Name = "recentFilesToolStripMenuItem";
-            recentFilesToolStripMenuItem.Size = new Size(136, 22);
-            recentFilesToolStripMenuItem.Text = "Recent Files";
-            // 
-            // noRecentItemsToolStripMenuItem
-            // 
-            noRecentItemsToolStripMenuItem.Enabled = false;
-            noRecentItemsToolStripMenuItem.Name = "noRecentItemsToolStripMenuItem";
-            noRecentItemsToolStripMenuItem.Size = new Size(161, 22);
-            noRecentItemsToolStripMenuItem.Text = "No Recent Items";
-            // 
-            // toolStripSeparator2
-            // 
-            toolStripSeparator2.Name = "toolStripSeparator2";
-            toolStripSeparator2.Size = new Size(133, 6);
-            // 
-            // exitToolStripMenuItem
-            // 
-            exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            exitToolStripMenuItem.Size = new Size(136, 22);
-            exitToolStripMenuItem.Text = "Exit";
-            exitToolStripMenuItem.Click += exitToolStripMenuItem_Click;
             // 
             // splitContainerMain
             // 
@@ -199,7 +125,7 @@
             tableLayoutPanel1.SetColumnSpan(splitContainerMain, 2);
             splitContainerMain.Dock = DockStyle.Fill;
             splitContainerMain.Location = new Point(5, 64);
-            splitContainerMain.Margin = new Padding(5, 0, 5, 0);
+            splitContainerMain.Margin = new Padding(5, 0, 5, 3);
             splitContainerMain.Name = "splitContainerMain";
             // 
             // splitContainerMain.Panel1
@@ -212,7 +138,7 @@
             // 
             splitContainerMain.Panel2.Controls.Add(splitContainerRight);
             splitContainerMain.Panel2MinSize = 300;
-            splitContainerMain.Size = new Size(888, 433);
+            splitContainerMain.Size = new Size(888, 430);
             splitContainerMain.SplitterDistance = 490;
             splitContainerMain.SplitterWidth = 7;
             splitContainerMain.TabIndex = 6;
@@ -232,7 +158,7 @@
             // splitContainerLeft.Panel2
             // 
             splitContainerLeft.Panel2.Controls.Add(panelSheetListBorder);
-            splitContainerLeft.Size = new Size(490, 433);
+            splitContainerLeft.Size = new Size(490, 430);
             splitContainerLeft.SplitterDistance = 170;
             splitContainerLeft.SplitterWidth = 7;
             splitContainerLeft.TabIndex = 0;
@@ -244,68 +170,33 @@
             dockablePanelFont.HeaderText = "Dockable Panel";
             dockablePanelFont.Location = new Point(0, 0);
             dockablePanelFont.Name = "dockablePanelFont";
-            dockablePanelFont.Size = new Size(170, 433);
+            dockablePanelFont.Size = new Size(170, 430);
             dockablePanelFont.TabIndex = 0;
             // 
             // panelSheetListBorder
             // 
             panelSheetListBorder.BorderStyle = BorderStyle.Fixed3D;
-            panelSheetListBorder.Controls.Add(tableLayoutPanelSheets);
+            panelSheetListBorder.Controls.Add(listViewSheets);
             panelSheetListBorder.Dock = DockStyle.Fill;
             panelSheetListBorder.Location = new Point(0, 0);
             panelSheetListBorder.Margin = new Padding(0);
             panelSheetListBorder.Name = "panelSheetListBorder";
-            panelSheetListBorder.Size = new Size(313, 433);
+            panelSheetListBorder.Size = new Size(313, 430);
             panelSheetListBorder.TabIndex = 1;
-            // 
-            // tableLayoutPanelSheets
-            // 
-            tableLayoutPanelSheets.BackColor = SystemColors.ControlLight;
-            tableLayoutPanelSheets.ColumnCount = 2;
-            tableLayoutPanelSheets.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 150F));
-            tableLayoutPanelSheets.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            tableLayoutPanelSheets.Controls.Add(listViewSheets, 0, 0);
-            tableLayoutPanelSheets.Controls.Add(colorPickerBgColour, 0, 1);
-            tableLayoutPanelSheets.Dock = DockStyle.Fill;
-            tableLayoutPanelSheets.Location = new Point(0, 0);
-            tableLayoutPanelSheets.Margin = new Padding(0);
-            tableLayoutPanelSheets.Name = "tableLayoutPanelSheets";
-            tableLayoutPanelSheets.RowCount = 2;
-            tableLayoutPanelSheets.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            tableLayoutPanelSheets.RowStyles.Add(new RowStyle(SizeType.Absolute, 32F));
-            tableLayoutPanelSheets.Size = new Size(309, 429);
-            tableLayoutPanelSheets.TabIndex = 0;
             // 
             // listViewSheets
             // 
             listViewSheets.BackColor = Color.FromArgb(122, 65, 196);
             listViewSheets.BorderStyle = BorderStyle.None;
-            tableLayoutPanelSheets.SetColumnSpan(listViewSheets, 2);
             listViewSheets.Dock = DockStyle.Fill;
             listViewSheets.ForeColor = Color.White;
             listViewSheets.Location = new Point(0, 0);
             listViewSheets.Margin = new Padding(0);
             listViewSheets.Name = "listViewSheets";
-            listViewSheets.Size = new Size(309, 397);
-            listViewSheets.TabIndex = 3;
+            listViewSheets.Size = new Size(309, 426);
+            listViewSheets.TabIndex = 4;
             listViewSheets.UseCompatibleStateImageBehavior = false;
             listViewSheets.SelectedIndexChanged += listViewSheets_SelectedIndexChanged;
-            // 
-            // colorPickerBgColour
-            // 
-            colorPickerBgColour.CircleMargin = 6;
-            colorPickerBgColour.CirclePosition = Fontendo.Controls.CirclePosition.Left;
-            colorPickerBgColour.CircleSize = 8;
-            colorPickerBgColour.Dock = DockStyle.Fill;
-            colorPickerBgColour.Location = new Point(3, 400);
-            colorPickerBgColour.Name = "colorPickerBgColour";
-            colorPickerBgColour.SelectedColor = Color.FromArgb(122, 65, 196);
-            colorPickerBgColour.Size = new Size(144, 26);
-            colorPickerBgColour.TabIndex = 4;
-            colorPickerBgColour.Text = "Background Colour";
-            colorPickerBgColour.UseVisualStyleBackColor = true;
-            colorPickerBgColour.ColorChanged += colorPickerBgColour_ColorChanged;
-            colorPickerBgColour.PreviewColorChanged += colorPickerBgColour_PreviewColorChanged;
             // 
             // splitContainerRight
             // 
@@ -317,33 +208,26 @@
             // 
             // splitContainerRight.Panel1
             // 
-            splitContainerRight.Panel1.Controls.Add(tableLayoutPanel2);
+            splitContainerRight.Panel1.Controls.Add(panelCharacterListBorder);
             // 
             // splitContainerRight.Panel2
             // 
             splitContainerRight.Panel2.Controls.Add(dockablePanelGlyph);
             splitContainerRight.Panel2MinSize = 170;
-            splitContainerRight.Size = new Size(391, 433);
-            splitContainerRight.SplitterDistance = 166;
+            splitContainerRight.Size = new Size(391, 430);
+            splitContainerRight.SplitterDistance = 122;
             splitContainerRight.SplitterWidth = 7;
             splitContainerRight.TabIndex = 0;
             // 
-            // tableLayoutPanel2
+            // panelCharacterListBorder
             // 
-            tableLayoutPanel2.BackColor = SystemColors.ControlLight;
-            tableLayoutPanel2.ColumnCount = 1;
-            tableLayoutPanel2.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            tableLayoutPanel2.Controls.Add(listViewCharacters, 0, 0);
-            tableLayoutPanel2.Dock = DockStyle.Fill;
-            tableLayoutPanel2.Location = new Point(0, 0);
-            tableLayoutPanel2.Margin = new Padding(0);
-            tableLayoutPanel2.Name = "tableLayoutPanel2";
-            tableLayoutPanel2.RowCount = 2;
-            tableLayoutPanel2.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            tableLayoutPanel2.RowStyles.Add(new RowStyle(SizeType.Absolute, 32F));
-            tableLayoutPanel2.RowStyles.Add(new RowStyle(SizeType.Absolute, 20F));
-            tableLayoutPanel2.Size = new Size(166, 433);
-            tableLayoutPanel2.TabIndex = 1;
+            panelCharacterListBorder.BorderStyle = BorderStyle.Fixed3D;
+            panelCharacterListBorder.Controls.Add(listViewCharacters);
+            panelCharacterListBorder.Dock = DockStyle.Fill;
+            panelCharacterListBorder.Location = new Point(0, 0);
+            panelCharacterListBorder.Name = "panelCharacterListBorder";
+            panelCharacterListBorder.Size = new Size(122, 430);
+            panelCharacterListBorder.TabIndex = 0;
             // 
             // listViewCharacters
             // 
@@ -355,8 +239,8 @@
             listViewCharacters.Location = new Point(0, 0);
             listViewCharacters.Margin = new Padding(0);
             listViewCharacters.Name = "listViewCharacters";
-            listViewCharacters.Size = new Size(166, 401);
-            listViewCharacters.TabIndex = 5;
+            listViewCharacters.Size = new Size(118, 426);
+            listViewCharacters.TabIndex = 7;
             listViewCharacters.UseCompatibleStateImageBehavior = false;
             listViewCharacters.SelectedIndexChanged += listViewCharacters_SelectedIndexChanged;
             // 
@@ -373,7 +257,7 @@
             dockablePanelGlyph.HeaderText = "Dockable Panel";
             dockablePanelGlyph.Location = new Point(0, 0);
             dockablePanelGlyph.Name = "dockablePanelGlyph";
-            dockablePanelGlyph.Size = new Size(218, 433);
+            dockablePanelGlyph.Size = new Size(262, 430);
             dockablePanelGlyph.TabIndex = 0;
             // 
             // panel1
@@ -414,10 +298,9 @@
             MinimumSize = new Size(700, 500);
             Name = "MainForm";
             Text = "Fontendo";
+            Shown += MainForm_Shown;
             tableLayoutPanel1.ResumeLayout(false);
             tableLayoutPanel1.PerformLayout();
-            menuStrip1.ResumeLayout(false);
-            menuStrip1.PerformLayout();
             splitContainerMain.Panel1.ResumeLayout(false);
             splitContainerMain.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)splitContainerMain).EndInit();
@@ -427,12 +310,11 @@
             ((System.ComponentModel.ISupportInitialize)splitContainerLeft).EndInit();
             splitContainerLeft.ResumeLayout(false);
             panelSheetListBorder.ResumeLayout(false);
-            tableLayoutPanelSheets.ResumeLayout(false);
             splitContainerRight.Panel1.ResumeLayout(false);
             splitContainerRight.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)splitContainerRight).EndInit();
             splitContainerRight.ResumeLayout(false);
-            tableLayoutPanel2.ResumeLayout(false);
+            panelCharacterListBorder.ResumeLayout(false);
             panel1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)pictureBox2).EndInit();
             ResumeLayout(false);
@@ -444,7 +326,6 @@
         private TextBox textFontFilePath;
         private Button btnBrowseFont;
         private ImageList imageListSheets;
-        private ListView listViewSheets;
         private MenuStrip menuStrip1;
         private ToolStripMenuItem fileToolStripMenuItem;
         private ToolStripMenuItem openToolStripMenuItem;
@@ -456,17 +337,22 @@
         private ToolStripMenuItem noRecentItemsToolStripMenuItem;
         private ToolStripMenuItem saveAsToolStripMenuItem;
         private SplitContainer splitContainerMain;
-        private TableLayoutPanel tableLayoutPanelSheets;
         private ImageList imageListCharacters;
         private SplitContainer splitContainerRight;
-        private TableLayoutPanel tableLayoutPanel2;
-        private ListView listViewCharacters;
         private SplitContainer splitContainerLeft;
         private Panel panelSheetListBorder;
         private Panel panel1;
         private PictureBox pictureBox2;
         private Controls.DockablePanel dockablePanelFont;
         private Controls.DockablePanel dockablePanelGlyph;
-        private Controls.ColorPickerButton colorPickerBgColour;
+        private ListView listViewSheets;
+        private Panel panelCharacterListBorder;
+        private ListView listViewCharacters;
+        private ContextMenuStrip contextMenuGlyph;
+        private ToolStripMenuItem replaceGlyphToolStripMenuItem;
+        private ToolStripMenuItem exportGlyphToolStripMenuItem;
+        private ContextMenuStrip contextMenuSheet;
+        private ToolStripMenuItem exportSheetToolStripMenuItem;
+        private ToolStripMenuItem replaceSheetToolStripMenuItem;
     }
 }

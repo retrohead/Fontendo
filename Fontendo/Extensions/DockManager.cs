@@ -220,7 +220,6 @@ namespace Fontendo.Extensions
             floatForm.Move += FloatingForm_Move;
             // redocking logic
             floatForm.MouseCaptureChanged += FloatForm_MouseCaptureChanged;
-            floatForm.FormClosed += (s, e) => Redock(control);
 
             // finalize
             info.FloatingForm = floatForm;
@@ -336,23 +335,19 @@ namespace Fontendo.Extensions
                 if (docking)
                 {
                     // dont animate if docking, just pop straight in
+                    var dinfo = info.AttachedDockInfo;
+                    info.AttachedDockInfo = null; // detatch control from dock resize firing
                     if (cont.Panel1 == info.ParentControl)
                     {
-                        var dinfo = info.AttachedDockInfo;
-                        info.AttachedDockInfo = null;
-                        cont.SplitterDistance = info.AttachedDockInfo.ParentOrigMinWidth;
+                        cont.SplitterDistance = dinfo.ParentOrigMinWidth;
                         cont.Panel1MinSize = dinfo.ParentOrigMinWidth;
-                        info.AttachedDockInfo = dinfo;
                     }
                     else
                     {
-                        // detatch control from dock to stop it resizing
-                        var dinfo = info.AttachedDockInfo;
-                        info.AttachedDockInfo = null;
                         cont.SplitterDistance = cont.Panel1.Width + cont.Panel2.Width - dinfo.ParentOrigMinWidth;
                         cont.Panel2MinSize = dinfo.ParentOrigMinWidth;
-                        info.AttachedDockInfo = dinfo;
                     }
+                    info.AttachedDockInfo = dinfo;
                 }
                 else
                 {
@@ -430,6 +425,17 @@ namespace Fontendo.Extensions
 
                 info.PlaceHolderInfo.ParentControl.Controls.SetChildIndex(info.DockPanel, Math.Max(0, index));
             }
+            // store the current attached dock info so we can give the current placeholder owner a home
+            DockInfo? orphan = info.PlaceHolderInfo.AttachedDockInfo;
+            if(orphan != null && orphan != info)
+            {
+                // find the orhpan a home
+                var freeSlot = _placeholder_registry.FirstOrDefault(p => p.AttachedDockInfo == null);
+                if (freeSlot == null) throw new Exception("Could not find a home for an orphan dock");
+                orphan.PlaceHolderInfo = freeSlot;
+                freeSlot.AttachedDockInfo = orphan;
+            }
+
             info.PlaceHolderInfo.AttachedDockInfo = info;
             UpdateSplitContainer(info.PlaceHolderInfo, false, true);
         }

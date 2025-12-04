@@ -29,13 +29,15 @@
         private void InitializeComponent()
         {
             tableMainTable = new TableLayoutPanel();
+            groupBox2 = new GroupBox();
             tableGlyphImage = new TableLayoutPanel();
             pictureBoxGlyph = new PictureBox();
             trackBarZoom = new TrackBar();
-            lblGlyphSymbol = new Label();
             panelGlyphProperties = new Panel();
-            btnExport = new Button();
-            btnImport = new Button();
+            btnExportGlyph = new Button();
+            btnReplaceGlyph = new Button();
+            groupBox1 = new GroupBox();
+            textGlyphSymbol = new TextBox();
             tableMainTable.SuspendLayout();
             tableGlyphImage.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)pictureBoxGlyph).BeginInit();
@@ -50,23 +52,39 @@
             tableMainTable.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
             tableMainTable.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 120F));
             tableMainTable.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            tableMainTable.Controls.Add(groupBox2, 0, 5);
             tableMainTable.Controls.Add(tableGlyphImage, 1, 1);
-            tableMainTable.Controls.Add(lblGlyphSymbol, 1, 2);
-            tableMainTable.Controls.Add(panelGlyphProperties, 0, 3);
-            tableMainTable.Controls.Add(btnExport, 1, 4);
-            tableMainTable.Controls.Add(btnImport, 1, 5);
+            tableMainTable.Controls.Add(panelGlyphProperties, 0, 4);
+            tableMainTable.Controls.Add(btnExportGlyph, 1, 6);
+            tableMainTable.Controls.Add(btnReplaceGlyph, 1, 7);
+            tableMainTable.Controls.Add(groupBox1, 0, 2);
+            tableMainTable.Controls.Add(textGlyphSymbol, 1, 3);
             tableMainTable.Dock = DockStyle.Top;
             tableMainTable.Location = new Point(0, 0);
             tableMainTable.Name = "tableMainTable";
-            tableMainTable.RowCount = 6;
+            tableMainTable.RowCount = 8;
             tableMainTable.RowStyles.Add(new RowStyle(SizeType.Absolute, 10F));
             tableMainTable.RowStyles.Add(new RowStyle(SizeType.Absolute, 142F));
+            tableMainTable.RowStyles.Add(new RowStyle(SizeType.Absolute, 10F));
             tableMainTable.RowStyles.Add(new RowStyle(SizeType.Absolute, 60F));
             tableMainTable.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            tableMainTable.RowStyles.Add(new RowStyle(SizeType.Absolute, 10F));
             tableMainTable.RowStyles.Add(new RowStyle(SizeType.Absolute, 32F));
             tableMainTable.RowStyles.Add(new RowStyle(SizeType.Absolute, 32F));
-            tableMainTable.Size = new Size(160, 332);
+            tableMainTable.Size = new Size(160, 352);
             tableMainTable.TabIndex = 0;
+            // 
+            // groupBox2
+            // 
+            groupBox2.BackColor = SystemColors.ControlLight;
+            tableMainTable.SetColumnSpan(groupBox2, 3);
+            groupBox2.Dock = DockStyle.Top;
+            groupBox2.Location = new Point(3, 281);
+            groupBox2.Name = "groupBox2";
+            groupBox2.Padding = new Padding(0);
+            groupBox2.Size = new Size(154, 2);
+            groupBox2.TabIndex = 7;
+            groupBox2.TabStop = false;
             // 
             // tableGlyphImage
             // 
@@ -108,20 +126,6 @@
             trackBarZoom.TickStyle = TickStyle.TopLeft;
             trackBarZoom.ValueChanged += trackBarZoom_ValueChanged;
             // 
-            // lblGlyphSymbol
-            // 
-            lblGlyphSymbol.BackColor = SystemColors.ControlLight;
-            lblGlyphSymbol.BorderStyle = BorderStyle.Fixed3D;
-            lblGlyphSymbol.Dock = DockStyle.Right;
-            lblGlyphSymbol.Font = new Font("Segoe UI", 25F);
-            lblGlyphSymbol.Location = new Point(55, 157);
-            lblGlyphSymbol.Margin = new Padding(0, 5, 35, 5);
-            lblGlyphSymbol.Name = "lblGlyphSymbol";
-            lblGlyphSymbol.Padding = new Padding(5, 0, 0, 10);
-            lblGlyphSymbol.Size = new Size(50, 50);
-            lblGlyphSymbol.TabIndex = 0;
-            lblGlyphSymbol.TextAlign = ContentAlignment.MiddleCenter;
-            // 
             // panelGlyphProperties
             // 
             panelGlyphProperties.AutoSize = true;
@@ -129,33 +133,58 @@
             panelGlyphProperties.BackColor = SystemColors.Control;
             tableMainTable.SetColumnSpan(panelGlyphProperties, 3);
             panelGlyphProperties.Dock = DockStyle.Top;
-            panelGlyphProperties.Location = new Point(3, 215);
+            panelGlyphProperties.Location = new Point(3, 225);
             panelGlyphProperties.MinimumSize = new Size(0, 50);
             panelGlyphProperties.Name = "panelGlyphProperties";
             panelGlyphProperties.Size = new Size(154, 50);
             panelGlyphProperties.TabIndex = 3;
             // 
-            // btnExport
+            // btnExportGlyph
             // 
-            btnExport.Dock = DockStyle.Fill;
-            btnExport.Location = new Point(23, 271);
-            btnExport.Name = "btnExport";
-            btnExport.Size = new Size(114, 26);
-            btnExport.TabIndex = 4;
-            btnExport.Text = "Export";
-            btnExport.UseVisualStyleBackColor = true;
-            btnExport.Click += btnExport_Click;
+            btnExportGlyph.Dock = DockStyle.Fill;
+            btnExportGlyph.Location = new Point(23, 291);
+            btnExportGlyph.Name = "btnExportGlyph";
+            btnExportGlyph.Size = new Size(114, 26);
+            btnExportGlyph.TabIndex = 4;
+            btnExportGlyph.Text = "Export Glyph";
+            btnExportGlyph.UseVisualStyleBackColor = true;
+            btnExportGlyph.Click += btnExportGlyph_Click;
             // 
-            // btnImport
+            // btnReplaceGlyph
             // 
-            btnImport.Dock = DockStyle.Fill;
-            btnImport.Location = new Point(23, 303);
-            btnImport.Name = "btnImport";
-            btnImport.Size = new Size(114, 26);
-            btnImport.TabIndex = 5;
-            btnImport.Text = "Import";
-            btnImport.UseVisualStyleBackColor = true;
-            btnImport.Click += btnImport_Click;
+            btnReplaceGlyph.Dock = DockStyle.Fill;
+            btnReplaceGlyph.Location = new Point(23, 323);
+            btnReplaceGlyph.Name = "btnReplaceGlyph";
+            btnReplaceGlyph.Size = new Size(114, 26);
+            btnReplaceGlyph.TabIndex = 5;
+            btnReplaceGlyph.Text = "Replace Glyph";
+            btnReplaceGlyph.UseVisualStyleBackColor = true;
+            btnReplaceGlyph.Click += btnReplaceGlyph_Click;
+            // 
+            // groupBox1
+            // 
+            groupBox1.BackColor = SystemColors.ControlLight;
+            tableMainTable.SetColumnSpan(groupBox1, 3);
+            groupBox1.Dock = DockStyle.Top;
+            groupBox1.Location = new Point(3, 155);
+            groupBox1.Name = "groupBox1";
+            groupBox1.Padding = new Padding(0);
+            groupBox1.Size = new Size(154, 2);
+            groupBox1.TabIndex = 6;
+            groupBox1.TabStop = false;
+            // 
+            // textGlyphSymbol
+            // 
+            textGlyphSymbol.BackColor = SystemColors.ControlLight;
+            textGlyphSymbol.Font = new Font("Segoe UI", 20F);
+            textGlyphSymbol.Location = new Point(55, 165);
+            textGlyphSymbol.Margin = new Padding(35, 3, 3, 3);
+            textGlyphSymbol.Multiline = true;
+            textGlyphSymbol.Name = "textGlyphSymbol";
+            textGlyphSymbol.ReadOnly = true;
+            textGlyphSymbol.Size = new Size(50, 50);
+            textGlyphSymbol.TabIndex = 8;
+            textGlyphSymbol.TextAlign = HorizontalAlignment.Center;
             // 
             // GlyphEditor
             // 
@@ -182,8 +211,10 @@
         private TableLayoutPanel tableGlyphImage;
         private TrackBar trackBarZoom;
         private Panel panelGlyphProperties;
-        private Label lblGlyphSymbol;
-        private Button btnExport;
-        private Button btnImport;
+        private Button btnExportGlyph;
+        private Button btnReplaceGlyph;
+        private GroupBox groupBox1;
+        private GroupBox groupBox2;
+        private TextBox textGlyphSymbol;
     }
 }

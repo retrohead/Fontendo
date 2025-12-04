@@ -1,14 +1,18 @@
 using Fontendo.Controls;
 using Fontendo.Extensions;
-using Microsoft.VisualBasic.Logging;
+using Fontendo.Interfaces;
+using System;
+using System.ComponentModel;
+using System.Reflection;
 using static FileSystemHelper;
 using static Fontendo.Extensions.FontBase;
+using static Fontendo.Extensions.FontBase.FontSettings;
 
 namespace Fontendo
 {
     public partial class MainForm : Form
     {
-        public static MainForm? Self;
+        public static MainForm Self = null!;
         public FontBase FontendoFont;
         public SJISConv SJIS;
         public UnicodeNames UnicodeNames;
@@ -16,8 +20,64 @@ namespace Fontendo
         public FontEditor FontEditor = new FontEditor();
         private bool debugMode = false;
 
+        public class MainFormButtonEnabler : INotifyPropertyChanged
+        {
+            private readonly FontBase _font;
+            private readonly ListView _sheetsList;
+            private readonly ListView _glyphList;
+
+            public MainFormButtonEnabler(FontBase font, ListView sheetsList, ListView glyphList)
+            {
+                _font = font;
+                _sheetsList = sheetsList;
+                _glyphList = glyphList;
+
+                // Subscribe to font property changes
+                _font.PropertyChanged += (s, e) =>
+                {
+                    if (e.PropertyName == nameof(FontBase.IsLoaded))
+                        RaiseAll();
+                };
+
+                // Subscribe to selection changes
+                _sheetsList.SelectedIndexChanged += (s, e) => RaiseAll();
+                _glyphList.SelectedIndexChanged += (s, e) => RaiseAll();
+            }
+
+            public bool IsGlyphSelected =>
+                _font.IsLoaded && _glyphList.SelectedItems.Count > 0;
+
+            public bool IsSheetSelected =>
+                _font.IsLoaded && _sheetsList.SelectedItems.Count > 0;
+
+            public event PropertyChangedEventHandler? PropertyChanged;
+
+            private void RaiseAll()
+            {
+                OnPropertyChanged(nameof(IsGlyphSelected));
+                OnPropertyChanged(nameof(IsSheetSelected));
+            }
+
+            protected void OnPropertyChanged(string name) =>
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+        }
+
+        public MainFormButtonEnabler ButtonEnabler => new MainFormButtonEnabler(FontendoFont, listViewSheets, listViewCharacters);
+
+        public int SelectedSheet
+        {
+            get
+            {
+                if (listViewSheets.SelectedItems.Count == 0)
+                    return -1;
+                return listViewSheets.SelectedItems[0].Index;
+            }
+        }
+
         public MainForm()
-        {// At application startup, choose which types to support
+        {
+            InitializeComponent();
+            // At application startup, choose which file types to support
             FileSystemHelper.Initialize(new List<FileType>
             {
                 FileType.BinaryCrustFont
@@ -25,12 +85,20 @@ namespace Fontendo
             RecentFiles.Initialize();
             SJIS = new SJISConv();
             UnicodeNames = new UnicodeNames();
+            // Get the version from the assembly
+            Version version = Assembly.GetExecutingAssembly().GetName().Version;
+            this.Text = $"Fontendo - Version {version}";
 
-            InitializeComponent();
             Self = this;
             FontendoFont = new FontBase(Platform.CTR);
-            colorPickerBgColour.SelectedColor = Properties.Settings.Default.FontBackgroundColor;
+            FontEditor.SelectedColor = Properties.Settings.Default.FontBackgroundColor;
             splitContainerRight.SplitterDistance = 434;
+        }
+
+        private void MainForm_Shown(object sender, EventArgs e)
+        {
+            FontEditor.ShowFontDetails(null);
+            GlyphEditor.ShowGlyphDetails(null);
             DockManager.Register(dockablePanelGlyph, GlyphEditor, "Glyph Properties");
             DockManager.Register(dockablePanelFont, FontEditor, "Font Properties");
         }
@@ -49,21 +117,21 @@ namespace Fontendo
             }
             RecentFiles.Add(textFontFilePath.Text);
             ListFontSheets();
-            FontEditor.ShowFontDetails(FontendoFont.Font);
+            FontEditor.ShowFontDetails(FontendoFont);
         }
 
         private void ListFontSheets()
         {
             imageListSheets.Images.Clear();
             if (FontendoFont == null) return;
-            if (FontendoFont.Font.Sheets == null) return;
+            if (FontendoFont.Settings.Sheets == null) return;
 
-            Sheets sheets = FontendoFont.Font.Sheets;
+            SheetsType sheets = FontendoFont.Settings.Sheets;
             imageListSheets.ImageSize = new Size(sheets.Width, sheets.Height);
             imageListSheets.ColorDepth = ColorDepth.Depth32Bit;
 
             // Add all sheets to the ImageList
-            foreach (Bitmap sheet in sheets.Items)
+            foreach (Bitmap sheet in sheets.Images)
             {
                 imageListSheets.Images.Add(sheet);
             }
@@ -72,12 +140,12 @@ namespace Fontendo
             listViewSheets.Items.Clear();
 
             // Create items with Tag = sheet
-            for (int i = 0; i < sheets.Items.Count; i++)
+            for (int i = 0; i < sheets.Images.Count; i++)
             {
                 var item = new ListViewItem($"Sheet {i + 1}", i)
                 {
                     ImageIndex = i,
-                    Tag = sheets.Items[i] // store the Bitmap in Tag
+                    Tag = sheets.Images[i] // store the Bitmap in Tag
                 };
                 listViewSheets.Items.Add(item);
             }
@@ -144,14 +212,14 @@ namespace Fontendo
             textFontFilePath.Text = ((RecentFiles.RecentFile)item.Tag).FilePath;
             RecentFiles.Add(textFontFilePath.Text);
             ListFontSheets();
-            FontEditor.ShowFontDetails(FontendoFont.Font);
+            FontEditor.ShowFontDetails(FontendoFont);
         }
 
         private void saveToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (!FontendoFont.IsLoaded()) return;
+            if (!FontendoFont.IsLoaded) return;
 
-            ActionResult result = FontendoFont.Font.Save(FontendoFont.LoadedFontFilePath);
+            ActionResult result = FontendoFont.SaveFont(FontendoFont.LoadedFontFilePath);
             if (!result.Success)
             {
                 MessageBox.Show(this, $"Font failed to save {result.Message}", "Font Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -164,7 +232,7 @@ namespace Fontendo
 
         private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (!FontendoFont.IsLoaded()) return;
+            if (!FontendoFont.IsLoaded) return;
 
             string filepath = FileSystemHelper.BrowseForSaveFile(
                 FontendoFont.LoadedFontFileType,
@@ -172,7 +240,7 @@ namespace Fontendo
                 Path.GetFileName(FontendoFont.LoadedFontFilePath)
                 );
             if (string.IsNullOrEmpty(filepath)) return;
-            ActionResult result = FontendoFont.Font.Save(filepath);
+            ActionResult result = FontendoFont.SaveFont(filepath);
             if (!result.Success)
             {
                 MessageBox.Show(this, $"Font failed to save {result.Message}", "Font Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -183,17 +251,7 @@ namespace Fontendo
             }
         }
 
-        private void colorPickerBgColour_ColorChanged(object sender, EventArgs e)
-        {
-            SetBackgroundColour(colorPickerBgColour.SelectedColor, true);
-        }
-
-        private void colorPickerBgColour_PreviewColorChanged(object sender, Fontendo.Controls.ColorPreviewEventArgs e)
-        {
-            SetBackgroundColour(e.PreviewColor, false);
-        }
-
-        private void SetBackgroundColour(Color color, bool save)
+        public void SetBackgroundColour(Color color, bool save)
         {
             listViewSheets.BackColor = color;
             listViewCharacters.BackColor = color;
@@ -225,7 +283,7 @@ namespace Fontendo
             imageListCharacters.Images.Clear();
 
             // Get all CharImages belonging to this sheet
-            var glyphsForSheet = FontendoFont.Font.Glyphs?.Where(g => g.Sheet.Equals(sheetIndex));
+            var glyphsForSheet = FontendoFont.Settings.Glyphs?.Where(g => g.Sheet.Equals(sheetIndex));
             if (glyphsForSheet != null)
             {
                 foreach (var glyph in glyphsForSheet)
@@ -244,7 +302,7 @@ namespace Fontendo
                     listViewCharacters.Items.Add(item);
                 }
             }
-            if(listViewCharacters.Items.Count > 0)
+            if (listViewCharacters.Items.Count > 0)
                 listViewCharacters.Items[0].Selected = true;
             listViewCharacters.EndUpdate();
         }
@@ -261,7 +319,7 @@ namespace Fontendo
         static bool deletelog = true;
         public static void Log(string message)
         {
-            if(!Self?.debugMode ?? false)
+            if (!Self?.debugMode ?? false)
                 return;
             // get application directory and create/open log file
             string path = AppDomain.CurrentDomain.BaseDirectory;
@@ -279,13 +337,70 @@ namespace Fontendo
             }
         }
 
-        internal void UpdateFontImages()
+        internal void UpdateListViewImagesFromGlyphs()
         {
-            Glyph? glyph = (Glyph?)listViewCharacters.SelectedItems[0].Tag;
+            // update glyph image
+            Glyph glyph = (Glyph)listViewCharacters.SelectedItems[0].Tag;
             int index = listViewCharacters.SelectedItems[0].ImageIndex;
             imageListCharacters.Images[index] = glyph.Settings.Image;
             listViewCharacters.LargeImageList = imageListCharacters;
             listViewCharacters.Refresh();
+
+            // update sheet image
+            FontendoFont.RecreateSheetFromGlyphs(glyph.Sheet);
+            index = listViewSheets.SelectedItems[0].ImageIndex;
+            imageListSheets.Images[index] = FontendoFont.Settings.Sheets.Images[index];
+            listViewSheets.LargeImageList = imageListSheets;
+            listViewSheets.Refresh();
+
+        }
+        internal void UpdateListViewImagesFromSheets()
+        {
+            // update sheet image
+            int sheetnum = listViewSheets.SelectedItems[0].ImageIndex;
+            imageListSheets.Images[sheetnum] = FontendoFont.Settings.Sheets.Images[sheetnum];
+            listViewSheets.LargeImageList = imageListSheets;
+            listViewSheets.Refresh();
+
+            // update glyph images
+            FontendoFont.RecreateGlyphsFromSheet(sheetnum);
+            var glyphs = FontendoFont.Settings.Glyphs.FindAll(g => g.Sheet.Equals(sheetnum));
+            for (var i = 0; i < glyphs.Count; i++)
+            {
+                imageListCharacters.Images[i] = glyphs[i].Settings.Image;
+            }
+            listViewCharacters.LargeImageList = imageListCharacters;
+            listViewCharacters.Refresh();
+
+        }
+
+        private void contextMenuGlyph_Opening(object sender, CancelEventArgs e)
+        {
+            if (listViewCharacters.SelectedItems.Count == 0)
+            {
+                e.Cancel = true;
+                return;
+            }
+        }
+
+        private void replaceGlyphToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            GlyphEditor.btnReplaceGlyph_Click(sender, e);
+        }
+
+        private void exportGlyphToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            GlyphEditor.btnExportGlyph_Click(sender, e);
+        }
+
+        private void exportSheetToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            FontEditor.btnExportSheet_Click(sender, e);
+        }
+
+        private void replaceSheetToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            FontEditor.btnImportSheet_Click(sender, e);
         }
     }
 }

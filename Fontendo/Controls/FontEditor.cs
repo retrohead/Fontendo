@@ -9,20 +9,32 @@ namespace Fontendo.Controls
 {
     public partial class FontEditor : UserControl
     {
-        private float zoomFactor = 1.0f;
-        private float maxZoomFactor = 1.0f;
-        private Bitmap? currentGlyph;
-        private bool userHasSetZoom = false;
-        private bool suppressZoomEvent = false;
+        private FontBase? LoadedFont;
+        public Color SelectedColor
+        {
+            get => colorPickerBgColour.SelectedColor;
+            set => colorPickerBgColour.SelectedColor = value;
+        }
 
         public FontEditor()
         {
             InitializeComponent();
         }
 
-        public void ShowFontDetails(IFontendoFont? font)
+        bool initialized = false;
+        public void ShowFontDetails(FontBase? font)
         {
+            if (!initialized)
+            {
+                // Register legacy encodings (including Shift-JIS)
+                Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+                btnExportSheet.DataBindings.Add(new Binding(nameof(btnExportSheet.Enabled), MainForm.Self.ButtonEnabler, nameof(MainForm.Self.ButtonEnabler.IsSheetSelected), true, DataSourceUpdateMode.Never));
+                btnReplaceSheet.DataBindings.Add(new Binding(nameof(btnReplaceSheet.Enabled), MainForm.Self.ButtonEnabler, nameof(MainForm.Self.ButtonEnabler.IsSheetSelected), true, DataSourceUpdateMode.Never));
+
+                initialized = true;
+            }
             if (MainForm.Self == null) return;
+            LoadedFont = font;
             if (font == null)
             {
                 ClearFontDetails();
@@ -33,10 +45,10 @@ namespace Fontendo.Controls
 
         public void ClearFontDetails()
         {
-
+            panelFontProperties.Controls.Clear();
         }
 
-        public void BuildPropertiesPanel(Panel panel, IFontendoFont font)
+        public void BuildPropertiesPanel(Panel panel, FontBase font)
         {
             panel.Controls.Clear();
             //panel.AutoScroll = true;
@@ -45,7 +57,7 @@ namespace Fontendo.Controls
             {
                 Dock = DockStyle.Fill,
                 ColumnCount = 2,
-                RowCount = font.Properties.FontPropertyDescriptors.Where(d => d.Value.PreferredControl != EditorType.None).Count() + 2, // +2 for blank row at end and padding at start
+                RowCount = font.Settings.PropertyDescriptors.Where(d => d.Value.PreferredControl != EditorType.None).Count() + 2, // +2 for blank row at end and padding at start
                 Margin = Padding.Empty,
                 Padding = Padding.Empty,
                 AutoSize = false
@@ -54,12 +66,12 @@ namespace Fontendo.Controls
             table.RowStyles.Add(new RowStyle(SizeType.Absolute, 10));
 
             // Column styles: first fixed 100px, second fills remaining
-            table.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 75));
+            table.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
 
             int rowIndex = 1;
 
-            foreach (var kvp in font.Properties.FontPropertyDescriptors)
+            foreach (var kvp in font.Settings.PropertyDescriptors)
             {
                 var descriptor = kvp.Value;
 
@@ -76,84 +88,8 @@ namespace Fontendo.Controls
                     table.Controls.Add(label, 0, rowIndex);
                 }
 
-                Control? editor = null;
-                switch (descriptor.PreferredControl)
-                {
-                    case EditorType.CodePointPicker:
-                        UInt16 val = (UInt16)(font.Properties.FontProperties[kvp.Key] ?? descriptor.ValueRange.Value.Min);
-                        editor = new HexNumericUpDown()
-                        {
-                            Dock = DockStyle.Fill,
-                            Minimum = descriptor.ValueRange.Value.Min,
-                            Maximum = descriptor.ValueRange.Value.Max,
-                            Text = "0x" + val.ToString("X4")
-                        };
-                        break;
-
-                    case EditorType.TextBox:
-                        editor = new TextBox
-                        {
-                            Dock = DockStyle.Fill,
-                            Text = font.Properties.FontProperties[kvp.Key]?.ToString() ?? string.Empty
-                        };
-                        break;
-
-                    case EditorType.NumberBox:
-                        editor = new NumericUpDown
-                        {
-                            Dock = DockStyle.Fill,
-                            Minimum = descriptor.ValueRange.Value.Min,
-                            Maximum = descriptor.ValueRange.Value.Max,
-                            TextAlign = HorizontalAlignment.Right,
-                            Value = Convert.ToDecimal(
-                                font.Properties.FontProperties[kvp.Key] ?? descriptor.ValueRange.Value.Min
-                            )
-                        };
-                        break;
-
-                    case EditorType.ComboBox:
-                        editor = new ComboBox
-                        {
-                            Dock = DockStyle.Fill,
-                            DropDownStyle = ComboBoxStyle.DropDownList
-                        };
-                        // TODO: populate items based on descriptor metadata
-                        break;
-
-                    case EditorType.Slider:
-                        editor = new TrackBar
-                        {
-                            Dock = DockStyle.Fill,
-                            Minimum = (int)(descriptor.ValueRange?.Min ?? 0),
-                            Maximum = (int)(descriptor.ValueRange?.Max ?? 100),
-                            Value = Convert.ToInt32(font.Properties.FontProperties[kvp.Key] ?? 0)
-                        };
-                        break;
-
-                    case EditorType.CheckBox:
-                        editor = new CheckBox
-                        {
-                            Dock = DockStyle.Left,
-                            Checked = Convert.ToBoolean(font.Properties.FontProperties[kvp.Key] ?? false)
-                        };
-                        break;
-
-                    case EditorType.ColorPicker:
-                        editor = new Button
-                        {
-                            Dock = DockStyle.Left,
-                            Text = "Pick Color"
-                        };
-                        editor.Click += (s, e) =>
-                        {
-                            using var dlg = new ColorDialog();
-                            if (dlg.ShowDialog() == DialogResult.OK)
-                            {
-                                font.Properties.SetValue(kvp.Key, dlg.Color.ToArgb());
-                            }
-                        };
-                        break;
-                }
+                font.Settings.GetBindingForObject(kvp.Key, out var binding);
+                Control? editor = CreateControlForEditorType(descriptor.PreferredControl, descriptor, binding);
 
                 if (editor != null)
                 {
@@ -161,7 +97,7 @@ namespace Fontendo.Controls
                     table.Controls.Add(editor, 1, rowIndex);
 
                     // Fix row height to 32px
-                    table.RowStyles.Add(new RowStyle(SizeType.Absolute, 28));
+                    table.RowStyles.Add(new RowStyle(SizeType.AutoSize));
                     rowIndex++;
                 }
             }
@@ -172,6 +108,49 @@ namespace Fontendo.Controls
             table.AutoSize = true;
 
             panel.Controls.Add(table);
+        }
+
+
+        private void colorPickerBgColour_ColorChanged(object sender, EventArgs e)
+        {
+            MainForm.Self.SetBackgroundColour(colorPickerBgColour.SelectedColor, true);
+        }
+
+
+        private void colorPickerBgColour_PreviewColorChanged(object sender, Fontendo.Controls.ColorPreviewEventArgs e)
+        {
+            MainForm.Self.SetBackgroundColour(e.PreviewColor, false);
+        }
+
+        public void btnImportSheet_Click(object sender, EventArgs e)
+        {
+            int index = MainForm.Self.SelectedSheet;
+            if (index < 0 || LoadedFont == null || LoadedFont.Settings.Sheets == null) return;
+
+            string fileName = FileSystemHelper.BrowseForFile(FileSystemHelper.FileType.Png, "Import Sheet Image");
+            if (fileName == "") return;
+            Bitmap bmp = new Bitmap(fileName);
+            if (bmp.Width != LoadedFont.Settings.Sheets.Width || bmp.Height != LoadedFont.Settings.Sheets.Height)
+            {
+                MessageBox.Show("The selected image file does not match the size of the loaded sheet", "File Error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                return;
+            }
+            if (LoadedFont.Settings.Sheets.Images[index] != null)
+                LoadedFont.Settings.Sheets.Images[index].Dispose();
+            LoadedFont.Settings.Sheets.Images[index] = bmp;
+            MainForm.Self.UpdateListViewImagesFromSheets();
+            MessageBox.Show("Sheet image imported successfully.", "Import Successful", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
+
+        public void btnExportSheet_Click(object sender, EventArgs e)
+        {
+            int index = MainForm.Self.SelectedSheet;
+            if (index < 0 || LoadedFont == null || LoadedFont.Settings.Sheets == null)
+                return;
+            string fileName = FileSystemHelper.BrowseForSaveFile(FileSystemHelper.FileType.Png, "Export Sheet Image", $"Sheet {index + 1}.png");
+            if (fileName == "") return;
+            LoadedFont.Settings.Sheets.Images[index].Save(fileName);
+            MessageBox.Show("Sheet image exported successfully.", "Export Successful", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
     }
 }

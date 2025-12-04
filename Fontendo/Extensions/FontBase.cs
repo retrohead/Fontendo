@@ -1,41 +1,470 @@
 ﻿using Fontendo.Formats.CTR;
 using Fontendo.Interfaces;
+using Fontendo.Properties;
+using System.ComponentModel;
+using static Fontendo.FontProperties.FontPropertyList;
+using static Fontendo.FontProperties.GlyphProperties;
+using static Fontendo.FontProperties.PropertyList;
 
 namespace Fontendo.Extensions
 {
-    public class FontBase
+    public class FontBase : INotifyPropertyChanged
     {
-        public class Sheets
+        public class FontSettings : INotifyPropertyChanged
         {
-            public int Width { get; set; }
-            public int Height { get; set; }
-            public List<Bitmap> Items { get; set; }
+            private FontPropertyRegistry Properties {  get; set; } = new FontPropertyRegistry();
 
-            public Sheets(int Width, int Height)
+            private List<FontProperty> CreatedProperties = new List<FontProperty>();
+
+            public class SheetsType : INotifyPropertyChanged
             {
-                this.Width = Width;
-                this.Height = Height;
-                Items = new List<Bitmap>();
+                private int _width;
+                public int Width 
+                { 
+                    get
+                    { return _width; }
+                    set
+                    {
+                        if (_width != value)
+                        {
+                            _width = value; OnPropertyChanged(nameof(Width));
+                        }
+                    }
+                }
+                private int _height;
+                public int Height
+                {
+                    get { return _height; }
+                    set
+                    {
+                        if (_height != value)
+                        {
+                            _height = value; OnPropertyChanged(nameof(Height));
+
+                        }
+                    }
+                }
+
+                public List<Bitmap> Images
+                {
+                    get; set;
+                }
+
+                public SheetsType(int Width, int Height)
+                {
+                    this.Width = Width;
+                    this.Height = Height;
+                    Images = new List<Bitmap>();
+                }
+
+                public event PropertyChangedEventHandler? PropertyChanged;
+                protected void OnPropertyChanged(string propertyName) =>
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
             }
+            public class CharImageType : INotifyPropertyChanged
+            {
+                private int _index;
+                public int Index
+                {
+                    get
+                    { return _index; }
+                    set
+                    {
+                        if (_index != value)
+                        {
+                            _index = value; OnPropertyChanged(nameof(Index));
+                        }
+                    }
+                }
+
+                private int _sheet;
+                public int Sheet
+                {
+                    get { return _sheet; }
+                    set
+                    {
+                        if (_sheet != value)
+                        {
+                            _sheet = value; OnPropertyChanged(nameof(Sheet));
+                        }
+                    }
+                }
+
+                private Bitmap _image;
+                public Bitmap Image
+                {
+                    get { return _image; }
+                    set
+                    {
+                        if (_image != value)
+                        {
+                            _image = value; OnPropertyChanged(nameof(Image));
+                        }
+                    }
+                }
+
+                public CharImageType(int Index, int Sheet, Bitmap Image)
+                {
+                    this.Index = Index;
+                    this.Sheet = Sheet;
+                    this.Image = Image;
+                }
+
+                public event PropertyChangedEventHandler? PropertyChanged;
+                protected void OnPropertyChanged(string propertyName) =>
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            }
+
+            // font properties
+            public bool Endianness
+            {
+                get
+                {
+                    return Properties.GetValue<bool>(FontProperty.Endianness);
+                }
+                set
+                {
+                    if (!CreatedProperties.Contains(FontProperty.Endianness))
+                    {
+                        Properties.SetValue(FontProperty.Endianness, value);
+                        CreatedProperties.Add(FontProperty.Endianness);
+                        return;
+                    }
+                    if (Endianness != value)
+                    {
+                        Properties.SetValue(FontProperty.Endianness, value);
+                        OnPropertyChanged(nameof(Endianness));
+                    }
+                }
+            }
+            public CharEncodings CharEncoding
+            {
+                get
+                {
+                    return Properties.GetValue<CharEncodings>(FontProperty.CharEncoding);
+                }
+                set
+                {
+                    if (!CreatedProperties.Contains(FontProperty.CharEncoding))
+                    {
+                        Properties.SetValue(FontProperty.CharEncoding, value);
+                        CreatedProperties.Add(FontProperty.CharEncoding);
+                        return;
+                    }
+                    if (CharEncoding != value)
+                    {
+                        Properties.SetValue(FontProperty.CharEncoding, value);
+                        OnPropertyChanged(nameof(CharEncoding));
+                    }
+                }
+            }
+            public byte LineFeed
+            {
+                get
+                {
+                    return Properties.GetValue<byte>(FontProperty.LineFeed);
+                }
+                set
+                {
+                    if (!CreatedProperties.Contains(FontProperty.LineFeed))
+                    {
+                        Properties.SetValue(FontProperty.LineFeed, value);
+                        CreatedProperties.Add(FontProperty.LineFeed);
+                        return;
+                    }
+                    if (LineFeed != value)
+                    {
+                        Properties.SetValue(FontProperty.LineFeed, value);
+                        OnPropertyChanged(nameof(LineFeed));
+                    }
+                }
+                }
+            public byte Height
+            {
+                get
+                {
+                    return Properties.GetValue<byte>(FontProperty.Height);
+                }
+                set
+                {
+                    if (!CreatedProperties.Contains(FontProperty.Height))
+                    {
+                        Properties.SetValue(FontProperty.Height, value);
+                        CreatedProperties.Add(FontProperty.Height);
+                        return;
+                    }
+                    if (Height != value)
+                    {
+                        Properties.SetValue(FontProperty.Height, value);
+                        OnPropertyChanged(nameof(Height));
+                    }
+                }
+                }
+            public byte Width
+            {
+                get
+                {
+                    return Properties.GetValue<byte>(FontProperty.Width);
+                }
+                set
+                {
+                    if (!CreatedProperties.Contains(FontProperty.Width))
+                    {
+                        Properties.SetValue(FontProperty.Width, value);
+                        CreatedProperties.Add(FontProperty.Width);
+                        return;
+                    }
+                    if (Width != value)
+                    {
+                        Properties.SetValue(FontProperty.Width, value);
+                        OnPropertyChanged(nameof(Width));
+                    }
+                }
+            }
+            public byte Ascent
+            {
+                get
+                {
+                    return Properties.GetValue<byte>(FontProperty.Ascent);
+                }
+                set
+                {
+                    if (!CreatedProperties.Contains(FontProperty.Ascent))
+                    {
+                        Properties.SetValue(FontProperty.Ascent, value);
+                        CreatedProperties.Add(FontProperty.Ascent);
+                        return;
+                    }
+                    if (Ascent != value)
+                    {
+                        Properties.SetValue(FontProperty.Ascent, value);
+                        OnPropertyChanged(nameof(Ascent));
+                    }
+                }
+            }
+            public byte Baseline
+            {
+                get
+                {
+                    return Properties.GetValue<byte>(FontProperty.Baseline);
+                }
+                set
+                {
+                    if (!CreatedProperties.Contains(FontProperty.Baseline))
+                    {
+                        Properties.SetValue(FontProperty.Baseline, value);
+                        CreatedProperties.Add(FontProperty.Baseline);
+                        return;
+                    }
+                    if (Baseline != value)
+                    {
+                        Properties.SetValue(FontProperty.Baseline, value);
+                        OnPropertyChanged(nameof(Baseline));
+                    }
+                }
+            }
+            public uint Version
+            {
+                get
+                {
+                    return Properties.GetValue<uint>(FontProperty.Version);
+                }
+                set
+                {
+                    if (!CreatedProperties.Contains(FontProperty.Version))
+                    {
+                        Properties.SetValue(FontProperty.Version, value);
+                        CreatedProperties.Add(FontProperty.Version);
+                        return;
+                    }
+                    if (Version != value)
+                    {
+                        Properties.SetValue(FontProperty.Version, value);
+                        OnPropertyChanged(nameof(Version));
+                    }
+                }
+            }
+            public SheetsType? Sheets
+            {
+                get
+                {
+                    return Font.Sheets;
+                }
+                set
+                {
+                    if (Font.Sheets != value)
+                    {
+                        Font.Sheets = value;
+                        OnPropertyChanged(nameof(Sheets));
+                    }
+                }
+            }
+            public List<Glyph>? Glyphs
+            {
+                get
+                {
+                    return Font.Glyphs;
+                }
+                set
+                {
+                    if (Font.Glyphs != value)
+                    {
+                        Font.Glyphs = value;
+                        OnPropertyChanged(nameof(Glyphs));
+                    }
+                }
+            }
+
+            // NTR-specific
+
+                //NtrBpp,
+                //NtrVertical,
+                //NtrRotation,
+                //NtrGameFreak,
+
+                // RVL only
+            public ImageFormats NtrRvlImageFormat
+            {
+                get
+                {
+                    return Properties.GetValue<ImageFormats>(FontProperty.NtrRvlImageFormat);
+                }
+                set
+                {
+                    if (!CreatedProperties.Contains(FontProperty.NtrRvlImageFormat))
+                    {
+                        Properties.SetValue(FontProperty.NtrRvlImageFormat, value);
+                        CreatedProperties.Add(FontProperty.NtrRvlImageFormat);
+                        return;
+                    }
+                    if (NtrRvlImageFormat != value)
+                    {
+                        Properties.SetValue(FontProperty.NtrRvlImageFormat, value);
+                        OnPropertyChanged(nameof(NtrRvlImageFormat));
+                    }
+                }
+            }
+
+            private IFontendoFont Font;
+            public FontSettings(IFontendoFont Font)
+            {
+                this.Font = Font;
+            }
+
+
+            public T GetValue<T>(FontProperty property)
+            {
+                return Properties.GetValue<T>(property);
+            }
+
+
+            public Dictionary<FontProperty, FontPropertyDescriptor> PropertyDescriptors
+            {
+                get
+                {
+                    return Properties.FontPropertyDescriptors;
+                }
+                set
+                {
+                    if (Properties.FontPropertyDescriptors != value)
+                    {
+                        Properties.FontPropertyDescriptors.Clear();
+                        foreach (var kvp in value)
+                        {
+                            Properties.FontPropertyDescriptors.Add(kvp.Key, kvp.Value);
+                        }
+                        OnPropertyChanged(nameof(PropertyDescriptors));
+                    }
+                }
+            }
+            public void AddProperty(
+                FontProperty property,
+                string name,
+                PropertyValueType type,
+                EditorType editorType = EditorType.None,
+                (long Min, long Max)? range = null)
+            {
+                Properties.AddProperty(property, name, type, editorType, range);
+            }
+
+
+
+            public bool GetBindingForObject(FontProperty property, out Binding? binding)
+            {
+                switch (property)
+                {
+                    case FontProperty.Endianness:
+                        binding = new Binding("LitteEndian", this, nameof(Endianness), false, DataSourceUpdateMode.OnPropertyChanged);
+                        return true;
+                    case FontProperty.CharEncoding:
+                        binding = new Binding("Text", this, nameof(CharEncoding), false, DataSourceUpdateMode.OnPropertyChanged);
+                        return true;
+                    case FontProperty.LineFeed:
+                        binding = new Binding("Value", this, nameof(LineFeed), false, DataSourceUpdateMode.OnPropertyChanged);
+                        return true;
+                    case FontProperty.Height:
+                        binding = new Binding("Value", this, nameof(Height), false, DataSourceUpdateMode.OnPropertyChanged);
+                        return true;
+                    case FontProperty.Width:
+                        binding = new Binding("Value", this, nameof(Width), false, DataSourceUpdateMode.OnPropertyChanged);
+                        return true;
+                    case FontProperty.Ascent:
+                        binding = new Binding("Value", this, nameof(Ascent), false, DataSourceUpdateMode.OnPropertyChanged);
+                        return true;
+                    case FontProperty.Baseline:
+                        binding = new Binding("Value", this, nameof(Baseline), false, DataSourceUpdateMode.OnPropertyChanged);
+                        return true;
+                    case FontProperty.NtrRvlImageFormat:
+                        binding = new Binding("Text", this, nameof(NtrRvlImageFormat), false, DataSourceUpdateMode.OnPropertyChanged);
+                        return true;
+                    case FontProperty.Version:
+                        binding = new Binding("Text", this, nameof(Version), false, DataSourceUpdateMode.OnPropertyChanged);
+                        return true;
+                    default:
+                        throw new NotImplementedException($"No binding implemented for property {property}");
+                }
+            }
+
+            public void UpdateValueRange(FontProperty property, (long Min, long Max) range)
+            {
+                Properties.UpdateValueRange(property, range);
+            }
+
+            public event PropertyChangedEventHandler? PropertyChanged;
+            protected void OnPropertyChanged(string propertyName) =>
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
-        public class CharImage
+        public FontSettings Settings
         {
-            public int Index { get; set; }
-            public int Sheet { get; set; }
-            public Bitmap Image { get; set; }
-
-            public CharImage(int Index, int Sheet, Bitmap Image)
-            {
-                this.Index = Index;
-                this.Sheet = Sheet;
-                this.Image = Image;
-            }
+            get;
+            private set;
         }
 
-        public IFontendoFont Font;
+        private IFontendoFont Font;
         public ITextureCodec TextureCodec;
         public FileSystemHelper.FileType LoadedFontFileType;
-        public string LoadedFontFilePath = "";
+
+        private string _loadedFontPath = "";
+        public string LoadedFontFilePath
+        {
+            get { return _loadedFontPath; }
+            private set
+            {
+                if (_loadedFontPath != value)
+                {
+                    _loadedFontPath = value;
+                    OnPropertyChanged(nameof(LoadedFontFilePath));
+                    OnPropertyChanged(nameof(IsLoaded));
+                }
+            }
+        }
+        public bool IsLoaded
+        {
+            get
+            {
+                return LoadedFontFilePath != "";
+            }
+        }
         public enum Platform
         {
             Dolphin,
@@ -86,7 +515,18 @@ namespace Fontendo.Extensions
                     //break;
                 case Platform.CTR:
                     TextureCodec = new Fontendo.Codecs.CTR.CTRTextureCodec();
-                    Font = new BCFNT();
+                    Font = new BCFNT(this);
+                    Settings = new FontSettings(Font);
+                    Settings.AddProperty(FontProperty.Endianness, "Endianness", PropertyValueType.Bool, EditorType.EndiannessPicker);
+                    Settings.AddProperty(FontProperty.CharEncoding, "Char encoding", PropertyValueType.CharEncoding, EditorType.Label);
+                    Settings.AddProperty(FontProperty.LineFeed, "Line feed", PropertyValueType.Byte, EditorType.NumberBox, (0, 0xFF));
+                    Settings.AddProperty(FontProperty.Height, "Height", PropertyValueType.Byte, EditorType.NumberBox, (0, 0xFF));
+                    Settings.AddProperty(FontProperty.Width, "Width", PropertyValueType.Byte, EditorType.NumberBox, (0, 0xFF));
+                    Settings.AddProperty(FontProperty.Ascent, "Ascent", PropertyValueType.Byte, EditorType.NumberBox, (0, 0xFF));
+                    Settings.AddProperty(FontProperty.Baseline, "Baseline", PropertyValueType.Byte, EditorType.NumberBox, (0, 0xFF));
+                    Settings.AddProperty(FontProperty.Version, "Version", PropertyValueType.UInt32, EditorType.Label, (0, 0xFFFFFFFF));
+                    Settings.AddProperty(FontProperty.NtrRvlImageFormat, "Image encoding", PropertyValueType.ImageFormat, EditorType.Label);
+
                     break;
                 case Platform.Nitro:
                     // TODO: Implement NTR fonts
@@ -103,7 +543,10 @@ namespace Fontendo.Extensions
             FileSystemHelper.FileType fontFileType = FileSystemHelper.GetFileTypeFromPath(path);
             if (fontFileType == FileSystemHelper.FileType.All)
                 return new ActionResult(false, "File extension is not recognised");
-            ActionResult result = Font.Load(path);
+            if(Font != null)
+                Font.Dispose();
+            Font = new BCFNT(this);
+            ActionResult result = Font.Load(this, path);
             // TODO: verify the font is of the expected type
             LoadedFontFileType = fontFileType;
             if (result.Success)
@@ -111,9 +554,25 @@ namespace Fontendo.Extensions
             return result;
         }
 
-        public bool IsLoaded()
+        public ActionResult SaveFont(string path)
         {
-            return LoadedFontFilePath != "";
+            if (!IsLoaded)
+                return new ActionResult(false, "No font loaded");
+            return Font.Save(path);
         }
+
+        public void RecreateSheetFromGlyphs(int sheetNumber)
+        {
+            Font.RecreateSheetFromGlyphs(sheetNumber);
+        }
+
+        public void RecreateGlyphsFromSheet(int sheetNumber)
+        {
+            Font.RecreateGlyphsFromSheet(sheetNumber);
+        }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+        protected void OnPropertyChanged(string propertyName) =>
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 }

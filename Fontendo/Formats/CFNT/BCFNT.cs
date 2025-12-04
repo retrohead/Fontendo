@@ -1,15 +1,11 @@
 ﻿using Fontendo.Extensions;
 using Fontendo.Extensions.BinaryTools;
 using Fontendo.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.DirectoryServices.ActiveDirectory;
 using System.Drawing.Imaging;
-using System.Runtime.CompilerServices;
 using static Fontendo.Extensions.FontBase;
-using static Fontendo.FontProperties.PropertyList;
 using static Fontendo.FontProperties.FontPropertyList;
 using static Fontendo.FontProperties.GlyphProperties;
+using static Fontendo.Extensions.FontBase.FontSettings;
 
 namespace Fontendo.Formats.CTR
 {
@@ -27,29 +23,22 @@ namespace Fontendo.Formats.CTR
         private List<CharWidths>? CharWidths { get; set; } = null;
         private List<CMAP>? CMAP_Headers { get; set; } = null;
         private List<CMAPEntry>? CharMaps { get; set; } = null;
-        public Sheets? Sheets { get; set; } = null;
-        public List<CharImage>? CharImages { get; set; } = null;
+        public SheetsType? Sheets { get; set; } = null;
         public List<Glyph>? Glyphs { get; set; } = null;
-        public FontPropertyRegistry Properties { get; set; }
+        public List<CharImageType>? CharImages { get; set; } = null;
+        public FontBase FontBase { get; }
 
-        public BCFNT()
+        public BCFNT(FontBase FontBase)
         {
-            Properties = new FontPropertyRegistry();
-            Properties.AddProperty(FontProperty.Endianness, "Endianness", PropertyValueType.Bool, EditorType.EndiannessPicker);
-            Properties.AddProperty(FontProperty.CharEncoding, "Char encoding", PropertyValueType.CharEncoding, EditorType.Label);
-            Properties.AddProperty(FontProperty.LineFeed, "Line feed", PropertyValueType.Byte, EditorType.NumberBox, (0, 0xFF));
-            Properties.AddProperty(FontProperty.Height, "Height", PropertyValueType.Byte, EditorType.NumberBox, (0, 0xFF));
-            Properties.AddProperty(FontProperty.Width, "Width", PropertyValueType.Byte, EditorType.NumberBox, (0, 0xFF));
-            Properties.AddProperty(FontProperty.Ascent, "Ascent", PropertyValueType.Byte, EditorType.NumberBox, (0, 0xFF));
-            Properties.AddProperty(FontProperty.Baseline, "Baseline", PropertyValueType.Byte, EditorType.NumberBox, (0, 0xFF));
-            Properties.AddProperty(FontProperty.Version, "Version", PropertyValueType.UInt32, EditorType.Label, (0, 0xFFFFFFFF));
-            Properties.AddProperty(FontProperty.NtrRvlImageFormat, "Image encoding", PropertyValueType.ImageFormat, EditorType.Label);
+            this.FontBase = FontBase;
         }
 
         public ITextureCodec Codec { get; set; } = TextureCodecFactory.Create(TextureCodecFactory.Platform.CTR);
 
-        public ActionResult Load(string filename)
+        public ActionResult Load(FontBase fontbase, string filename)
         {
+
+
             ActionResult result;
             MainForm.Log($"------------------------------------------");
             MainForm.Log($"Loading file: {filename}");
@@ -159,16 +148,16 @@ namespace Fontendo.Formats.CTR
 
                     // Decoding textures
                     br.BaseStream.Position = TGLP.SheetPtr;
-                    if (Sheets?.Items != null)
+                    if (Sheets?.Images != null)
                     {
-                        foreach (var bmp in Sheets.Items)
+                        foreach (var bmp in Sheets.Images)
                         {
                             bmp.Dispose();
                         }
-                        Sheets.Items.Clear();
+                        Sheets.Images.Clear();
                     }
-                    Sheets = new Sheets(TGLP.SheetWidth, TGLP.SheetHeight);
-                    Sheets.Items = new List<Bitmap>();
+                    Sheets = new SheetsType(TGLP.SheetWidth, TGLP.SheetHeight);
+                    Sheets.Images = new List<Bitmap>();
                     MainForm.Log($"Sheets start: {br.BaseStream.Position}");
                     for (ushort i = 0; i < TGLP.SheetCount; i++)
                     {
@@ -190,7 +179,7 @@ namespace Fontendo.Formats.CTR
                             sheet.UnlockBits(bmpData);
                         }
 
-                        Sheets.Items.Add(sheet);
+                        Sheets.Images.Add(sheet);
                     }
                     MainForm.Log($"Sheets End: {br.BaseStream.Position}");
 
@@ -203,7 +192,7 @@ namespace Fontendo.Formats.CTR
                         }
                         CharImages.Clear();
                     }
-                    CharImages = new List<CharImage>();
+                    CharImages = new List<CharImageType>();
                     for (int i = 0; i < CharMaps.Count(); i++) //Get glyph count from charMaps, cause there's no better way to do that
                     {
                         //Do some math to figure out where we should start reading the pixels
@@ -216,8 +205,8 @@ namespace Fontendo.Formats.CTR
                         // Copy pixels from the sheet into a new Bitmap
 
                         Rectangle rect = new Rectangle(startX, startY, TGLP.CellWidth + 1, TGLP.CellHeight + 1);
-                        Bitmap bmp = Sheets.Items[currentSheet].Clone(rect, Sheets.Items[currentSheet].PixelFormat);
-                        CharImage newImg = new CharImage(i, currentSheet, bmp);
+                        Bitmap bmp = Sheets.Images[currentSheet].Clone(rect, Sheets.Images[currentSheet].PixelFormat);
+                        CharImageType newImg = new CharImageType(i, currentSheet, bmp);
                         // Append Bitmap to list
                         CharImages.Add(newImg);
                     }
@@ -241,7 +230,6 @@ namespace Fontendo.Formats.CTR
                         glyph.Settings.CharWidth = CharWidths[i].CharWidth;
                         glyph.Settings.Image = CharImages[i].Image;
                         Glyphs.Add(glyph);
-
                     }
 
                     if (CharMaps.Count() != Glyphs.Count())
@@ -277,16 +265,18 @@ namespace Fontendo.Formats.CTR
                     CellSize = new Point(TGLP.CellWidth, TGLP.CellHeight);
                     SheetSize = new Point(TGLP.SheetWidth, TGLP.SheetHeight);
 
-                    Properties.SetValue(FontProperty.Endianness, br.GetEndianness() == Endianness.Endian.Little);
-                    Properties.SetValue(FontProperty.CharEncoding, (CharEncodings)FINF.Encoding);
-                    Properties.SetValue(FontProperty.LineFeed, FINF.LineFeed);
-                    Properties.SetValue(FontProperty.Height, FINF.Height);
-                    Properties.SetValue(FontProperty.Width, FINF.Width);
-                    Properties.SetValue(FontProperty.Ascent, FINF.Ascent);
-                    Properties.SetValue(FontProperty.Baseline, TGLP.BaselinePos);
-                    Properties.SetValue(FontProperty.Version, CFNT.Version);
-                    Properties.SetValue(FontProperty.NtrRvlImageFormat, (ImageFormats)Codec.ConvertPlatformTextureTypeToGeneral(TGLP.SheetFormat));
 
+                    FontBase.Settings.Endianness = br.GetEndianness() == Endianness.Endian.Little;
+                    FontBase.Settings.CharEncoding = (CharEncodings)FINF.Encoding;
+                    FontBase.Settings.LineFeed = FINF.LineFeed;
+                    FontBase.Settings.Height = FINF.Height;
+                    FontBase.Settings.Width = FINF.Width;
+                    FontBase.Settings.Ascent = FINF.Ascent;
+                    FontBase.Settings.Baseline = TGLP.BaselinePos;
+                    FontBase.Settings.Version = CFNT.Version;
+                    FontBase.Settings.NtrRvlImageFormat = (ImageFormats)Codec.ConvertPlatformTextureTypeToGeneral(TGLP.SheetFormat);
+                    FontBase.Settings.Sheets = Sheets;
+                    FontBase.Settings.Glyphs = Glyphs;
                 }
                 catch (Exception e)
                 {
@@ -304,6 +294,89 @@ namespace Fontendo.Formats.CTR
                 br.Dispose();
             }
             return new ActionResult(true, "OK");
+        }
+
+        /// <summary>
+        /// DO NOT FORGET TO DISPOSE THE BITMAPS LATER
+        /// creates a new image for each sheet and draws all glyphs onto their respective sheets
+        /// </summary>
+        private List<Bitmap> CreateAllSheets()
+        {
+            List<Bitmap> sheetImgs = new List<Bitmap>();
+            for (var i = 0; i < TGLP.SheetCount; i++)
+            {
+                var bmp = new Bitmap(SheetSize.Value.X, SheetSize.Value.Y, PixelFormat.Format32bppArgb);
+                using (var gfx = Graphics.FromImage(bmp)) gfx.Clear(Color.Transparent);
+                sheetImgs.Add(bmp);
+            }
+            foreach (var g in Glyphs)
+            {
+                var i = g.Settings.Index;
+                var currentSheet = i / (TGLP.CellsPerRow * TGLP.CellsPerColumn);
+                var i2 = i - (currentSheet * TGLP.CellsPerRow * TGLP.CellsPerColumn);
+                var currentRow = i2 / TGLP.CellsPerRow;
+                var currentColumn = i2 - (currentRow * TGLP.CellsPerRow);
+                var startX = (int)(currentColumn * (CellSize.Value.X + 1));
+                var startY = (int)(currentRow * (CellSize.Value.Y + 1));
+                if (currentSheet >= sheetImgs.Count)
+                {
+                    throw new Exception("calculated sheet index exceeds created sheets count");
+                }
+                // Draw glyph image onto the sheet
+                using (var gfx = Graphics.FromImage(sheetImgs[(int)currentSheet]))
+                {
+                    gfx.DrawImage(g.Settings.Image, new Rectangle(startX, startY, g.Settings.Image.Width, g.Settings.Image.Height));
+                }
+            }
+            return sheetImgs;
+        }
+
+        public void RecreateSheetFromGlyphs(int i)
+        {
+            var bmp = new Bitmap(SheetSize.Value.X, SheetSize.Value.Y, PixelFormat.Format32bppArgb);
+            using (var gfx = Graphics.FromImage(bmp)) gfx.Clear(Color.Transparent);
+            foreach (var g in Glyphs)
+            {
+                var index = g.Settings.Index;
+                var currentSheet = index / (TGLP.CellsPerRow * TGLP.CellsPerColumn);
+                if (currentSheet != i) continue;
+                var i2 = index - (currentSheet * TGLP.CellsPerRow * TGLP.CellsPerColumn);
+                var currentRow = i2 / TGLP.CellsPerRow;
+                var currentColumn = i2 - (currentRow * TGLP.CellsPerRow);
+                var startX = (int)(currentColumn * (CellSize.Value.X + 1));
+                var startY = (int)(currentRow * (CellSize.Value.Y + 1));
+                // Draw glyph image onto the sheet
+                using (var gfx = Graphics.FromImage(bmp))
+                {
+                    gfx.DrawImage(g.Settings.Image, new Rectangle(startX, startY, g.Settings.Image.Width, g.Settings.Image.Height));
+                }
+            }
+            // Replace old sheet image
+            Sheets.Images[i].Dispose();
+            Sheets.Images[i] = bmp;
+        }
+
+
+        public void RecreateGlyphsFromSheet(int sheetNum)
+        {
+            var charImages = CharImages.FindAll(c => c.Sheet.Equals(sheetNum));
+            for (int i = 0; i < charImages.Count(); i++) //Get glyph count from charMaps, cause there's no better way to do that
+            {
+                //Do some math to figure out where we should start reading the pixels
+                int i2 = CharImages.IndexOf(charImages[i]) - (sheetNum * TGLP.CellsPerRow * TGLP.CellsPerColumn);
+                int currentRow = i2 / TGLP.CellsPerRow;
+                int currentColumn = i2 - (currentRow * TGLP.CellsPerRow);
+                int startX = currentColumn * (TGLP.CellWidth + 1);
+                int startY = currentRow * (TGLP.CellHeight + 1);
+                // Copy pixels from the sheet into a new Bitmap
+
+                Rectangle rect = new Rectangle(startX, startY, TGLP.CellWidth + 1, TGLP.CellHeight + 1);
+                Bitmap bmp = Sheets.Images[sheetNum].Clone(rect, Sheets.Images[sheetNum].PixelFormat);
+                // replace the bmp
+                charImages[i].Image.Dispose();
+                charImages[i].Image = bmp;
+                Glyphs[charImages[i].Index].Settings.Image = bmp;
+            }
         }
 
         public ActionResult Save(string filename)
@@ -340,45 +413,12 @@ namespace Fontendo.Formats.CTR
 
                 RecalculateSheetInfo();
 
-                // Stitch glyph bitmaps into sheet images
-                var cellsPerRow = (uint)(SheetSize.Value.X / (CellSize.Value.X + 1));
-                var cellsPerColumn = (uint)(SheetSize.Value.Y / (CellSize.Value.Y + 1));
-                var cellsPerSheet = cellsPerRow * cellsPerColumn;
-                var numSheets = (uint)Math.Ceiling((double)encodedGlyphs.Count / cellsPerSheet);
+                List<Bitmap> sheetImgs = CreateAllSheets();
 
-                // create empty sheet bmps for writing on
-                List<Bitmap> sheetImgs = new List<Bitmap>();
-                for (var i = 0; i < numSheets; i++)
-                {
-                    var bmp = new Bitmap(SheetSize.Value.X, SheetSize.Value.Y, PixelFormat.Format32bppArgb);
-                    using (var gfx = Graphics.FromImage(bmp)) gfx.Clear(Color.Transparent);
-                    sheetImgs.Add(bmp);
-                }
 
-                foreach (var g in Glyphs)
-                {
-                    var i = g.Settings.GetValue<ushort>(GlyphProperty.Index);
-                    var currentSheet = i / (cellsPerRow * cellsPerColumn);
-                    var i2 = i - (currentSheet * cellsPerRow * cellsPerColumn);
-                    var currentRow = i2 / cellsPerRow;
-                    var currentColumn = i2 - (currentRow * cellsPerRow);
-                    var startX = (int)(currentColumn * (CellSize.Value.X + 1));
-                    var startY = (int)(currentRow * (CellSize.Value.Y + 1));
-                    if(currentSheet >= sheetImgs.Count)
-                    {
-                        throw new Exception("calculated sheet index exceeds created sheets count");
-                    }
-
-                    // Draw glyph image onto the sheet
-                    using (var gfx = Graphics.FromImage(sheetImgs[(int)currentSheet]))
-                    {
-                        gfx.DrawImage(g.Settings.Image, new Rectangle(startX, startY, g.Settings.Image.Width, g.Settings.Image.Height));
-                    }
-                }
-                sheetImgs[0].Save("C:\\Users\\kebud\\source\\repos\\Izuto\\sample_files\\sheet0.png");
                 // Encode sheets to platform texture format
                 // Image format taken from FontProperties (NtrRvlImageFormat), converted to platform
-                var generalFmt = Properties.GetValue<ImageFormats>(FontProperty.NtrRvlImageFormat);
+                var generalFmt = FontBase.Settings.NtrRvlImageFormat;
                 var platformFmt = Codec.ConvertGeneralTextureTypeToPlatform(generalFmt);
                 var encodedSheets = new List<byte[]>(sheetImgs.Count());
                 for (int iSheet = 0; iSheet < sheetImgs.Count(); iSheet++)
@@ -412,14 +452,14 @@ namespace Fontendo.Formats.CTR
 
                 // Create headers from current property values
                 // FINF expects many fields from FontProperties and current state
-                var finfLineFeed = Properties.GetValue<byte>(FontProperty.LineFeed);
-                var finfCharEnc = Properties.GetValue<byte>(FontProperty.CharEncoding);
-                var finfHeight = Properties.GetValue<byte>(FontProperty.Height);
-                var finfWidth = Properties.GetValue<byte>(FontProperty.Width);
-                var finfAscent = Properties.GetValue<byte>(FontProperty.Ascent);
-                var finfBaseline = Properties.GetValue<byte>(FontProperty.Baseline);
-                var cfntVersion = Properties.GetValue<UInt32>(FontProperty.Version);
-                var endiannessLittle = Properties.GetValue<bool>(FontProperty.Endianness);
+                var finfLineFeed = FontBase.Settings.LineFeed;
+                var finfCharEnc = FontBase.Settings.CharEncoding;
+                var finfHeight = FontBase.Settings.Height;
+                var finfWidth = FontBase.Settings.Width;
+                var finfAscent = FontBase.Settings.Ascent;
+                var finfBaseline = FontBase.Settings.Baseline;
+                var cfntVersion = FontBase.Settings.Version;
+                var endiannessLittle = FontBase.Settings.Endianness;
 
                 // Construct CFNT, FINF, TGLP blocks (matching signatures and constants from your parsers)
                 var cfnt = new CFNT(); // If your CFNT has ctor overload, adjust accordingly
@@ -429,7 +469,7 @@ namespace Fontendo.Formats.CTR
                     finfLineFeed,
                     0x1F,                  // matches original hardcoded
                     widthEntries[0],       // same as original: template from first glyph
-                    finfCharEnc,
+                    ((byte)finfCharEnc),
                     finfHeight,
                     finfWidth,
                     finfAscent,
@@ -444,8 +484,8 @@ namespace Fontendo.Formats.CTR
                     (uint)encodedSheets[0].Length,
                     (ushort)encodedSheets.Count,
                     platformFmt,
-                    (ushort)cellsPerRow,
-                    (ushort)cellsPerColumn,
+                    (ushort)TGLP.CellsPerRow,
+                    (ushort)TGLP.CellsPerColumn,
                     (ushort)SheetSize.Value.X,
                     (ushort)SheetSize.Value.Y,
                     0x504C4754U
@@ -514,8 +554,8 @@ namespace Fontendo.Formats.CTR
                 }
 
                 //// Cleanup bitmaps
-                //foreach (var bmp in sheetImgs)
-                //    bmp?.Dispose();
+                foreach (var bmp in sheetImgs)
+                    bmp?.Dispose();
 
                 return new ActionResult(true, "OK");
             }
@@ -582,13 +622,13 @@ namespace Fontendo.Formats.CTR
                 }
                 CharImages.Clear();
             }
-            if (Sheets != null && Sheets.Items != null)
+            if (Sheets != null && Sheets.Images != null)
             {
-                foreach (var bmp in Sheets.Items)
+                foreach (var bmp in Sheets.Images)
                 {
                     bmp.Dispose();
                 }
-                Sheets.Items.Clear();
+                Sheets.Images.Clear();
             }
             if (Glyphs != null)
             {

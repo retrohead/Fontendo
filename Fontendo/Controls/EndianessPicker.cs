@@ -12,18 +12,24 @@ namespace Fontendo.Controls
 {
     public partial class EndianessPicker : UserControl
     {
-        public Endianness.Endian? Endian
+        public bool LitteEndian
         {
-            get => (Endianness.Endian?)button1.Tag;
+            get => (bool)(button1.Tag ?? false);
             set
             {
                 button1.Tag = value;
-                button1.Text = value == Endianness.Endian.Little ? "LE" : "BE";
+                button1.Text = value ? "LE" : "BE";
             }
         }
         public EndianessPicker()
         {
             InitializeComponent();
+            button1.Click += EndianessPicker_Click;
+        }
+
+        private void EndianessPicker_Click(object? sender, EventArgs e)
+        {
+            LitteEndian = !LitteEndian;
         }
     }
 }

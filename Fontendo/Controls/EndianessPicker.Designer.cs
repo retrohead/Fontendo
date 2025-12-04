@@ -36,7 +36,7 @@
             button1.Dock = DockStyle.Fill;
             button1.Location = new Point(0, 0);
             button1.Name = "button1";
-            button1.Size = new Size(112, 39);
+            button1.Size = new Size(86, 30);
             button1.TabIndex = 0;
             button1.Text = "button1";
             button1.UseVisualStyleBackColor = true;
@@ -47,7 +47,7 @@
             AutoScaleMode = AutoScaleMode.Font;
             Controls.Add(button1);
             Name = "EndianessPicker";
-            Size = new Size(112, 39);
+            Size = new Size(86, 30);
             ResumeLayout(false);
         }
 

@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using Newtonsoft.Json.Linq;
+using System.ComponentModel;
 using static Fontendo.FontProperties.PropertyList;
 
 namespace Fontendo.FontProperties
@@ -34,7 +35,7 @@ namespace Fontendo.FontProperties
         /// Descriptor shared across properties of the same kind (e.g., glyph entries).
         /// Holds index, name, type info, control hint, and optional numeric range.
         /// </summary>
-        public sealed class FontPropertyListEntryDescriptor
+        public sealed class FontPropertyDescriptor
         {
             /// <summary>
             /// Property index in a list (avoids passing the index around).
@@ -62,7 +63,7 @@ namespace Fontendo.FontProperties
             /// </summary>
             public EditorType PreferredControl { get; set; }
 
-            public FontPropertyListEntryDescriptor(
+            public FontPropertyDescriptor(
                 int index,
                 string name,
                 PropertyValueType propType,
@@ -92,7 +93,7 @@ namespace Fontendo.FontProperties
         public class FontPropertyRegistry
         {
             // Shared descriptors for each property type
-            public Dictionary<FontProperty, FontPropertyListEntryDescriptor> FontPropertyDescriptors { get; }
+            public Dictionary<FontProperty, FontPropertyDescriptor> FontPropertyDescriptors { get; }
                 = new();
 
             // Actual property values keyed by property type
@@ -108,7 +109,7 @@ namespace Fontendo.FontProperties
                                     EditorType preferredControl,
                                     (long Min, long Max)? range = null)
             {
-                var descriptor = new FontPropertyListEntryDescriptor(
+                var descriptor = new FontPropertyDescriptor(
                     index: (int)propType,
                     name: name,
                     propType: valueType,
@@ -121,8 +122,20 @@ namespace Fontendo.FontProperties
             /// <summary>
             /// Get a strongly-typed property value.
             /// </summary>
-            public T GetValue<T>(FontProperty propType)
+            public T? GetValue<T>(FontProperty propType)
             {
+                if (FontProperties[propType].GetType() == typeof(T))
+                    return (T)FontProperties[propType];
+
+                // Handle numeric widening explicitly
+                if (typeof(T) == typeof(int) && FontProperties[propType] is byte b)
+                    return (T)(object)(int)b;
+                if (typeof(T) == typeof(int?) && FontProperties[propType] is byte b2)
+                    return (T)(object)(int?)b2;
+
+                if (FontProperties[propType] is T tValue)
+                    return tValue;
+
                 return (T)Convert.ChangeType(FontProperties[propType], typeof(T));
             }
 

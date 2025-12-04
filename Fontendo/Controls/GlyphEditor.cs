@@ -10,7 +10,6 @@ namespace Fontendo.Controls
     {
         private float zoomFactor = 1.0f;
         private float maxZoomFactor = 1.0f;
-        private Bitmap? currentGlyph;
         private bool userHasSetZoom = false;
         private bool suppressZoomEvent = false;
         Glyph? LoadedGlyph;
@@ -25,7 +24,7 @@ namespace Fontendo.Controls
                 glyphBackground = value;
                 try
                 {
-                    if (currentGlyph == null)
+                    if (LoadedGlyph?.Settings.Image == null)
                         pictureBoxGlyph.BackColor = GlyphBackground;
                     else
                         pictureBoxGlyph.Invalidate(); // force redraw with new background
@@ -37,6 +36,7 @@ namespace Fontendo.Controls
                 }
             }
         }
+        bool initialized = false;
         public GlyphEditor()
         {
             InitializeComponent();
@@ -44,8 +44,16 @@ namespace Fontendo.Controls
 
         public void ShowGlyphDetails(Glyph? glyph)
         {
-            // Register legacy encodings (including Shift-JIS)
-            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+            if(!initialized)
+            {
+                // Register legacy encodings (including Shift-JIS)
+                Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+                btnExportGlyph.DataBindings.Add(new Binding(nameof(btnExportGlyph.Enabled), MainForm.Self.ButtonEnabler, nameof(MainForm.Self.ButtonEnabler.IsGlyphSelected), true, DataSourceUpdateMode.Never));
+                btnReplaceGlyph.DataBindings.Add(new Binding(nameof(btnReplaceGlyph.Enabled), MainForm.Self.ButtonEnabler, nameof(MainForm.Self.ButtonEnabler.IsGlyphSelected), true, DataSourceUpdateMode.Never));
+                trackBarZoom.DataBindings.Add(new Binding(nameof(trackBarZoom.Enabled), MainForm.Self.ButtonEnabler, nameof(MainForm.Self.ButtonEnabler.IsGlyphSelected), true, DataSourceUpdateMode.Never));
+
+                initialized = true;
+            }
             if (MainForm.Self == null) return;
             if (glyph == null)
             {
@@ -55,11 +63,11 @@ namespace Fontendo.Controls
             ShowGlyphImage(glyph);
             BuildPropertiesPanel(panelGlyphProperties, glyph);
 
-            CharEncodings enc = MainForm.Self.FontendoFont.Font.Properties.GetValue<CharEncodings>(FontProperties.FontPropertyList.FontProperty.CharEncoding);
+            CharEncodings enc = MainForm.Self.FontendoFont.Settings.CharEncoding;
 
             UInt16 code = glyph.Settings.CodePoint;
             string dchar = "";
-            lblGlyphSymbol.Text = "";
+            textGlyphSymbol.Text = "";
             switch (enc)
             {
                 case CharEncodings.UTF8:
@@ -85,7 +93,7 @@ namespace Fontendo.Controls
             byte[] bytes = new byte[chr.Length * 2];
             Buffer.BlockCopy(chr, 0, bytes, 0, bytes.Length);
             string unicodechar = Encoding.Unicode.GetString(bytes);
-            lblGlyphSymbol.Text = unicodechar;
+            textGlyphSymbol.Text = unicodechar;
         }
 
         private void ShowGlyphImage(Glyph? glyph)
@@ -98,16 +106,15 @@ namespace Fontendo.Controls
                 return;
             }
 
-            currentGlyph = glyph.Settings.Image;
-            if (currentGlyph == null)
+            if (LoadedGlyph?.Settings.Image == null)
             {
                 ClearGlyphDetails();
                 return;
             }
 
             // Compute max zoom so image fits inside PictureBox
-            float scaleX = (float)pictureBoxGlyph.Width / currentGlyph.Width;
-            float scaleY = (float)pictureBoxGlyph.Height / currentGlyph.Height;
+            float scaleX = (float)pictureBoxGlyph.Width / LoadedGlyph.Settings.Image.Width;
+            float scaleY = (float)pictureBoxGlyph.Height / LoadedGlyph.Settings.Image.Height;
             maxZoomFactor = Math.Min(scaleX, scaleY);
 
             // Configure TrackBar range
@@ -134,9 +141,10 @@ namespace Fontendo.Controls
 
         public void ClearGlyphDetails()
         {
-
+            panelGlyphProperties.Controls.Clear();
+            LoadedGlyph = null;
+            textGlyphSymbol.Text = "";
         }
-
 
         public void BuildPropertiesPanel(Panel panel, Glyph glyph)
         {
@@ -202,9 +210,6 @@ namespace Fontendo.Controls
             panel.Controls.Add(table);
         }
 
-
-
-
         private void trackBarZoom_ValueChanged(object? sender, EventArgs? e)
         {
             if (suppressZoomEvent) return; // ignore programmatic changes
@@ -215,7 +220,7 @@ namespace Fontendo.Controls
 
         private void pictureBox1_Paint(object? sender, PaintEventArgs? e)
         {
-            if (currentGlyph == null)
+            if (LoadedGlyph?.Settings.Image == null)
             {
                 using var brush = new SolidBrush(SystemColors.ControlLight);
                 e.Graphics.FillRectangle(brush, pictureBoxGlyph.ClientRectangle);
@@ -224,7 +229,7 @@ namespace Fontendo.Controls
             float scaledWidth;
             try
             {
-                scaledWidth = currentGlyph.Width * zoomFactor;
+                scaledWidth = LoadedGlyph.Settings.Image.Width * zoomFactor;
             }
             catch
             {
@@ -232,7 +237,7 @@ namespace Fontendo.Controls
             }
 
 
-            float scaledHeight = currentGlyph.Height * zoomFactor;
+            float scaledHeight = LoadedGlyph.Settings.Image.Height * zoomFactor;
 
             float centerX = pictureBoxGlyph.ClientSize.Width / 2f;
             float centerY = pictureBoxGlyph.ClientSize.Height / 2f;
@@ -250,10 +255,10 @@ namespace Fontendo.Controls
 
             // Draw glyph
             e.Graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.NearestNeighbor;
-            e.Graphics.DrawImage(currentGlyph, drawX, drawY, scaledWidth, scaledHeight);
+            e.Graphics.DrawImage(LoadedGlyph.Settings.Image, drawX, drawY, scaledWidth, scaledHeight);
         }
 
-        private void btnExport_Click(object sender, EventArgs e)
+        public void btnExportGlyph_Click(object sender, EventArgs e)
         {
             if (LoadedGlyph == null) return;
 
@@ -261,9 +266,10 @@ namespace Fontendo.Controls
             string fileName = FileSystemHelper.BrowseForSaveFile(FileSystemHelper.FileType.Png, "Export Glyph Image", $"0x{((long)LoadedGlyph.Settings.CodePoint).ToString($"X{digits}")}.png");
             if (fileName == "") return;
             LoadedGlyph.Settings.Image?.Save(fileName);
+            MessageBox.Show("Glyph image exported successfully.", "Export Successful", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
-        private void btnImport_Click(object sender, EventArgs e)
+        public void btnReplaceGlyph_Click(object sender, EventArgs e)
         {
             if (LoadedGlyph == null || LoadedGlyph.Settings.Image == null) return;
             string fileName = FileSystemHelper.BrowseForFile(FileSystemHelper.FileType.Png, "Import Glyph Image");
@@ -274,9 +280,12 @@ namespace Fontendo.Controls
                 MessageBox.Show("The selected image file does not match the size of the loaded glyph image", "File Error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 return;
             }
+            if (LoadedGlyph.Settings.Image != null)
+                LoadedGlyph.Settings.Image.Dispose();
             LoadedGlyph.Settings.Image = bmp;
             ShowGlyphDetails(LoadedGlyph);
-            MainForm.Self.UpdateFontImages();
+            MainForm.Self.UpdateListViewImagesFromGlyphs();
+            MessageBox.Show("Glyph image imported successfully.", "Import Successful", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
     }
 }

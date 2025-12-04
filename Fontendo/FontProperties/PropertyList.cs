@@ -84,12 +84,22 @@ namespace Fontendo.FontProperties
             Control? editor = null;
             switch (editorType)
             {
+                case EditorType.None:
+                    break;
+                case EditorType.EndiannessPicker:
+                    editor = new EndianessPicker
+                    {
+                        Dock = DockStyle.Fill,
+                        DataBindings = { binding }
+                    };
+                    break;
                 case EditorType.CodePointPicker:
                     editor = new HexNumericUpDown
                     {
                         Dock = DockStyle.Fill,
                         Minimum = descriptor.ValueRange.Item1,
                         Maximum = descriptor.ValueRange.Item2,
+                        TextAlign = HorizontalAlignment.Center,
                         DataBindings = { binding }
                     };
                     break;
@@ -108,7 +118,7 @@ namespace Fontendo.FontProperties
                         Dock = DockStyle.Fill,
                         Minimum = descriptor.ValueRange.Item1,
                         Maximum = descriptor.ValueRange.Item2,
-                        TextAlign = HorizontalAlignment.Right,
+                        TextAlign = HorizontalAlignment.Center,
                         DataBindings = { binding }
                     };
                     break;
@@ -149,6 +159,15 @@ namespace Fontendo.FontProperties
                         DataBindings = { binding }
                     };
                     break;
+                case EditorType.Label:
+                    editor = new Label
+                    {
+                        Dock = DockStyle.Left,
+                        DataBindings = { binding }
+                    };
+                    break;
+                default:
+                    throw new Exception($"Editor type {editorType} not handled");
             }
             return editor;
         }
