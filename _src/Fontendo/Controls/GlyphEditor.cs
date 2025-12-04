@@ -44,7 +44,7 @@ namespace Fontendo.Controls
 
         public void ShowGlyphDetails(Glyph? glyph)
         {
-            if(!initialized)
+            if (!initialized)
             {
                 // Register legacy encodings (including Shift-JIS)
                 Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
@@ -94,6 +94,7 @@ namespace Fontendo.Controls
             Buffer.BlockCopy(chr, 0, bytes, 0, bytes.Length);
             string unicodechar = Encoding.Unicode.GetString(bytes);
             textGlyphSymbol.Text = unicodechar;
+            lblGlyphName.Text = MainForm.Self.UnicodeNames.GetCharNameFromUnicodeCodepoint(code);
         }
 
         private void ShowGlyphImage(Glyph? glyph)
@@ -144,6 +145,7 @@ namespace Fontendo.Controls
             panelGlyphProperties.Controls.Clear();
             LoadedGlyph = null;
             textGlyphSymbol.Text = "";
+            lblGlyphName.Text = "";
         }
 
         public void BuildPropertiesPanel(Panel panel, Glyph glyph)
@@ -189,7 +191,7 @@ namespace Fontendo.Controls
                 }
                 Control? editor;
                 glyph.Settings.GetBindingForObject(kvp.Key, out var binding);
-                editor = CreateControlForEditorType(kvp.Value.PreferredControl, descriptor, binding);
+                editor = CreateControlForEditorType(kvp.Value.PreferredControl, descriptor, new List<Binding> { binding });
 
                 if (editor != null)
                 {
@@ -275,7 +277,7 @@ namespace Fontendo.Controls
             string fileName = FileSystemHelper.BrowseForFile(FileSystemHelper.FileType.Png, "Import Glyph Image");
             if (fileName == "") return;
             Bitmap bmp = new Bitmap(fileName);
-            if(bmp.Width != LoadedGlyph.Settings.Image.Width || bmp.Height != LoadedGlyph.Settings.Image.Height)
+            if (bmp.Width != LoadedGlyph.Settings.Image.Width || bmp.Height != LoadedGlyph.Settings.Image.Height)
             {
                 MessageBox.Show("The selected image file does not match the size of the loaded glyph image", "File Error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 return;
@@ -287,5 +289,6 @@ namespace Fontendo.Controls
             MainForm.Self.UpdateListViewImagesFromGlyphs();
             MessageBox.Show("Glyph image imported successfully.", "Import Successful", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
+
     }
 }

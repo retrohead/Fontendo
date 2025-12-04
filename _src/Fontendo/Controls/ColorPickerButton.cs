@@ -79,6 +79,7 @@ namespace Fontendo.Controls
         {
             this.Text = "Pick Color";
             this.Click += ColorPickerButton_Click;
+            Padding = new Padding(0, 2, 0, 0);
         }
 
         private void ColorPickerButton_Click(object sender, EventArgs e)

@@ -92,7 +92,6 @@ namespace Fontendo
             Self = this;
             FontendoFont = new FontBase(Platform.CTR);
             FontEditor.SelectedColor = Properties.Settings.Default.FontBackgroundColor;
-            splitContainerRight.SplitterDistance = 434;
         }
 
         private void MainForm_Shown(object sender, EventArgs e)

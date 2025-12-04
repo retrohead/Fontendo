@@ -1,7 +1,9 @@
-﻿using Fontendo.Formats.CTR;
+﻿using Fontendo.FontProperties;
+using Fontendo.Formats.CTR;
 using Fontendo.Interfaces;
 using Fontendo.Properties;
 using System.ComponentModel;
+using System.Windows.Forms;
 using static Fontendo.FontProperties.FontPropertyList;
 using static Fontendo.FontProperties.GlyphProperties;
 using static Fontendo.FontProperties.PropertyList;
@@ -389,36 +391,40 @@ namespace Fontendo.Extensions
 
 
 
-            public bool GetBindingForObject(FontProperty property, out Binding? binding)
+            public bool GetBindingForObject(FontProperty property, out List<Binding>? bindings)
             {
+                bindings = new List<Binding>();
                 switch (property)
                 {
                     case FontProperty.Endianness:
-                        binding = new Binding("LitteEndian", this, nameof(Endianness), false, DataSourceUpdateMode.OnPropertyChanged);
+                        bindings.Add(new Binding("LitteEndian", this, nameof(Endianness), false, DataSourceUpdateMode.OnPropertyChanged));
                         return true;
                     case FontProperty.CharEncoding:
-                        binding = new Binding("Text", this, nameof(CharEncoding), false, DataSourceUpdateMode.OnPropertyChanged);
+                        bindings.Add(new Binding("Text", this, nameof(CharEncoding), false, DataSourceUpdateMode.OnPropertyChanged));
                         return true;
                     case FontProperty.LineFeed:
-                        binding = new Binding("Value", this, nameof(LineFeed), false, DataSourceUpdateMode.OnPropertyChanged);
+                        bindings.Add(new Binding("Value", this, nameof(LineFeed), false, DataSourceUpdateMode.OnPropertyChanged));
                         return true;
                     case FontProperty.Height:
-                        binding = new Binding("Value", this, nameof(Height), false, DataSourceUpdateMode.OnPropertyChanged);
+                        bindings.Add(new Binding("Value", this, nameof(Height), false, DataSourceUpdateMode.OnPropertyChanged));
                         return true;
                     case FontProperty.Width:
-                        binding = new Binding("Value", this, nameof(Width), false, DataSourceUpdateMode.OnPropertyChanged);
+                        bindings.Add(new Binding("Value", this, nameof(Width), false, DataSourceUpdateMode.OnPropertyChanged));
                         return true;
                     case FontProperty.Ascent:
-                        binding = new Binding("Value", this, nameof(Ascent), false, DataSourceUpdateMode.OnPropertyChanged);
+                        bindings.Add(new Binding("Value", this, nameof(Ascent), false, DataSourceUpdateMode.OnPropertyChanged));
                         return true;
                     case FontProperty.Baseline:
-                        binding = new Binding("Value", this, nameof(Baseline), false, DataSourceUpdateMode.OnPropertyChanged);
+                        bindings.Add(new Binding("Value", this, nameof(Baseline), false, DataSourceUpdateMode.OnPropertyChanged));
                         return true;
                     case FontProperty.NtrRvlImageFormat:
-                        binding = new Binding("Text", this, nameof(NtrRvlImageFormat), false, DataSourceUpdateMode.OnPropertyChanged);
+                        bindings.Add(new Binding("Text", this, nameof(NtrRvlImageFormat), false, DataSourceUpdateMode.OnPropertyChanged));
                         return true;
                     case FontProperty.Version:
-                        binding = new Binding("Text", this, nameof(Version), false, DataSourceUpdateMode.OnPropertyChanged);
+                        var vb = new Binding("Text", this, nameof(Version), false, DataSourceUpdateMode.OnPropertyChanged);
+                        vb.Format += PropertyList.BindingFormatter_Hex;
+                        vb.Parse += PropertyList.BindingParser_Hex;
+                        bindings.Add(vb);
                         return true;
                     default:
                         throw new NotImplementedException($"No binding implemented for property {property}");

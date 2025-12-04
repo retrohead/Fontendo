@@ -50,19 +50,19 @@ namespace Fontendo
             dockablePanelFont = new Fontendo.Controls.DockablePanel();
             panelSheetListBorder = new Panel();
             listViewSheets = new ListView();
+            contextMenuSheet = new ContextMenuStrip(components);
+            exportSheetToolStripMenuItem = new ToolStripMenuItem();
+            replaceSheetToolStripMenuItem = new ToolStripMenuItem();
             splitContainerRight = new SplitContainer();
             panelCharacterListBorder = new Panel();
             listViewCharacters = new ListView();
+            contextMenuGlyph = new ContextMenuStrip(components);
+            exportGlyphToolStripMenuItem = new ToolStripMenuItem();
+            replaceGlyphToolStripMenuItem = new ToolStripMenuItem();
             imageListCharacters = new ImageList(components);
             dockablePanelGlyph = new Fontendo.Controls.DockablePanel();
             panel1 = new Panel();
             pictureBox2 = new PictureBox();
-            contextMenuGlyph = new ContextMenuStrip(components);
-            exportGlyphToolStripMenuItem = new ToolStripMenuItem();
-            replaceGlyphToolStripMenuItem = new ToolStripMenuItem();
-            contextMenuSheet = new ContextMenuStrip(components);
-            exportSheetToolStripMenuItem = new ToolStripMenuItem();
-            replaceSheetToolStripMenuItem = new ToolStripMenuItem();
             imageListSheets = new ImageList(components);
             tableLayoutPanel1.SuspendLayout();
             menuStrip1.SuspendLayout();
@@ -75,15 +75,15 @@ namespace Fontendo
             splitContainerLeft.Panel2.SuspendLayout();
             splitContainerLeft.SuspendLayout();
             panelSheetListBorder.SuspendLayout();
+            contextMenuSheet.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)splitContainerRight).BeginInit();
             splitContainerRight.Panel1.SuspendLayout();
             splitContainerRight.Panel2.SuspendLayout();
             splitContainerRight.SuspendLayout();
             panelCharacterListBorder.SuspendLayout();
+            contextMenuGlyph.SuspendLayout();
             panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)pictureBox2).BeginInit();
-            contextMenuGlyph.SuspendLayout();
-            contextMenuSheet.SuspendLayout();
             SuspendLayout();
             // 
             // tableLayoutPanel1
@@ -103,7 +103,7 @@ namespace Fontendo
             tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Absolute, 32F));
             tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Absolute, 32F));
             tableLayoutPanel1.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
-            tableLayoutPanel1.Size = new Size(898, 497);
+            tableLayoutPanel1.Size = new Size(964, 548);
             tableLayoutPanel1.TabIndex = 0;
             // 
             // textFontFilePath
@@ -114,13 +114,13 @@ namespace Fontendo
             textFontFilePath.Location = new Point(8, 35);
             textFontFilePath.Margin = new Padding(8, 3, 3, 3);
             textFontFilePath.Name = "textFontFilePath";
-            textFontFilePath.Size = new Size(787, 23);
+            textFontFilePath.Size = new Size(853, 23);
             textFontFilePath.TabIndex = 0;
             // 
             // btnBrowseFont
             // 
             btnBrowseFont.Dock = DockStyle.Fill;
-            btnBrowseFont.Location = new Point(801, 35);
+            btnBrowseFont.Location = new Point(867, 35);
             btnBrowseFont.Margin = new Padding(3, 3, 8, 3);
             btnBrowseFont.Name = "btnBrowseFont";
             btnBrowseFont.Size = new Size(89, 26);
@@ -136,7 +136,7 @@ namespace Fontendo
             menuStrip1.Items.AddRange(new ToolStripItem[] { fileToolStripMenuItem });
             menuStrip1.Location = new Point(0, 0);
             menuStrip1.Name = "menuStrip1";
-            menuStrip1.Size = new Size(798, 32);
+            menuStrip1.Size = new Size(864, 32);
             menuStrip1.TabIndex = 5;
             menuStrip1.Text = "menuStrip1";
             // 
@@ -213,14 +213,14 @@ namespace Fontendo
             // 
             splitContainerMain.Panel1.BackColor = SystemColors.Control;
             splitContainerMain.Panel1.Controls.Add(splitContainerLeft);
-            splitContainerMain.Panel1MinSize = 150;
+            splitContainerMain.Panel1MinSize = 300;
             // 
             // splitContainerMain.Panel2
             // 
             splitContainerMain.Panel2.Controls.Add(splitContainerRight);
             splitContainerMain.Panel2MinSize = 300;
-            splitContainerMain.Size = new Size(888, 430);
-            splitContainerMain.SplitterDistance = 490;
+            splitContainerMain.Size = new Size(954, 481);
+            splitContainerMain.SplitterDistance = 526;
             splitContainerMain.SplitterWidth = 7;
             splitContainerMain.TabIndex = 6;
             // 
@@ -234,13 +234,14 @@ namespace Fontendo
             // splitContainerLeft.Panel1
             // 
             splitContainerLeft.Panel1.Controls.Add(dockablePanelFont);
-            splitContainerLeft.Panel1MinSize = 170;
+            splitContainerLeft.Panel1MinSize = 190;
             // 
             // splitContainerLeft.Panel2
             // 
             splitContainerLeft.Panel2.Controls.Add(panelSheetListBorder);
-            splitContainerLeft.Size = new Size(490, 430);
-            splitContainerLeft.SplitterDistance = 170;
+            splitContainerLeft.Panel2MinSize = 0;
+            splitContainerLeft.Size = new Size(526, 481);
+            splitContainerLeft.SplitterDistance = 190;
             splitContainerLeft.SplitterWidth = 7;
             splitContainerLeft.TabIndex = 0;
             // 
@@ -251,7 +252,7 @@ namespace Fontendo
             dockablePanelFont.HeaderText = "Dockable Panel";
             dockablePanelFont.Location = new Point(0, 0);
             dockablePanelFont.Name = "dockablePanelFont";
-            dockablePanelFont.Size = new Size(170, 430);
+            dockablePanelFont.Size = new Size(190, 481);
             dockablePanelFont.TabIndex = 0;
             // 
             // panelSheetListBorder
@@ -262,7 +263,7 @@ namespace Fontendo
             panelSheetListBorder.Location = new Point(0, 0);
             panelSheetListBorder.Margin = new Padding(0);
             panelSheetListBorder.Name = "panelSheetListBorder";
-            panelSheetListBorder.Size = new Size(313, 430);
+            panelSheetListBorder.Size = new Size(329, 481);
             panelSheetListBorder.TabIndex = 1;
             // 
             // listViewSheets
@@ -275,114 +276,10 @@ namespace Fontendo
             listViewSheets.Location = new Point(0, 0);
             listViewSheets.Margin = new Padding(0);
             listViewSheets.Name = "listViewSheets";
-            listViewSheets.Size = new Size(309, 426);
+            listViewSheets.Size = new Size(325, 477);
             listViewSheets.TabIndex = 4;
             listViewSheets.UseCompatibleStateImageBehavior = false;
             listViewSheets.SelectedIndexChanged += listViewSheets_SelectedIndexChanged;
-            // 
-            // splitContainerRight
-            // 
-            splitContainerRight.Dock = DockStyle.Fill;
-            splitContainerRight.FixedPanel = FixedPanel.Panel2;
-            splitContainerRight.Location = new Point(0, 0);
-            splitContainerRight.Margin = new Padding(0);
-            splitContainerRight.Name = "splitContainerRight";
-            // 
-            // splitContainerRight.Panel1
-            // 
-            splitContainerRight.Panel1.Controls.Add(panelCharacterListBorder);
-            // 
-            // splitContainerRight.Panel2
-            // 
-            splitContainerRight.Panel2.Controls.Add(dockablePanelGlyph);
-            splitContainerRight.Panel2MinSize = 170;
-            splitContainerRight.Size = new Size(391, 430);
-            splitContainerRight.SplitterDistance = 107;
-            splitContainerRight.SplitterWidth = 7;
-            splitContainerRight.TabIndex = 0;
-            // 
-            // panelCharacterListBorder
-            // 
-            panelCharacterListBorder.BorderStyle = BorderStyle.Fixed3D;
-            panelCharacterListBorder.Controls.Add(listViewCharacters);
-            panelCharacterListBorder.Dock = DockStyle.Fill;
-            panelCharacterListBorder.Location = new Point(0, 0);
-            panelCharacterListBorder.Name = "panelCharacterListBorder";
-            panelCharacterListBorder.Size = new Size(107, 430);
-            panelCharacterListBorder.TabIndex = 0;
-            // 
-            // listViewCharacters
-            // 
-            listViewCharacters.BackColor = Color.FromArgb(122, 65, 196);
-            listViewCharacters.BorderStyle = BorderStyle.None;
-            listViewCharacters.ContextMenuStrip = contextMenuGlyph;
-            listViewCharacters.Dock = DockStyle.Fill;
-            listViewCharacters.ForeColor = Color.White;
-            listViewCharacters.LargeImageList = imageListCharacters;
-            listViewCharacters.Location = new Point(0, 0);
-            listViewCharacters.Margin = new Padding(0);
-            listViewCharacters.Name = "listViewCharacters";
-            listViewCharacters.Size = new Size(103, 426);
-            listViewCharacters.TabIndex = 7;
-            listViewCharacters.UseCompatibleStateImageBehavior = false;
-            listViewCharacters.SelectedIndexChanged += listViewCharacters_SelectedIndexChanged;
-            // 
-            // imageListCharacters
-            // 
-            imageListCharacters.ColorDepth = ColorDepth.Depth32Bit;
-            imageListCharacters.ImageSize = new Size(16, 16);
-            imageListCharacters.TransparentColor = Color.Transparent;
-            // 
-            // dockablePanelGlyph
-            // 
-            dockablePanelGlyph.AutoScroll = true;
-            dockablePanelGlyph.Dock = DockStyle.Fill;
-            dockablePanelGlyph.HeaderText = "Dockable Panel";
-            dockablePanelGlyph.Location = new Point(0, 0);
-            dockablePanelGlyph.Name = "dockablePanelGlyph";
-            dockablePanelGlyph.Size = new Size(277, 430);
-            dockablePanelGlyph.TabIndex = 0;
-            // 
-            // panel1
-            // 
-            panel1.BackColor = SystemColors.Menu;
-            panel1.Controls.Add(pictureBox2);
-            panel1.Location = new Point(798, 0);
-            panel1.Margin = new Padding(0);
-            panel1.Name = "panel1";
-            panel1.Size = new Size(100, 32);
-            panel1.TabIndex = 7;
-            // 
-            // pictureBox2
-            // 
-            pictureBox2.Dock = DockStyle.Right;
-            pictureBox2.Image = Properties.Resources.Fontendo_tiny;
-            pictureBox2.Location = new Point(45, 0);
-            pictureBox2.Margin = new Padding(5, 0, 0, 0);
-            pictureBox2.Name = "pictureBox2";
-            pictureBox2.Size = new Size(55, 32);
-            pictureBox2.TabIndex = 11;
-            pictureBox2.TabStop = false;
-            // 
-            // contextMenuGlyph
-            // 
-            contextMenuGlyph.Items.AddRange(new ToolStripItem[] { exportGlyphToolStripMenuItem, replaceGlyphToolStripMenuItem });
-            contextMenuGlyph.Name = "contextMenuGlyph";
-            contextMenuGlyph.Size = new Size(150, 48);
-            // 
-            // exportGlyphToolStripMenuItem
-            // 
-            exportGlyphToolStripMenuItem.Name = "exportGlyphToolStripMenuItem";
-            exportGlyphToolStripMenuItem.Size = new Size(149, 22);
-            exportGlyphToolStripMenuItem.Text = "Export Glyph";
-            exportGlyphToolStripMenuItem.Click += exportGlyphToolStripMenuItem_Click;
-            // 
-            // replaceGlyphToolStripMenuItem
-            // 
-            replaceGlyphToolStripMenuItem.Name = "replaceGlyphToolStripMenuItem";
-            replaceGlyphToolStripMenuItem.Size = new Size(149, 22);
-            replaceGlyphToolStripMenuItem.Text = "Replace Glyph";
-            replaceGlyphToolStripMenuItem.Click += replaceGlyphToolStripMenuItem_Click;
             // 
             // contextMenuSheet
             // 
@@ -404,6 +301,111 @@ namespace Fontendo
             replaceSheetToolStripMenuItem.Text = "Replace Sheet";
             replaceSheetToolStripMenuItem.Click += replaceSheetToolStripMenuItem_Click;
             // 
+            // splitContainerRight
+            // 
+            splitContainerRight.Dock = DockStyle.Fill;
+            splitContainerRight.FixedPanel = FixedPanel.Panel2;
+            splitContainerRight.Location = new Point(0, 0);
+            splitContainerRight.Margin = new Padding(0);
+            splitContainerRight.Name = "splitContainerRight";
+            // 
+            // splitContainerRight.Panel1
+            // 
+            splitContainerRight.Panel1.Controls.Add(panelCharacterListBorder);
+            splitContainerRight.Panel1MinSize = 0;
+            // 
+            // splitContainerRight.Panel2
+            // 
+            splitContainerRight.Panel2.Controls.Add(dockablePanelGlyph);
+            splitContainerRight.Panel2MinSize = 180;
+            splitContainerRight.Size = new Size(421, 481);
+            splitContainerRight.SplitterDistance = 225;
+            splitContainerRight.SplitterWidth = 7;
+            splitContainerRight.TabIndex = 0;
+            // 
+            // panelCharacterListBorder
+            // 
+            panelCharacterListBorder.BorderStyle = BorderStyle.Fixed3D;
+            panelCharacterListBorder.Controls.Add(listViewCharacters);
+            panelCharacterListBorder.Dock = DockStyle.Fill;
+            panelCharacterListBorder.Location = new Point(0, 0);
+            panelCharacterListBorder.Name = "panelCharacterListBorder";
+            panelCharacterListBorder.Size = new Size(225, 481);
+            panelCharacterListBorder.TabIndex = 0;
+            // 
+            // listViewCharacters
+            // 
+            listViewCharacters.BackColor = Color.FromArgb(122, 65, 196);
+            listViewCharacters.BorderStyle = BorderStyle.None;
+            listViewCharacters.ContextMenuStrip = contextMenuGlyph;
+            listViewCharacters.Dock = DockStyle.Fill;
+            listViewCharacters.ForeColor = Color.White;
+            listViewCharacters.LargeImageList = imageListCharacters;
+            listViewCharacters.Location = new Point(0, 0);
+            listViewCharacters.Margin = new Padding(0);
+            listViewCharacters.Name = "listViewCharacters";
+            listViewCharacters.Size = new Size(221, 477);
+            listViewCharacters.TabIndex = 7;
+            listViewCharacters.UseCompatibleStateImageBehavior = false;
+            listViewCharacters.SelectedIndexChanged += listViewCharacters_SelectedIndexChanged;
+            // 
+            // contextMenuGlyph
+            // 
+            contextMenuGlyph.Items.AddRange(new ToolStripItem[] { exportGlyphToolStripMenuItem, replaceGlyphToolStripMenuItem });
+            contextMenuGlyph.Name = "contextMenuGlyph";
+            contextMenuGlyph.Size = new Size(150, 48);
+            // 
+            // exportGlyphToolStripMenuItem
+            // 
+            exportGlyphToolStripMenuItem.Name = "exportGlyphToolStripMenuItem";
+            exportGlyphToolStripMenuItem.Size = new Size(149, 22);
+            exportGlyphToolStripMenuItem.Text = "Export Glyph";
+            exportGlyphToolStripMenuItem.Click += exportGlyphToolStripMenuItem_Click;
+            // 
+            // replaceGlyphToolStripMenuItem
+            // 
+            replaceGlyphToolStripMenuItem.Name = "replaceGlyphToolStripMenuItem";
+            replaceGlyphToolStripMenuItem.Size = new Size(149, 22);
+            replaceGlyphToolStripMenuItem.Text = "Replace Glyph";
+            replaceGlyphToolStripMenuItem.Click += replaceGlyphToolStripMenuItem_Click;
+            // 
+            // imageListCharacters
+            // 
+            imageListCharacters.ColorDepth = ColorDepth.Depth32Bit;
+            imageListCharacters.ImageSize = new Size(16, 16);
+            imageListCharacters.TransparentColor = Color.Transparent;
+            // 
+            // dockablePanelGlyph
+            // 
+            dockablePanelGlyph.AutoScroll = true;
+            dockablePanelGlyph.Dock = DockStyle.Fill;
+            dockablePanelGlyph.HeaderText = "Dockable Panel";
+            dockablePanelGlyph.Location = new Point(0, 0);
+            dockablePanelGlyph.Name = "dockablePanelGlyph";
+            dockablePanelGlyph.Size = new Size(189, 481);
+            dockablePanelGlyph.TabIndex = 0;
+            // 
+            // panel1
+            // 
+            panel1.BackColor = SystemColors.Menu;
+            panel1.Controls.Add(pictureBox2);
+            panel1.Location = new Point(864, 0);
+            panel1.Margin = new Padding(0);
+            panel1.Name = "panel1";
+            panel1.Size = new Size(100, 32);
+            panel1.TabIndex = 7;
+            // 
+            // pictureBox2
+            // 
+            pictureBox2.Dock = DockStyle.Right;
+            pictureBox2.Image = Properties.Resources.Fontendo_tiny;
+            pictureBox2.Location = new Point(45, 0);
+            pictureBox2.Margin = new Padding(5, 0, 0, 0);
+            pictureBox2.Name = "pictureBox2";
+            pictureBox2.Size = new Size(55, 32);
+            pictureBox2.TabIndex = 11;
+            pictureBox2.TabStop = false;
+            // 
             // imageListSheets
             // 
             imageListSheets.ColorDepth = ColorDepth.Depth32Bit;
@@ -414,7 +416,7 @@ namespace Fontendo
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(898, 497);
+            ClientSize = new Size(964, 548);
             Controls.Add(tableLayoutPanel1);
             Icon = (Icon)resources.GetObject("$this.Icon");
             MainMenuStrip = menuStrip1;
@@ -435,15 +437,15 @@ namespace Fontendo
             ((System.ComponentModel.ISupportInitialize)splitContainerLeft).EndInit();
             splitContainerLeft.ResumeLayout(false);
             panelSheetListBorder.ResumeLayout(false);
+            contextMenuSheet.ResumeLayout(false);
             splitContainerRight.Panel1.ResumeLayout(false);
             splitContainerRight.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)splitContainerRight).EndInit();
             splitContainerRight.ResumeLayout(false);
             panelCharacterListBorder.ResumeLayout(false);
+            contextMenuGlyph.ResumeLayout(false);
             panel1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)pictureBox2).EndInit();
-            contextMenuGlyph.ResumeLayout(false);
-            contextMenuSheet.ResumeLayout(false);
             ResumeLayout(false);
         }
 

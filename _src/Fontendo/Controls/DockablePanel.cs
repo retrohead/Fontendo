@@ -38,7 +38,7 @@ namespace Fontendo.Controls
             labelHeader.Text = HeaderText;
 
             AttachedControl = userControl;
-            AttachedControl.Dock = DockStyle.Fill;
+            //AttachedControl.Dock = DockStyle.Top;
             panelScrollablePanel.Controls.Add(AttachedControl);
         }
 

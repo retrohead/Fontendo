@@ -61,13 +61,13 @@
             tableMainTable.RowStyles.Add(new RowStyle(SizeType.Absolute, 32F));
             tableMainTable.RowStyles.Add(new RowStyle(SizeType.Absolute, 32F));
             tableMainTable.RowStyles.Add(new RowStyle(SizeType.Absolute, 32F));
-            tableMainTable.Size = new Size(160, 226);
+            tableMainTable.Size = new Size(180, 226);
             tableMainTable.TabIndex = 0;
             // 
             // btnExportSheet
             // 
             btnExportSheet.Dock = DockStyle.Fill;
-            btnExportSheet.Location = new Point(23, 101);
+            btnExportSheet.Location = new Point(33, 101);
             btnExportSheet.Name = "btnExportSheet";
             btnExportSheet.Size = new Size(114, 26);
             btnExportSheet.TabIndex = 10;
@@ -81,7 +81,7 @@
             colorPickerBgColour.CirclePosition = CirclePosition.Left;
             colorPickerBgColour.CircleSize = 8;
             colorPickerBgColour.Dock = DockStyle.Fill;
-            colorPickerBgColour.Location = new Point(23, 69);
+            colorPickerBgColour.Location = new Point(33, 69);
             colorPickerBgColour.Name = "colorPickerBgColour";
             colorPickerBgColour.SelectedColor = Color.FromArgb(122, 65, 196);
             colorPickerBgColour.Size = new Size(114, 26);
@@ -99,7 +99,7 @@
             groupBox1.Location = new Point(3, 59);
             groupBox1.Name = "groupBox1";
             groupBox1.Padding = new Padding(0);
-            groupBox1.Size = new Size(154, 2);
+            groupBox1.Size = new Size(174, 2);
             groupBox1.TabIndex = 7;
             groupBox1.TabStop = false;
             // 
@@ -113,13 +113,13 @@
             panelFontProperties.Location = new Point(3, 3);
             panelFontProperties.MinimumSize = new Size(0, 50);
             panelFontProperties.Name = "panelFontProperties";
-            panelFontProperties.Size = new Size(154, 50);
+            panelFontProperties.Size = new Size(174, 50);
             panelFontProperties.TabIndex = 3;
             // 
             // btnReplaceSheet
             // 
             btnReplaceSheet.Dock = DockStyle.Fill;
-            btnReplaceSheet.Location = new Point(23, 133);
+            btnReplaceSheet.Location = new Point(33, 133);
             btnReplaceSheet.Name = "btnReplaceSheet";
             btnReplaceSheet.Size = new Size(114, 26);
             btnReplaceSheet.TabIndex = 9;
@@ -131,10 +131,11 @@
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            AutoScroll = true;
+            AutoSize = true;
             Controls.Add(tableMainTable);
+            MinimumSize = new Size(180, 350);
             Name = "FontEditor";
-            Size = new Size(160, 349);
+            Size = new Size(180, 350);
             tableMainTable.ResumeLayout(false);
             tableMainTable.PerformLayout();
             ResumeLayout(false);

@@ -1,26 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
+﻿using System.ComponentModel;
 
 namespace Fontendo.Controls
 {
-    public class HexNumericUpDown : NumericUpDown
+    public class HexNumericUpDown : NumericUpDown, INotifyPropertyChanged
     {
         private TextBox? innerBox;
         private long _value;
         public long HexValue
         {
-            get
-            {
-                return _value;
-            }
+            get => _value;
             set
             {
-                _value = value;
-                UpdateEditText();
+                if (_value != value)
+                {
+                    _value = value;
+                    UpdateEditText();
+                    OnPropertyChanged(nameof(HexValue));
+                }
             }
         }
 
@@ -36,7 +32,8 @@ namespace Fontendo.Controls
                 innerBox.KeyDown += InnerBox_KeyDown;
             }
             MouseDown += NumberBox_MouseDown;
-            MouseMove += NumberBox_MouseDown;
+            Binding binding = new Binding("Value", this, "HexValue", true, DataSourceUpdateMode.OnPropertyChanged);
+            DataBindings.Add(binding);
         }
 
         protected override void UpdateEditText()
@@ -107,6 +104,11 @@ namespace Fontendo.Controls
                 innerBox.SelectionStart = 2; // force caret after "0x"
             }
         }
+
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+        protected void OnPropertyChanged(string name) =>
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
     }
 
 

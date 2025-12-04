@@ -8,4 +8,8 @@ Port of NintyFont by hadashisora to c#. All credit goes to him for the original 
 https://github.com/hadashisora/NintyFont
 
 
-Currently supports loading CTR fonts only, no saving or modifying yet
+Currently supports loading and modifying CTR fonts only for now.
+
+## Supported Formats
+
+- CFNT - Binary Citrus FoNT, used in many 3DS titles utilizing old versions of NW4C.

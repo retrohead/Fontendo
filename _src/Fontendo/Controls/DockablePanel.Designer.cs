@@ -44,7 +44,6 @@
             // panelScrollablePanel
             // 
             panelScrollablePanel.AutoScroll = true;
-            panelScrollablePanel.AutoSizeMode = AutoSizeMode.GrowAndShrink;
             panelScrollablePanel.BackColor = SystemColors.Control;
             panelScrollablePanel.Dock = DockStyle.Fill;
             panelScrollablePanel.Location = new Point(0, 20);

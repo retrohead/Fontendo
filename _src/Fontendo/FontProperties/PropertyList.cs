@@ -79,7 +79,7 @@ namespace Fontendo.FontProperties
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        public static Control? CreateControlForEditorType(EditorType editorType,dynamic? descriptor, Binding? binding)
+        public static Control? CreateControlForEditorType(EditorType editorType,dynamic? descriptor, List<Binding>? bindings)
         {
             Control? editor = null;
             switch (editorType)
@@ -87,11 +87,7 @@ namespace Fontendo.FontProperties
                 case EditorType.None:
                     break;
                 case EditorType.EndiannessPicker:
-                    editor = new EndianessPicker
-                    {
-                        Dock = DockStyle.Fill,
-                        DataBindings = { binding }
-                    };
+                    editor = new EndianessPicker{ Dock = DockStyle.Fill };
                     break;
                 case EditorType.CodePointPicker:
                     editor = new HexNumericUpDown
@@ -99,17 +95,12 @@ namespace Fontendo.FontProperties
                         Dock = DockStyle.Fill,
                         Minimum = descriptor.ValueRange.Item1,
                         Maximum = descriptor.ValueRange.Item2,
-                        TextAlign = HorizontalAlignment.Center,
-                        DataBindings = { binding }
+                        TextAlign = HorizontalAlignment.Center
                     };
                     break;
 
                 case EditorType.TextBox:
-                    editor = new TextBox 
-                    {
-                        Dock = DockStyle.Fill,
-                        DataBindings = { binding }
-                    };
+                    editor = new TextBox{ Dock = DockStyle.Fill };
                     break;
 
                 case EditorType.NumberBox:
@@ -118,8 +109,7 @@ namespace Fontendo.FontProperties
                         Dock = DockStyle.Fill,
                         Minimum = descriptor.ValueRange.Item1,
                         Maximum = descriptor.ValueRange.Item2,
-                        TextAlign = HorizontalAlignment.Center,
-                        DataBindings = { binding }
+                        TextAlign = HorizontalAlignment.Center
                     };
                     break;
 
@@ -127,8 +117,7 @@ namespace Fontendo.FontProperties
                     editor = new ComboBox
                     {
                         Dock = DockStyle.Fill,
-                        DropDownStyle = ComboBoxStyle.DropDownList,
-                        DataBindings = { binding }
+                        DropDownStyle = ComboBoxStyle.DropDownList
                     };
                     // TODO: populate items based on descriptor metadata
                     break;
@@ -138,16 +127,14 @@ namespace Fontendo.FontProperties
                     {
                         Dock = DockStyle.Fill,
                         Minimum = (int)(descriptor.ValueRange?.Min ?? 0),
-                        Maximum = (int)(descriptor.ValueRange?.Max ?? 100),
-                        DataBindings = { binding }
+                        Maximum = (int)(descriptor.ValueRange?.Max ?? 100)
                     };
                     break;
 
                 case EditorType.CheckBox:
                     editor = new CheckBox
                     {
-                        Dock = DockStyle.Left,
-                        DataBindings = { binding }
+                        Dock = DockStyle.Left
                     };
                     break;
 
@@ -155,19 +142,25 @@ namespace Fontendo.FontProperties
                     editor = new ColorPickerButton
                     {
                         Dock = DockStyle.Left,
-                        Text = "Pick Color",
-                        DataBindings = { binding }
+                        Text = "Pick Color"
                     };
                     break;
                 case EditorType.Label:
                     editor = new Label
                     {
                         Dock = DockStyle.Left,
-                        DataBindings = { binding }
+                        Margin = new Padding(0, 0, 0, 3)
                     };
                     break;
                 default:
                     throw new Exception($"Editor type {editorType} not handled");
+            }
+            if(editor != null && bindings != null)
+            {
+                foreach (var binding in bindings)
+                {
+                    editor.DataBindings.Add(binding);
+                }
             }
             return editor;
         }
@@ -188,6 +181,49 @@ namespace Fontendo.FontProperties
                 EditorType.ColorPicker => "SelectedColor",
                 _ => null
             };
+        }
+
+        public static void BindingFormatter_Hex(object? sender, ConvertEventArgs e)
+        {
+            if (e.DesiredType == typeof(string) && e.Value != null)
+            {
+                switch (Type.GetTypeCode(e.Value.GetType()))
+                {
+                    case TypeCode.Int16:
+                    case TypeCode.UInt16:
+                    case TypeCode.Int32:
+                    case TypeCode.UInt32:
+                    case TypeCode.Int64:
+                        e.Value = "0x" + Convert.ToInt64(e.Value).ToString("X");
+                        break;
+                }
+            }
+        }
+
+        public static void BindingParser_Hex(object? sender, ConvertEventArgs e)
+        {
+            if (e.Value is string str)
+            {
+                str = str.Trim().Replace("0x", "");
+
+                if (long.TryParse(str, System.Globalization.NumberStyles.HexNumber, null, out var parsed))
+                {
+                    // Cast back to the target type
+                    var targetType = e.DesiredType;
+                    if (targetType == typeof(short))
+                        e.Value = (short)parsed;
+                    else if (targetType == typeof(ushort))
+                        e.Value = (ushort)parsed;
+                    else if (targetType == typeof(int))
+                        e.Value = (int)parsed;
+                    else if (targetType == typeof(uint))
+                        e.Value = (uint)parsed;
+                    else if (targetType == typeof(long))
+                        e.Value = parsed;
+                    else
+                        e.Value = parsed; // fallback
+                }
+            }
         }
     }
 }

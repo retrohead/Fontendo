@@ -88,8 +88,8 @@ namespace Fontendo.Controls
                     table.Controls.Add(label, 0, rowIndex);
                 }
 
-                font.Settings.GetBindingForObject(kvp.Key, out var binding);
-                Control? editor = CreateControlForEditorType(descriptor.PreferredControl, descriptor, binding);
+                font.Settings.GetBindingForObject(kvp.Key, out var bindings);
+                Control? editor = CreateControlForEditorType(descriptor.PreferredControl, descriptor, bindings);
 
                 if (editor != null)
                 {
