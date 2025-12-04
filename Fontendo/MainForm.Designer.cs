@@ -58,12 +58,12 @@ namespace Fontendo
             panel1 = new Panel();
             pictureBox2 = new PictureBox();
             contextMenuGlyph = new ContextMenuStrip(components);
-            contextMenuSheet = new ContextMenuStrip(components);
-            imageListSheets = new ImageList(components);
-            exportSheetToolStripMenuItem = new ToolStripMenuItem();
-            replaceSheetToolStripMenuItem = new ToolStripMenuItem();
             exportGlyphToolStripMenuItem = new ToolStripMenuItem();
             replaceGlyphToolStripMenuItem = new ToolStripMenuItem();
+            contextMenuSheet = new ContextMenuStrip(components);
+            exportSheetToolStripMenuItem = new ToolStripMenuItem();
+            replaceSheetToolStripMenuItem = new ToolStripMenuItem();
+            imageListSheets = new ImageList(components);
             tableLayoutPanel1.SuspendLayout();
             menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)splitContainerMain).BeginInit();
@@ -269,6 +269,7 @@ namespace Fontendo
             // 
             listViewSheets.BackColor = Color.FromArgb(122, 65, 196);
             listViewSheets.BorderStyle = BorderStyle.None;
+            listViewSheets.ContextMenuStrip = contextMenuSheet;
             listViewSheets.Dock = DockStyle.Fill;
             listViewSheets.ForeColor = Color.White;
             listViewSheets.Location = new Point(0, 0);
@@ -296,7 +297,7 @@ namespace Fontendo
             splitContainerRight.Panel2.Controls.Add(dockablePanelGlyph);
             splitContainerRight.Panel2MinSize = 170;
             splitContainerRight.Size = new Size(391, 430);
-            splitContainerRight.SplitterDistance = 110;
+            splitContainerRight.SplitterDistance = 107;
             splitContainerRight.SplitterWidth = 7;
             splitContainerRight.TabIndex = 0;
             // 
@@ -307,20 +308,21 @@ namespace Fontendo
             panelCharacterListBorder.Dock = DockStyle.Fill;
             panelCharacterListBorder.Location = new Point(0, 0);
             panelCharacterListBorder.Name = "panelCharacterListBorder";
-            panelCharacterListBorder.Size = new Size(110, 430);
+            panelCharacterListBorder.Size = new Size(107, 430);
             panelCharacterListBorder.TabIndex = 0;
             // 
             // listViewCharacters
             // 
             listViewCharacters.BackColor = Color.FromArgb(122, 65, 196);
             listViewCharacters.BorderStyle = BorderStyle.None;
+            listViewCharacters.ContextMenuStrip = contextMenuGlyph;
             listViewCharacters.Dock = DockStyle.Fill;
             listViewCharacters.ForeColor = Color.White;
             listViewCharacters.LargeImageList = imageListCharacters;
             listViewCharacters.Location = new Point(0, 0);
             listViewCharacters.Margin = new Padding(0);
             listViewCharacters.Name = "listViewCharacters";
-            listViewCharacters.Size = new Size(106, 426);
+            listViewCharacters.Size = new Size(103, 426);
             listViewCharacters.TabIndex = 7;
             listViewCharacters.UseCompatibleStateImageBehavior = false;
             listViewCharacters.SelectedIndexChanged += listViewCharacters_SelectedIndexChanged;
@@ -338,7 +340,7 @@ namespace Fontendo
             dockablePanelGlyph.HeaderText = "Dockable Panel";
             dockablePanelGlyph.Location = new Point(0, 0);
             dockablePanelGlyph.Name = "dockablePanelGlyph";
-            dockablePanelGlyph.Size = new Size(274, 430);
+            dockablePanelGlyph.Size = new Size(277, 430);
             dockablePanelGlyph.TabIndex = 0;
             // 
             // panel1
@@ -366,19 +368,27 @@ namespace Fontendo
             // 
             contextMenuGlyph.Items.AddRange(new ToolStripItem[] { exportGlyphToolStripMenuItem, replaceGlyphToolStripMenuItem });
             contextMenuGlyph.Name = "contextMenuGlyph";
-            contextMenuGlyph.Size = new Size(181, 70);
+            contextMenuGlyph.Size = new Size(150, 48);
+            // 
+            // exportGlyphToolStripMenuItem
+            // 
+            exportGlyphToolStripMenuItem.Name = "exportGlyphToolStripMenuItem";
+            exportGlyphToolStripMenuItem.Size = new Size(149, 22);
+            exportGlyphToolStripMenuItem.Text = "Export Glyph";
+            exportGlyphToolStripMenuItem.Click += exportGlyphToolStripMenuItem_Click;
+            // 
+            // replaceGlyphToolStripMenuItem
+            // 
+            replaceGlyphToolStripMenuItem.Name = "replaceGlyphToolStripMenuItem";
+            replaceGlyphToolStripMenuItem.Size = new Size(149, 22);
+            replaceGlyphToolStripMenuItem.Text = "Replace Glyph";
+            replaceGlyphToolStripMenuItem.Click += replaceGlyphToolStripMenuItem_Click;
             // 
             // contextMenuSheet
             // 
             contextMenuSheet.Items.AddRange(new ToolStripItem[] { exportSheetToolStripMenuItem, replaceSheetToolStripMenuItem });
             contextMenuSheet.Name = "contextMenuSheet";
             contextMenuSheet.Size = new Size(148, 48);
-            // 
-            // imageListSheets
-            // 
-            imageListSheets.ColorDepth = ColorDepth.Depth32Bit;
-            imageListSheets.ImageSize = new Size(16, 16);
-            imageListSheets.TransparentColor = Color.Transparent;
             // 
             // exportSheetToolStripMenuItem
             // 
@@ -394,19 +404,11 @@ namespace Fontendo
             replaceSheetToolStripMenuItem.Text = "Replace Sheet";
             replaceSheetToolStripMenuItem.Click += replaceSheetToolStripMenuItem_Click;
             // 
-            // exportGlyphToolStripMenuItem
+            // imageListSheets
             // 
-            exportGlyphToolStripMenuItem.Name = "exportGlyphToolStripMenuItem";
-            exportGlyphToolStripMenuItem.Size = new Size(180, 22);
-            exportGlyphToolStripMenuItem.Text = "Export Glyph";
-            exportGlyphToolStripMenuItem.Click += exportGlyphToolStripMenuItem_Click;
-            // 
-            // replaceGlyphToolStripMenuItem
-            // 
-            replaceGlyphToolStripMenuItem.Name = "replaceGlyphToolStripMenuItem";
-            replaceGlyphToolStripMenuItem.Size = new Size(180, 22);
-            replaceGlyphToolStripMenuItem.Text = "Replace Glyph";
-            replaceGlyphToolStripMenuItem.Click += replaceGlyphToolStripMenuItem_Click;
+            imageListSheets.ColorDepth = ColorDepth.Depth32Bit;
+            imageListSheets.ImageSize = new Size(16, 16);
+            imageListSheets.TransparentColor = Color.Transparent;
             // 
             // MainForm
             // 
