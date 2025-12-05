@@ -13,7 +13,6 @@
   <ItemGroup>
     <None Remove="Resources\DerivedName.txt" />
     <None Remove="Resources\fontendo logo.ico" />
-    <None Remove="Resources\SHIFTJIS.TXT" />
   </ItemGroup>
 
   <ItemGroup>
@@ -22,7 +21,6 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Resources\DerivedName.txt" />
-    <EmbeddedResource Include="Resources\SHIFTJIS.TXT" />
   </ItemGroup>
 
   <ItemGroup>

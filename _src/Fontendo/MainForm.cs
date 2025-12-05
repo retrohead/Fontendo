@@ -14,7 +14,6 @@ namespace Fontendo
     {
         public static MainForm Self = null!;
         public FontBase FontendoFont;
-        public SJISConv SJIS;
         public UnicodeNames UnicodeNames;
         public GlyphEditor GlyphEditor = new GlyphEditor();
         public FontEditor FontEditor = new FontEditor();
@@ -83,7 +82,6 @@ namespace Fontendo
                 FileType.BinaryCrustFont
             });
             RecentFiles.Initialize();
-            SJIS = new SJISConv();
             UnicodeNames = new UnicodeNames();
             // Get the version from the assembly
             Version version = Assembly.GetExecutingAssembly().GetName().Version;

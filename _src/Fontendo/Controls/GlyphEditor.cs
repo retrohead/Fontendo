@@ -77,7 +77,9 @@ namespace Fontendo.Controls
                 case CharEncodings.ShiftJIS:
                     try
                     {
-                        code = MainForm.Self.SJIS.CodeToUTF16(code); MainForm.Self.SJIS.CodeToUTF16(code);
+                        char c = (char)code;
+                        code = (ushort)c;
+                        //code = MainForm.Self.SJIS.CodeToUTF16(code);
                     }
                     catch
                     {
