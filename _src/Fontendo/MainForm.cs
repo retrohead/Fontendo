@@ -102,21 +102,32 @@ namespace Fontendo
             DockManager.Register(dockablePanelFont, FontEditor, "Font Properties");
         }
 
+        public void LoadFont(string filename)
+        {
+            textFontFilePath.Text = "";
+            FontEditor.ShowFontDetails(null);
+            GlyphEditor.ShowGlyphDetails(null);
+            ActionResult result = FontendoFont.LoadFont(filename);
+
+            if (!result.Success)
+            {
+                MessageBox.Show($"Font failed to load {result.Message}", "Font Error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                return;
+            } else if(result.Message != "OK")
+            {
+                MessageBox.Show($"Font loaded with warnings:\n\n{result.Message}", "Font Warnings Occurred", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            textFontFilePath.Text = filename;
+            RecentFiles.Add(textFontFilePath.Text);
+            ListFontSheets();
+            FontEditor.ShowFontDetails(FontendoFont);
+        }
+
         private void btnBrowseFont_Click(object sender, EventArgs e)
         {
             string filename = FileSystemHelper.BrowseForSupportedFile("Select a font file");
             if (string.IsNullOrEmpty(filename)) return;
-            textFontFilePath.Text = filename;
-            ActionResult result = FontendoFont.LoadFont(textFontFilePath.Text);
-
-            if (!result.Success)
-            {
-                MessageBox.Show($"Font failed to load {result.Message}");
-                return;
-            }
-            RecentFiles.Add(textFontFilePath.Text);
-            ListFontSheets();
-            FontEditor.ShowFontDetails(FontendoFont);
+            LoadFont(filename);
         }
 
         private void ListFontSheets()
@@ -201,17 +212,7 @@ namespace Fontendo
                 return;
             }
 
-            ActionResult result = FontendoFont.LoadFont(((RecentFiles.RecentFile)item.Tag).FilePath);
-
-            if (!result.Success)
-            {
-                MessageBox.Show(this, $"Font failed to load {result.Message}", "Font Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-            textFontFilePath.Text = ((RecentFiles.RecentFile)item.Tag).FilePath;
-            RecentFiles.Add(textFontFilePath.Text);
-            ListFontSheets();
-            FontEditor.ShowFontDetails(FontendoFont);
+            LoadFont(((RecentFiles.RecentFile)item.Tag).FilePath);
         }
 
         private void saveToolStripMenuItem_Click(object sender, EventArgs e)

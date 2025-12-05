@@ -6,7 +6,7 @@
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="FontBackgroundColor" Type="System.Drawing.Color" Scope="User">
-      <Value Profile="(Default)">Black</Value>
+      <Value Profile="(Default)">123, 64, 194</Value>
     </Setting>
   </Settings>
 </SettingsFile>

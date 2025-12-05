@@ -43,6 +43,8 @@ namespace Fontendo.Formats.CTR
             MainForm.Log($"------------------------------------------");
             MainForm.Log($"Loading file: {filename}");
 
+
+            string fixedCorrupt = "";
             using (var br = new BinaryReaderX(File.OpenRead(filename)))
             {
                 CFNT = new CFNT(br);
@@ -213,11 +215,6 @@ namespace Fontendo.Formats.CTR
                     // sort CMAP entries
                     CharMaps.Sort((a, b) => a.Index.CompareTo(b.Index));
 
-
-                    if (CharMaps.Count() != CharWidths.Count())
-                        return new ActionResult(false, $"character maps count '{CharMaps.Count()}' does not match character widths count '{CharWidths.Count()}'");
-
-
                     // put all glyphs into data
                     Glyphs = new List<Glyph>();
                     for (int i = 0; i < CharMaps.Count(); i++)
@@ -230,6 +227,14 @@ namespace Fontendo.Formats.CTR
                         glyph.Settings.CharWidth = CharWidths[i].CharWidth;
                         glyph.Settings.Image = CharImages[i].Image;
                         Glyphs.Add(glyph);
+                    }
+                    // try to fix corrupted fonts with too many char widths from NintyFont
+                    if (CharMaps.Count() == Glyphs.Count() && CharWidths.Count() > CharMaps.Count())
+                    {
+                        int excess = CharWidths.Count() - CharMaps.Count();
+                        while (CharWidths.Count() > CharMaps.Count())
+                            CharWidths.RemoveAt(0);
+                        fixedCorrupt = $"{excess} corrupted char widths were found and removed from the font so you can hopefully recover it";
                     }
 
                     if (CharMaps.Count() != Glyphs.Count())
@@ -293,7 +298,7 @@ namespace Fontendo.Formats.CTR
                 br.Close();
                 br.Dispose();
             }
-            return new ActionResult(true, "OK");
+            return new ActionResult(true, fixedCorrupt);
         }
 
         /// <summary>

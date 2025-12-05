@@ -37,7 +37,7 @@ namespace Fontendo.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Black")]
+        [global::System.Configuration.DefaultSettingValueAttribute("123, 64, 194")]
         public global::System.Drawing.Color FontBackgroundColor {
             get {
                 return ((global::System.Drawing.Color)(this["FontBackgroundColor"]));
