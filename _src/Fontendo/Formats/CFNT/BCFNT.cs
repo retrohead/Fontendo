@@ -298,7 +298,7 @@ namespace Fontendo.Formats.CTR
                 br.Close();
                 br.Dispose();
             }
-            return new ActionResult(true, fixedCorrupt);
+            return new ActionResult(true, fixedCorrupt == "" ? "OK" : fixedCorrupt);
         }
 
         /// <summary>
