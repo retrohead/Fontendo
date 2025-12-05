@@ -17,7 +17,7 @@ namespace Fontendo
         public UnicodeNames UnicodeNames;
         public GlyphEditor GlyphEditor = new GlyphEditor();
         public FontEditor FontEditor = new FontEditor();
-        private bool debugMode = false;
+        private bool debugMode = true;
 
         public class MainFormButtonEnabler : INotifyPropertyChanged
         {
@@ -238,7 +238,7 @@ namespace Fontendo
                 Path.GetFileName(FontendoFont.LoadedFontFilePath)
                 );
             if (string.IsNullOrEmpty(filepath)) return;
-            ActionResult result = FontendoFont.SaveFont(FontendoFont.LoadedFontFilePath);
+            ActionResult result = FontendoFont.SaveFont(filepath);
             if (!result.Success)
             {
                 MessageBox.Show(this, $"Font failed to save {result.Message}", "Font Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
