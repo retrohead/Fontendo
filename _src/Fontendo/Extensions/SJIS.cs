@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -9,45 +10,49 @@ namespace Fontendo.Extensions
 
     public class SJISConv
     {
-        private readonly Dictionary<UInt16, UInt16> nameLookUpTable;
+        private readonly Dictionary<UInt16, UInt16> nameLookupTable;
 
         // Constructor
-        public SJISConv(string sjisPath = "")
+        public SJISConv()
         {
-            if(sjisPath == "")
-                sjisPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "SHIFTJIS.TXT");
-            nameLookUpTable = new Dictionary<UInt16, UInt16>();
-
-            if (File.Exists(sjisPath))
+            var assembly = Assembly.GetExecutingAssembly();
+            string resourceName = nameof(Fontendo) + ".Resources.SHIFTJIS.TXT";
+            nameLookupTable = new Dictionary<UInt16, UInt16>();
+            StringBuilder sjis = new StringBuilder();
+            try
             {
-                try
+                using (Stream s = assembly.GetManifestResourceStream(resourceName))
                 {
-                    foreach (var line in File.ReadLines(sjisPath))
+                    using (StreamReader sr = new StreamReader(s))
                     {
-                        if (line.StartsWith("#"))
-                            continue;
-                        // Expecting lines like: "8140 3000" (hex values)
-                        var parts = line.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
-                        if (parts.Length >= 2 &&
-                            UInt16.TryParse(parts[0].Replace("0x", ""), System.Globalization.NumberStyles.HexNumber, null, out UInt16 sjis) &&
-                            UInt16.TryParse(parts[1].Replace("0x", ""), System.Globalization.NumberStyles.HexNumber, null, out UInt16 utf16))
+                        while (!sr.EndOfStream)
                         {
-                            nameLookUpTable.Add(sjis, utf16);
+                            var line = sr.ReadLine();
+                            if (line.StartsWith("#"))
+                                continue;
+                            // Expecting lines like: "8140 3000" (hex values)
+                            var parts = line.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                            if (parts.Length >= 2 &&
+                                UInt16.TryParse(parts[0].Replace("0x", ""), System.Globalization.NumberStyles.HexNumber, null, out UInt16 sjisCode) &&
+                                UInt16.TryParse(parts[1].Replace("0x", ""), System.Globalization.NumberStyles.HexNumber, null, out UInt16 utf16))
+                            {
+                                nameLookupTable.Add(sjisCode, utf16);
+                            }
                         }
                     }
-                } catch
-                {
-                    nameLookUpTable.Clear();
-                    MessageBox.Show("SHIFTJIS.TXT file is corrupted and will not be used", "SHIFTJIS.TXT Corrupted", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 }
-
+            }
+            catch
+            {
+                nameLookupTable.Clear();
+                MessageBox.Show("SHIFTJIS.TXT file is corrupted and will not be used", "SHIFTJIS.TXT Corrupted", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
             }
         }
 
         // Methods
         public ushort CodeToUTF16(ushort code)
         {
-            if (nameLookUpTable.TryGetValue(code, out ushort utf16))
+            if (nameLookupTable.TryGetValue(code, out ushort utf16))
                 return utf16;
 
             return 0; // or throw, depending on your needs
