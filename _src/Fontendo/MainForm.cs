@@ -240,13 +240,14 @@ namespace Fontendo
                 Path.GetFileName(FontendoFont.LoadedFontFilePath)
                 );
             if (string.IsNullOrEmpty(filepath)) return;
-            ActionResult result = FontendoFont.SaveFont(filepath);
+            ActionResult result = FontendoFont.SaveFont(FontendoFont.LoadedFontFilePath);
             if (!result.Success)
             {
                 MessageBox.Show(this, $"Font failed to save {result.Message}", "Font Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             else
             {
+                textFontFilePath.Text = FontendoFont.LoadedFontFilePath;
                 MessageBox.Show(this, "Font saved successfully.", "Font Saved", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }

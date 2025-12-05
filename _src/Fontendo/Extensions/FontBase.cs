@@ -564,7 +564,10 @@ namespace Fontendo.Extensions
         {
             if (!IsLoaded)
                 return new ActionResult(false, "No font loaded");
-            return Font.Save(path);
+            var result = Font.Save(path);
+            if (result.Success)
+                LoadedFontFilePath = path;
+            return result;
         }
 
         public void RecreateSheetFromGlyphs(int sheetNumber)
