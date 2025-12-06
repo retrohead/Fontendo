@@ -132,12 +132,14 @@ namespace Fontendo.Controls
             Bitmap bmp = new Bitmap(fileName);
             if (bmp.Width != LoadedFont.Settings.Sheets.Width || bmp.Height != LoadedFont.Settings.Sheets.Height)
             {
-                MessageBox.Show("The selected image file does not match the size of the loaded sheet", "File Error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                MessageBox.Show($"The size of the selected image file ({bmp.Width}x{bmp.Height}) does not match the size of the loaded sheet ({LoadedFont.Settings.Sheets.Width}x{LoadedFont.Settings.Sheets.Height})", "File Error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                bmp.Dispose(); 
                 return;
             }
             if (LoadedFont.Settings.Sheets.Images[index] != null)
                 LoadedFont.Settings.Sheets.Images[index].Dispose();
-            LoadedFont.Settings.Sheets.Images[index] = bmp;
+            LoadedFont.Settings.Sheets.Images[index] = (Bitmap)bmp.Clone();
+            bmp.Dispose();
             MainForm.Self.UpdateListViewImagesFromSheets();
             MessageBox.Show("Sheet image imported successfully.", "Import Successful", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }

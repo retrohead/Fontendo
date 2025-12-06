@@ -1,4 +1,9 @@
-﻿## V1.0.0.4
+﻿## V1.0.0.5
+
+- Close files after importing.
+
+
+## V1.0.0.4
 
 - Error checks when replacing glyph.
 

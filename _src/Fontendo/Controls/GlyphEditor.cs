@@ -285,12 +285,15 @@ namespace Fontendo.Controls
             Bitmap bmp = new Bitmap(fileName);
             if (bmp.Width != LoadedGlyph.Settings.Image.Width || bmp.Height != LoadedGlyph.Settings.Image.Height)
             {
-                MessageBox.Show("The selected image file does not match the size of the loaded glyph image", "File Error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                MessageBox.Show($"The size of the selected image file ({bmp.Width}x{bmp.Height}) does not match the size of the loaded glyph image ({LoadedGlyph.Settings.Image.Width}x{LoadedGlyph.Settings.Image.Height})", "File Error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+
+                bmp.Dispose(); 
                 return;
             }
             if (LoadedGlyph.Settings.Image != null)
                 LoadedGlyph.Settings.Image.Dispose();
-            LoadedGlyph.Settings.Image = bmp;
+            LoadedGlyph.Settings.Image = (Bitmap)bmp.Clone();
+            bmp.Dispose();
             ShowGlyphDetails(LoadedGlyph);
             MainForm.Self.UpdateListViewImagesFromGlyphs(item);
             MessageBox.Show("Glyph image imported successfully.", "Import Successful", MessageBoxButtons.OK, MessageBoxIcon.Information);
