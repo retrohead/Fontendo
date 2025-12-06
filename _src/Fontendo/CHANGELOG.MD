@@ -1,4 +1,9 @@
-﻿## V1.0.0.3
+﻿## V1.0.0.4
+
+- Error checks when replacing glyph.
+
+
+## V1.0.0.3
 
 - Saving fonts fixed.
 - Add changelog.

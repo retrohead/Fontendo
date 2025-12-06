@@ -340,23 +340,42 @@ namespace Fontendo
             }
         }
 
-        internal void UpdateListViewImagesFromGlyphs()
+        public ListViewItem? GetSelectedCharacterItem()
         {
-            // update glyph image
-            Glyph glyph = (Glyph)listViewCharacters.SelectedItems[0].Tag;
-            int index = listViewCharacters.SelectedItems[0].ImageIndex;
-            imageListCharacters.Images[index] = glyph.Settings.Image;
-            listViewCharacters.LargeImageList = imageListCharacters;
-            listViewCharacters.Refresh();
-
-            // update sheet image
-            FontendoFont.RecreateSheetFromGlyphs(glyph.Sheet);
-            index = listViewSheets.SelectedItems[0].ImageIndex;
-            imageListSheets.Images[index] = FontendoFont.Settings.Sheets.Images[index];
-            listViewSheets.LargeImageList = imageListSheets;
-            listViewSheets.Refresh();
-
+            if (listViewCharacters.SelectedItems.Count == 0)
+                return null!;
+            return listViewCharacters.SelectedItems[0];
         }
+
+        internal void UpdateListViewImagesFromGlyphs(ListViewItem selectedListViewItem)
+        {
+            try
+            {
+                // update glyph image
+                Glyph glyph = (Glyph)selectedListViewItem.Tag;
+                int index = selectedListViewItem.ImageIndex;
+                imageListCharacters.Images[index] = glyph.Settings.Image;
+                listViewCharacters.LargeImageList = imageListCharacters;
+                listViewCharacters.Refresh();
+            } catch (Exception ex)
+            {
+                MessageBox.Show($"Font was updated but failed to update the display: {ex.Message}", "Internal Error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+            }
+            try
+            {
+                Glyph glyph = (Glyph)selectedListViewItem.Tag;
+                // update sheet image
+                FontendoFont.RecreateSheetFromGlyphs(glyph.Sheet);
+                int index = listViewSheets.SelectedItems[0].ImageIndex;
+                imageListSheets.Images[index] = FontendoFont.Settings.Sheets.Images[index];
+                listViewSheets.LargeImageList = imageListSheets;
+                listViewSheets.Refresh();
+            } catch (Exception ex)
+            {
+                MessageBox.Show($"Sheet was updated with the new glyph but failed to update the display: {ex.Message}", "Internal Error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+            }
+
+}
         internal void UpdateListViewImagesFromSheets()
         {
             // update sheet image

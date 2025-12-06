@@ -276,6 +276,10 @@ namespace Fontendo.Controls
         public void btnReplaceGlyph_Click(object sender, EventArgs e)
         {
             if (LoadedGlyph == null || LoadedGlyph.Settings.Image == null) return;
+            
+            ListViewItem? item = MainForm.Self.GetSelectedCharacterItem();
+            if(item == null) return;
+
             string fileName = FileSystemHelper.BrowseForFile(FileSystemHelper.FileType.Png, "Import Glyph Image");
             if (fileName == "") return;
             Bitmap bmp = new Bitmap(fileName);
@@ -288,7 +292,7 @@ namespace Fontendo.Controls
                 LoadedGlyph.Settings.Image.Dispose();
             LoadedGlyph.Settings.Image = bmp;
             ShowGlyphDetails(LoadedGlyph);
-            MainForm.Self.UpdateListViewImagesFromGlyphs();
+            MainForm.Self.UpdateListViewImagesFromGlyphs(item);
             MessageBox.Show("Glyph image imported successfully.", "Import Successful", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
