@@ -143,33 +143,37 @@ namespace Fontendo.Formats.CTR
         /// <summary>
         /// Create "direct" CMAP entries: contiguous runs of glyphs with sequential codes and indices.
         /// </summary>
-        public static List<(Glyph First, Glyph Last)> CreateDirectEntries(ref List<Glyph> glyphs)
+        public static List<(Glyph First, Glyph Second)> CreateDirectEntries(ref LinkedList<Glyph> glyphs)
         {
-            var result = new List<(Glyph First, Glyph Last)>();
-            int pos = 0;
+            var result = new List<(Glyph First, Glyph Second)>();
+            var r = new Stride();
+            LinkedListNode<Glyph>? pos = glyphs.First;
 
         begin:
-            if (pos >= glyphs.Count)
+            if (pos == glyphs.Last?.Next)
                 return result;
-
-            Stride r = new Stride();
-            while (GetNextStride(glyphs, ref r, glyphs.Count - 1, pos))
+            while (GetNextStride(ref r, glyphs.Last, pos))
             {
                 if(r.First == null || r.Second == null)
                     break;
-                pos = (int)r.Second + 1;
+                pos = r.Second.Next;
 
-                int spanLength = glyphs[(int)r.Second].Settings.GetValue<UInt16>(GlyphProperty.Code) - glyphs[(int)r.First].Settings.GetValue<UInt16>(GlyphProperty.Code) + 1;
+                int spanLength = r.Second.Value.Settings.CodePoint - r.First.Value.Settings.CodePoint + 1;
                 if (spanLength >= 80)
                 {
                     // Add the pair of glyphs marking the stride
-                    result.Add((glyphs[(int)r.First], glyphs[(int)r.Second]));
+                    result.Add((r.First.Value, r.Second.Value));
 
                     // Remove the stride range from the glyph list
-                    glyphs.RemoveRange((int)r.First, (int)r.Second - (int)r.First + 1);
-
-                    // Restart from beginning (like the C++ goto)
-                    pos = 0;
+                    var current = r.First;
+                    var second = r.Second;
+                    while (current != second)
+                    {
+                        var next = current.Next;
+                        glyphs.Remove(current);
+                        current = next;
+                    }
+                    glyphs.Remove(second);
                     goto begin;
                 }
             }
@@ -179,25 +183,24 @@ namespace Fontendo.Formats.CTR
 
         public class Stride
         {
-            public int? First;
-            public int? Second;
+            public LinkedListNode<Glyph>? First;
+            public LinkedListNode<Glyph>? Second;
         }
 
-        public static List<List<CMAPEntry>> CreateTableEntries(ref List<Glyph> glyphs)
+        public static List<List<CMAPEntry>> CreateTableEntries(ref LinkedList<Glyph> glyphs)
         {
             var result = new List<List<CMAPEntry>>();
-            var pos = 0; // index into glyphs
-
             Stride r1 = new Stride();
-            while (pos < glyphs.Count() - 1)
+            LinkedListNode<Glyph>? pos = glyphs.First; // index into glyphs
+
+            while (pos != glyphs.Last.Next)
             {
                 // r1 is a pair of indices delimiting a stride
-                if (!GetNextStride(glyphs, ref r1, glyphs.Count - 1, pos))
-                    break;
-                if(r1.First == glyphs.Count() - 1 || r1.First == null || r1.Second == null)
+                GetNextStride(ref r1, glyphs.Last, pos);
+                if (r1.First == glyphs.Last.Next)
                     break;
 
-                int num1 = glyphs[(int)r1.Second].Settings.GetValue<UInt16>(GlyphProperty.Code) - glyphs[(int)r1.First].Settings.GetValue<UInt16>(GlyphProperty.Code) + 1;
+                int num1 = r1.Second.Value.Settings.CodePoint - r1.First.Value.Settings.CodePoint + 1;
                 int num2 = 0;
 
                 while (true)
@@ -207,54 +210,50 @@ namespace Fontendo.Formats.CTR
                     float num3 = 0.0f;
                     float num4 = 0.0f;
 
-                    if (r1.Second < glyphs.Count() - 1)
+                    // forward merge
+                    if (r1.Second != glyphs.Last.Next)
                     {
-                        int next = (int)r1.Second + 1;
-                        if (GetNextStride(glyphs, ref r2, glyphs.Count - 1, next))
+                        LinkedListNode<Glyph> next = r1.Second.Next;
+                        if (GetNextStride(ref r2, glyphs.Last, next))
                         {
-                            if (r2.First != null && r2.Second != null)
-                            {
-                                int num5 = glyphs[(int)r2.Second].Settings.GetValue<UInt16>(GlyphProperty.Code) - glyphs[(int)r2.First].Settings.GetValue<UInt16>(GlyphProperty.Code) + 1;
-                                int num6 = glyphs[(int)r2.First].Settings.GetValue<UInt16>(GlyphProperty.Code) - glyphs[(int)r1.Second].Settings.GetValue<UInt16>(GlyphProperty.Code) - 1;
-                                int num7 = num1 + num5;
-                                int num8 = num7 + num2 + num6;
-                                num3 = (float)num7 / num8;
-                            }
+                            int num5 = r2.Second.Value.Settings.CodePoint - r2.First.Value.Settings.CodePoint + 1;
+                            int num6 = r2.First.Value.Settings.CodePoint - r1.Second.Value.Settings.CodePoint - 1;
+                            int num7 = num1 + num5;
+                            int num8 = num7 + num2 + num6;
+                            num3 = (float)num7 / (float)num8;
                         }
                     }
 
-                    if (r1.First > 0 && r1.Second != null)
+                    // backward merge
+                    if (r1.First != glyphs.First)
                     {
-                        int prev = (int)r1.Second - 1;
-                        if (GetPrevStride(glyphs, ref r3, 0, prev))
+                        LinkedListNode<Glyph> prev = r1.First.Previous;
+                        if (GetPrevStride(ref r3, glyphs.First, prev))
                         {
-                            if (r3.First != null && r3.Second != null)
-                            {
-                                int num5 = glyphs[(int)r3.Second].Settings.GetValue<UInt16>(GlyphProperty.Code) - glyphs[(int)r3.First].Settings.GetValue<UInt16>(GlyphProperty.Code) + 1;
-                                int num6 = glyphs[(int)r1.First].Settings.GetValue<UInt16>(GlyphProperty.Code) - glyphs[(int)r3.Second].Settings.GetValue<UInt16>(GlyphProperty.Code) - 1;
-                                int num7 = num1 + num5;
-                                int num8 = num7 + num2 + num6;
-                                num4 = (float)num7 / num8;
-                            }
+                            int num5 = r3.Second.Value.Settings.CodePoint - r3.First.Value.Settings.CodePoint + 1;
+                            int num6 = r1.First.Value.Settings.CodePoint - r3.Second.Value.Settings.CodePoint - 1;
+                            int num7 = num1 + num5;
+                            int num8 = num7 + num2 + num6;
+                            num4 = (float)num7 / num8;
                         }
                     }
 
                     if (num3 > num4)
                     {
-                        if (num3 >= 0.5f && r2.First != null && r2.Second != null && r1.Second != null)
+                        if (num3 >= 0.5f)
                         {
-                            int num5 = glyphs[(int)r2.Second].Settings.GetValue<UInt16>(GlyphProperty.Code) - glyphs[(int)r2.First].Settings.GetValue<UInt16>(GlyphProperty.Code) + 1;
-                            int num6 = glyphs[(int)r2.First].Settings.GetValue<UInt16>(GlyphProperty.Code) - glyphs[(int)r1.Second].Settings.GetValue<UInt16>(GlyphProperty.Code) - 1;
+                            int num5 = r2.Second.Value.Settings.CodePoint - r2.First.Value.Settings.CodePoint + 1;
+                            int num6 = r2.First.Value.Settings.CodePoint - r1.Second.Value.Settings.CodePoint - 1;
                             num1 += num5;
                             num2 += num6;
                             r1.Second = r2.Second;
                         }
                         else break;
                     }
-                    else if (num4 >= 0.5f && r3.First != null && r3.Second != null)
+                    else if (num4 >= 0.5f)
                     {
-                        int num5 = glyphs[(int)r3.Second].Settings.GetValue<UInt16>(GlyphProperty.Code) - glyphs[(int)r3.First].Settings.GetValue<UInt16>(GlyphProperty.Code) + 1;
-                        int num6 = glyphs[(int)r1.First].Settings.GetValue<UInt16>(GlyphProperty.Code) - glyphs[(int)r3.Second].Settings.GetValue<UInt16>(GlyphProperty.Code) - 1;
+                        int num5 = r3.Second.Value.Settings.CodePoint - r3.First.Value.Settings.CodePoint + 1;
+                        int num6 = r1.First.Value.Settings.CodePoint - r3.Second.Value.Settings.CodePoint - 1;
                         num1 += num5;
                         num2 += num6;
                         r1.First = r3.First;
@@ -262,23 +261,23 @@ namespace Fontendo.Formats.CTR
                     else break;
                 }
 
-                if (num1 < 40 && r1.Second != null)
+                if (num1 < 40)
                 {
-                    pos = (int)r1.Second + 1;
+                    pos = r1.Second.Next;
                 }
-                else if(r1.Second != null)
+                else if (r1.Second != null)
                 {
-                    UInt16 code1 = glyphs[(int)r1.First].Settings.GetValue<UInt16>(GlyphProperty.Code);
-                    UInt16 code2 = glyphs[(int)r1.Second].Settings.GetValue<UInt16>(GlyphProperty.Code);
+                    UInt16 code1 = r1.First.Value.Settings.CodePoint;
+                    UInt16 code2 = r1.Second.Value.Settings.CodePoint;
                     UInt16 length = (UInt16)(code2 - code1 + 1);
 
                     var entries = new List<CMAPEntry>();
                     for (UInt16 offset = 0; offset < length; ++offset)
                     {
-                        var glyph = GetGlyphByCodePoint(glyphs, (UInt16)(code1 + offset));
+                        Glyph? glyph = GetGlyphByCodePoint(glyphs, (UInt16)(code1 + offset));
                         if (glyph != null)
                         {
-                            entries.Add(new CMAPEntry(glyph.Settings.GetValue<UInt16>(GlyphProperty.Code), glyph.Settings.GetValue<UInt16>(GlyphProperty.Index)));
+                            entries.Add(new CMAPEntry(glyph.Settings.CodePoint, (ushort)glyph.Settings.Index));
                         }
                         else
                         {
@@ -287,73 +286,76 @@ namespace Fontendo.Formats.CTR
                     }
 
                     result.Add(entries);
-                    pos = (int)r1.Second + 1;
+                    pos = r1.Second.Next;
 
-                    // Erase range [r1.first, r1.second]
-                    glyphs.RemoveRange((int)r1.First, (int)r1.Second - (int)r1.First + 1);
+                    // Remove the range from the glyph list (inclusive)
+                    var current = r1.First;
+                    var second = r1.Second;
+                    while (current != second)
+                    {
+                        var next = current.Next;
+                        glyphs.Remove(current);
+                        current = next;
+                    }
+                    glyphs.Remove(second);
                 }
             }
 
             return result;
         }
 
-
-
         /// <summary>
         /// Find the next contiguous stride of glyphs with sequential code/index values.
         /// </summary>
-        public static bool GetNextStride(List<Glyph> glyphs, ref Stride r, int lastIndex, int posIndex)
+        public static bool GetNextStride(ref Stride r, LinkedListNode<Glyph> last, LinkedListNode<Glyph> pos)
         {
-            if (posIndex == lastIndex + 1)
+            if (pos == last.Next)
                 return false;
-            r = new Stride();
-            ushort code = (ushort)(glyphs[posIndex].Settings.GetValue<UInt16>(GlyphProperty.Code) + 1U);
-            ushort index = (ushort)(glyphs[posIndex].Settings.GetValue<UInt16>(GlyphProperty.Index) + 1U);
 
-            int node = posIndex;
-            int next = node + 1;
+            ushort code = (ushort)(pos.Value.Settings.CodePoint + 1U);
+            ushort index = (ushort)(pos.Value.Settings.Index + 1U);
 
-            for(var next2 = node+1; next != lastIndex + 1 &&
-                   glyphs[next].Settings.GetValue<UInt16>(GlyphProperty.Code) == code &&
-                   glyphs[next].Settings.GetValue<UInt16>(GlyphProperty.Index) == index; index++)
+            LinkedListNode<Glyph> node = pos;
+            for (var next = node.Next;
+                 next != last.Next &&
+                 next.Value.Settings.CodePoint == code &&
+                 next.Value.Settings.Index == index;
+                 ++index)
             {
-                node = next2;
-                next = node + 1;
-                code++;
+                node = next;
+                next = node.Next;
+                ++code;
             }
-            if (r.First == r.Second)
-                return false;
-            r.First = posIndex;
+
+            r.First = pos;
             r.Second = node;
             return true;
         }
 
-        public static bool GetPrevStride(List<Glyph> glyphs, ref Stride r, int beginIndex, int posIndex)
+        /// <summary>
+        /// Find the previous contiguous stride of glyphs with sequential code values.
+        /// </summary>
+        public static bool GetPrevStride(ref Stride r, LinkedListNode<Glyph> begin, LinkedListNode<Glyph> pos)
         {
-            if (posIndex == beginIndex)
-                return false;
+            if (pos == begin) return false;
 
-            int prev1 = posIndex - 1;
-            if (prev1 == beginIndex)
-                return false;
+            var prev1 = pos.Previous;
+            if (prev1 == begin) return false;
 
-            ushort code = (ushort)(glyphs[prev1].Settings.GetValue<UInt16>(GlyphProperty.Code) - 1U);
+            ushort code = (ushort)(prev1.Value.Settings.CodePoint - 1U);
+            LinkedListNode<Glyph> prev2;
 
-            int prev2 = prev1 - 1;
-            while (prev2 >= beginIndex &&
-                   glyphs[prev2].Settings.GetValue<UInt16>(GlyphProperty.Code) == code)
+            for (prev2 = prev1.Previous;
+                 prev2 != begin && prev2.Value.Settings.CodePoint == code;
+                 --code)
             {
-                prev2--;
-                code--;
+                prev2 = prev2.Previous;
             }
 
-            if (r.First == r.Second)
-                return false;
-            r.First = prev2 + 1;
+            r.First = prev2.Next;
             r.Second = prev1;
             return true;
         }
-
 
         /// <summary>
         /// Find a glyph by its code point.
@@ -397,7 +399,7 @@ namespace Fontendo.Formats.CTR
 
             long startPos = bw.BaseStream.Position;
             long sectionNum = linker.GetLookupValue(FontPointerType.CMAP);
-            MainForm.Log($"0x{bw.BaseStream.Position.ToString()} CMAP {sectionNum} start");
+            MainForm.Log($"0x{bw.BaseStream.Position.ToString("X8")} CMAP {sectionNum - 1} start");
 
             linker.AddLookupValueByName($"{nameof(FontPointerType.CMAP)}{sectionNum}", startPos + 0x8);
 
@@ -420,6 +422,7 @@ namespace Fontendo.Formats.CTR
             {
                 case 0: // Direct
                     bw.WriteUInt16(Entries[0].Index);
+                    MainForm.Log($"0x{bw.BaseStream.Position.ToString()} Wrote {(CodeEnd - CodeBegin) + 1}");
                     break;
 
                 case 1: // Table
@@ -427,7 +430,7 @@ namespace Fontendo.Formats.CTR
                     {
                         bw.WriteUInt16(entry.Index);
                     }
-                    MainForm.Log($"0x{bw.BaseStream.Position.ToString()} Wrote {Entries.Count()} ending at {bw.BaseStream.Position}");
+                    MainForm.Log($"0x{bw.BaseStream.Position.ToString()} Wrote {Entries.Count()} of which {Entries.FindAll(e => e.Index != 0xFFFFU).Count()} where not just 0xFFFF");
                     break;
 
                 case 2: // Scan
@@ -436,7 +439,7 @@ namespace Fontendo.Formats.CTR
                     {
                         entry.Serialize(bw);
                     }
-                    MainForm.Log($"0x{bw.BaseStream.Position.ToString()} Wrote {Entries.Count()}");
+                    MainForm.Log($"0x{bw.BaseStream.Position.ToString()} Wrote {Entries.Count()} of which {Entries.FindAll(e => e.Index != 0xFFFFU).Count()} where not just 0xFFFF");
                     break;
             }
 

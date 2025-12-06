@@ -3,6 +3,7 @@ using Fontendo.Extensions;
 using Fontendo.Interfaces;
 using System;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Reflection;
 using static FileSystemHelper;
 using static Fontendo.Extensions.FontBase;
@@ -17,7 +18,7 @@ namespace Fontendo
         public UnicodeNames UnicodeNames;
         public GlyphEditor GlyphEditor = new GlyphEditor();
         public FontEditor FontEditor = new FontEditor();
-        private bool debugMode = true;
+        private bool debugMode = false;
 
         public class MainFormButtonEnabler : INotifyPropertyChanged
         {
@@ -84,8 +85,10 @@ namespace Fontendo
             RecentFiles.Initialize();
             UnicodeNames = new UnicodeNames();
             // Get the version from the assembly
-            Version version = Assembly.GetExecutingAssembly().GetName().Version;
-            this.Text = $"Fontendo - Version {version}";
+            string? fileVersion = FileVersionInfo
+                .GetVersionInfo(Assembly.GetExecutingAssembly().Location)
+                .FileVersion;
+            this.Text = $"Fontendo - Version {fileVersion}";
 
             Self = this;
             FontendoFont = new FontBase(Platform.CTR);

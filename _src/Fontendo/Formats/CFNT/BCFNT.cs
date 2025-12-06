@@ -394,14 +394,10 @@ namespace Fontendo.Formats.CTR
                     return new ActionResult(false, "character maps count does not match character widths count");
 
                 // Prepare glyphs for export: sort by code point, set indices, track max char width
-                var encodedGlyphs = new List<Glyph>(Glyphs);
-                encodedGlyphs.Sort((a, b) =>
+                var encodedGlyphs = new LinkedList<Glyph>(Glyphs.OrderBy((a) =>
                 {
-                    // Assuming helper reads value from glyph props
-                    var codeA = a.Settings.GetValue<UInt16>(GlyphProperty.Code);
-                    var codeB = b.Settings.GetValue<UInt16>(GlyphProperty.Code);
-                    return codeA.CompareTo(codeB);
-                });
+                    return a.Settings.CodePoint;
+                }).ToList());
 
                 //Set glyph indexes, while also looking for the widest glyph
                 byte maxCharWidth = 0;
@@ -472,7 +468,7 @@ namespace Fontendo.Formats.CTR
                     0x20,
                     0x1,
                     finfLineFeed,
-                    0x1F,                  // matches original hardcoded
+                    0x00 /*Hardcoded altCharIndex to 0*/,
                     widthEntries[0],       // same as original: template from first glyph
                     ((byte)finfCharEnc),
                     finfHeight,

@@ -7,6 +7,7 @@ Port of NintyFont by hadashisora to c#. All credit goes to him for the original 
 
 https://github.com/hadashisora/NintyFont
 
+## Features
 
 Currently supports loading and modifying CTR fonts only for now.
 
@@ -17,3 +18,7 @@ Currently supports loading and modifying CTR fonts only for now.
 ## Download
 
 Latest stable version usually compiled into the repo here: https://github.com/retrohead/Fontendo/tree/main/Fontendo/
+
+## Changelog
+
+See [CHANGELOG.MD](https://github.com/retrohead/Fontendo/blob/main/_src/Fontendo/CHANGELOG.MD)
