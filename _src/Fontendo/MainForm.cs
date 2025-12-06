@@ -85,9 +85,10 @@ namespace Fontendo
             RecentFiles.Initialize();
             UnicodeNames = new UnicodeNames();
             // Get the version from the assembly
-            string? fileVersion = FileVersionInfo
-                .GetVersionInfo(Assembly.GetExecutingAssembly().Location)
-                .FileVersion;
+            string? fileVersion = Assembly
+                    .GetEntryAssembly()?
+                    .GetCustomAttribute<AssemblyFileVersionAttribute>()?
+                    .Version;
             this.Text = $"Fontendo - Version {fileVersion}";
 
             Self = this;
