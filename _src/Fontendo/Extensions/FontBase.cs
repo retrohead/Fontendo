@@ -12,6 +12,20 @@ namespace Fontendo.Extensions
 {
     public class FontBase : INotifyPropertyChanged
     {
+        public enum FontPointerType
+        {
+            ptrFont,
+            ptrWidth,
+            ptrMap,
+            ptrInfo,
+            blockCount,
+            fileSize,
+            glyphLength,
+            ptrGlyph,
+            sheetPtr,
+            CMAP,
+            CWHD
+        }
         public class FontSettings : INotifyPropertyChanged
         {
             private FontPropertyRegistry Properties {  get; set; } = new FontPropertyRegistry();

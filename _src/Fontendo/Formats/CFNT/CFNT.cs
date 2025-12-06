@@ -1,6 +1,7 @@
 ﻿using Fontendo.Extensions.BinaryTools;
 using System;
 using System.Reflection.PortableExecutable;
+using static Fontendo.Extensions.FontBase;
 
 namespace Fontendo.Formats.CTR
 {
@@ -71,23 +72,23 @@ namespace Fontendo.Formats.CTR
         public void Serialize(BinaryWriterX bw, BlockLinker linker)
         {
             // Record the starting position of the font block
-            linker.AddLookupValue("ptrFont", bw.BaseStream.Position);
+            linker.AddLookupValue(FontPointerType.ptrFont, bw.BaseStream.Position);
 
             bw.WriteUInt32(Magic);
             bw.WriteUInt16(BOM);
 
             // Patch pointer to FINF block
-            linker.AddShortPatchAddr(bw.BaseStream.Position, "ptrInfo");
+            linker.AddShortPatchAddr(bw.BaseStream.Position, FontPointerType.ptrInfo);
             bw.WriteUInt16(HeaderSize);
 
             bw.WriteUInt32(Version);
 
             // Patch file size
-            linker.AddPatchAddr(bw.BaseStream.Position, "fileSize");
+            linker.AddPatchAddr(bw.BaseStream.Position, FontPointerType.fileSize);
             bw.WriteUInt32(FileSize);
 
             // Patch block count
-            linker.AddShortPatchAddr(bw.BaseStream.Position, "blockCount");
+            linker.AddShortPatchAddr(bw.BaseStream.Position, FontPointerType.blockCount);
             bw.WriteUInt16(DataBlocks);
 
             bw.WriteUInt16(Reserved);

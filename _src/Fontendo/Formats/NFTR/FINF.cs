@@ -3,6 +3,7 @@ using System;
 using System.Reflection.PortableExecutable;
 using System.Text;
 using System.Windows.Forms;
+using static Fontendo.Extensions.FontBase;
 
 namespace Fontendo.Formats.CTR
 {
@@ -110,8 +111,8 @@ namespace Fontendo.Formats.CTR
         public void Serialize(BinaryWriterX bw, BlockLinker linker)
         {
             // Increment lookup values
-            linker.IncLookupValue("ptrInfo", bw.BaseStream.Position);
-            linker.IncLookupValue("blockCount", 1);
+            linker.IncLookupValue(FontPointerType.ptrInfo, bw.BaseStream.Position);
+            linker.IncLookupValue(FontPointerType.blockCount, 1);
 
             // Write header fields
             bw.WriteUInt32(Magic);
@@ -126,13 +127,13 @@ namespace Fontendo.Formats.CTR
             bw.WriteByte(Encoding);
 
             // Patch pointers
-            linker.AddPatchAddr((uint)bw.BaseStream.Position, "ptrGlyph");
+            linker.AddPatchAddr((uint)bw.BaseStream.Position, FontPointerType.ptrGlyph);
             bw.WriteUInt32(PtrGlyph);
 
-            linker.AddPatchAddr((uint)bw.BaseStream.Position, "ptrWidth");
+            linker.AddPatchAddr((uint)bw.BaseStream.Position, FontPointerType.ptrWidth);
             bw.WriteUInt32(PtrWidth);
 
-            linker.AddPatchAddr((uint)bw.BaseStream.Position, "ptrMap");
+            linker.AddPatchAddr((uint)bw.BaseStream.Position, FontPointerType.ptrMap);
             bw.WriteUInt32(PtrMap);
 
             // Extra fields if length == 0x20

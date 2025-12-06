@@ -55,19 +55,19 @@ namespace Fontendo.Formats.CTR
                     br.BaseStream.Position = 0;
 
                     // CFNT Header
-                    MainForm.Log($"CTR Start: {br.BaseStream.Position}");
+                    MainForm.Log($"0x{br.BaseStream.Position.ToString("X8")} CTR Start");
                     result = CFNT.Parse();
                     if (!result.Success)
                         return new ActionResult(false, result.Message);
-                    MainForm.Log($"CTR End: {br.BaseStream.Position}");
+                    MainForm.Log($"0x{br.BaseStream.Position.ToString("X8")} CTR End");
 
                     // FINF Header
                     br.BaseStream.Position = CFNT.HeaderSize;
-                    MainForm.Log($"FINF Start: {br.BaseStream.Position}");
+                    MainForm.Log($"0x{br.BaseStream.Position.ToString("X8")} FINF Start");
                     result = FINF.Parse();
                     if (!result.Success)
                         return new ActionResult(false, result.Message);
-                    MainForm.Log($"FINF End: {br.BaseStream.Position}");
+                    MainForm.Log($"0x{br.BaseStream.Position.ToString("X8")} FINF End");
 
                     // Glyph Header
                     br.BaseStream.Position = FINF.PtrGlyph - 0x8U;
@@ -79,10 +79,10 @@ namespace Fontendo.Formats.CTR
                         //both in the font converter and the SDK headers...maybe they planned it but
                         //it got replaced with TGLP and monochrome image formats it supports
 
-                        MainForm.Log($"CGLP Start: {br.BaseStream.Position}");
+                        MainForm.Log($"0x{br.BaseStream.Position.ToString("X8")} CGLP Start");
                         CGLP = new CGLP(br, true);
                         result = CGLP.Parse();
-                        MainForm.Log($"CGLP End: {br.BaseStream.Position}");
+                        MainForm.Log($"0x{br.BaseStream.Position.ToString("X8")} CGLP End");
                         if (!result.Success)
                             return new ActionResult(false, result.Message);
                         //TODO: Find out if RVL supported CGLP fonts or not, if it did then implement it here
@@ -91,12 +91,12 @@ namespace Fontendo.Formats.CTR
                     }
                     else if (FINF.FontType == 0x1)
                     {
-                        MainForm.Log($"TGLP Start: {br.BaseStream.Position}");
+                        MainForm.Log($"0x{br.BaseStream.Position.ToString("X8")} TGLP Start");
                         TGLP = new TGLP(br);
                         result = TGLP.Parse();
                         if (!result.Success)
                             return new ActionResult(false, result.Message);
-                        MainForm.Log($"TGLP End: {br.BaseStream.Position}");
+                        MainForm.Log($"0x{br.BaseStream.Position.ToString("X8")} TGLP End");
                     }
                     else
                     {
@@ -105,17 +105,17 @@ namespace Fontendo.Formats.CTR
 
                     // CWDH data
                     UInt32 nextPtr = FINF.PtrWidth - 0x8;
-                    MainForm.Log($"CWDH Start: {br.BaseStream.Position}");
+                    MainForm.Log($"0x{br.BaseStream.Position.ToString("X8")} CWDH Start");
                     CWDH_Headers = new List<CWDH>();
                     CharWidths = new List<CharWidths>();
                     int count = 0;
                     while (nextPtr != 0x0)
                     {
                         br.BaseStream.Position = nextPtr;
-                        MainForm.Log($"CWDH {count} Start: {br.BaseStream.Position}");
+                        MainForm.Log($"0x{br.BaseStream.Position.ToString("X8")} CWDH Entry {count} Start");
                         CWDH cwdh = new CWDH(br); //Read the header and the entries
                         result = cwdh.Parse();
-                        MainForm.Log($"CWDH {count} End: {br.BaseStream.Position}");
+                        MainForm.Log($"0x{br.BaseStream.Position.ToString("X8")} CWDH Entry {count} End");
                         if (!result.Success)
                             return new ActionResult(false, result.Message);
                         CharWidths.AddRange(cwdh.Entries);
@@ -123,22 +123,22 @@ namespace Fontendo.Formats.CTR
                         CWDH_Headers.Add(cwdh); //Append the header
                         count++;
                     }
-                    MainForm.Log($"CWDH End: {br.BaseStream.Position}");
+                    MainForm.Log($"0x{br.BaseStream.Position.ToString("X8")} CWDH End");
 
                     // CMAP data
                     nextPtr = FINF.PtrMap;
                     CMAP_Headers = new List<CMAP>();
                     CharMaps = new List<CMAPEntry>();
-                    MainForm.Log($"CMAP Start: {br.BaseStream.Position} (but go back 0x8 ?)");
                     count = 0;
+                    MainForm.Log($"0x{br.BaseStream.Position.ToString("X8")} CMAPs Start");
                     while (nextPtr != 0x0)
                     {
                         br.BaseStream.Position = nextPtr - 0x8; //This is somewhat of a bodge, but it work nonetheless
 
-                        MainForm.Log($"CMAP {count} Start: {br.BaseStream.Position}");
+                        MainForm.Log($"0x{br.BaseStream.Position.ToString("X8")} CMAP {count} Start");
                         CMAP cmap = new CMAP(br);
                         result = cmap.Parse();
-                        MainForm.Log($"CMAP {count} End: {br.BaseStream.Position}");
+                        MainForm.Log($"0x{br.BaseStream.Position.ToString("X8")} CMAP {count} End");
                         if (!result.Success)
                             return new ActionResult(false, result.Message);
                         CharMaps.AddRange(cmap.Entries);
@@ -146,7 +146,7 @@ namespace Fontendo.Formats.CTR
                         CMAP_Headers.Add(cmap); //Append the CMAP header to the list
                         count++;
                     }
-                    MainForm.Log($"CMAP End: {br.BaseStream.Position}");
+                    MainForm.Log($"0x{br.BaseStream.Position.ToString("X8")} CMAP End");
 
                     // Decoding textures
                     br.BaseStream.Position = TGLP.SheetPtr;
@@ -160,7 +160,7 @@ namespace Fontendo.Formats.CTR
                     }
                     Sheets = new SheetsType(TGLP.SheetWidth, TGLP.SheetHeight);
                     Sheets.Images = new List<Bitmap>();
-                    MainForm.Log($"Sheets start: {br.BaseStream.Position}");
+                    MainForm.Log($"0x{br.BaseStream.Position.ToString("X8")} Sheets start");
                     for (ushort i = 0; i < TGLP.SheetCount; i++)
                     {
                         byte[] sheetRaw = Codec.DecodeTexture(TGLP.SheetFormat, br, TGLP.SheetWidth, TGLP.SheetHeight);
@@ -183,7 +183,7 @@ namespace Fontendo.Formats.CTR
 
                         Sheets.Images.Add(sheet);
                     }
-                    MainForm.Log($"Sheets End: {br.BaseStream.Position}");
+                    MainForm.Log($"0x{br.BaseStream.Position.ToString("X8")} Sheets End");
 
                     //Pull sheets apart into individual glyph images
                     if (CharImages != null)
@@ -451,8 +451,8 @@ namespace Fontendo.Formats.CTR
                 List<CharWidths> widthEntries = CTR.CharWidths.CreateWidthEntries(encodedGlyphs);
 
                 // Build CMAP entries: Direct, Table, Scan
-                List<(Glyph First, Glyph Last)> directEntries = CMAP.CreateDirectEntries(encodedGlyphs);
-                List<List<CMAPEntry>> tableEntries = CMAP.CreateTableEntries(encodedGlyphs);
+                List<(Glyph First, Glyph Last)> directEntries = CMAP.CreateDirectEntries(ref encodedGlyphs);
+                List<List<CMAPEntry>> tableEntries = CMAP.CreateTableEntries(ref encodedGlyphs);
                 List<List<CMAPEntry>> scanEntries = CMAP.CreateScanEntries(encodedGlyphs);
 
                 // Create headers from current property values
@@ -520,40 +520,41 @@ namespace Fontendo.Formats.CTR
                 {
                     var linker = new BlockLinker();
 
-                    MainForm.Log($"CTR Start: {bw.BaseStream.Position}");
+                    MainForm.Log($"0x{bw.BaseStream.Position.ToString("X8")} CTR Start");
                     cfnt.Serialize(bw, linker);
-                    MainForm.Log($"CTR End: {bw.BaseStream.Position}");
+                    MainForm.Log($"0x{bw.BaseStream.Position.ToString("X8")} CTR End");
 
-                    MainForm.Log($"FINF Start: {bw.BaseStream.Position}");
+                    MainForm.Log($"0x{bw.BaseStream.Position.ToString("X8")} FINF Start");
                     finf.Serialize(bw, linker);
-                    MainForm.Log($"FINF End: {bw.BaseStream.Position}");
+                    MainForm.Log($"0x{bw.BaseStream.Position.ToString("X8")} FINF End");
 
-                    MainForm.Log($"TGLP Start: {bw.BaseStream.Position}");
+                    MainForm.Log($"0x{bw.BaseStream.Position.ToString("X8")} TGLP Start");
                     tglp.Serialize(bw, linker, encodedSheets, align: 0x80); // CTR alignment
 
-                    MainForm.Log($"CWHD Start: {bw.BaseStream.Position}");
-                    linker.AddLookupValue("ptrWidth", bw.BaseStream.Position);
+                    MainForm.Log($"0x{bw.BaseStream.Position.ToString("X8")} CWHD Start");
+                    linker.AddLookupValue(FontPointerType.ptrWidth, bw.BaseStream.Position);
                     int count = 0;
                     foreach (var header in cwdhHeaders)
                     {
-                        MainForm.Log($"CWHD {count} Start: {bw.BaseStream.Position}");
+                        MainForm.Log($"0x{bw.BaseStream.Position.ToString("X8")} CWHD {count} Start");
                         header.Serialize(bw, linker);
-                        MainForm.Log($"CWHD {count} End: {bw.BaseStream.Position}");
+                        MainForm.Log($"0x{bw.BaseStream.Position.ToString("X8")} CWHD {count} End");
                         count++;
                     }
-                    MainForm.Log($"CWHD End: {bw.BaseStream.Position}");
+                    MainForm.Log($"0x{bw.BaseStream.Position.ToString("X8")} CWHD End");
 
-                    MainForm.Log($"CMAP Start: {bw.BaseStream.Position}");
-                    linker.AddLookupValue("ptrMap", bw.BaseStream.Position + 0x8U);
+                    MainForm.Log($"0x{bw.BaseStream.Position.ToString("X8")} CMAP Start");
+                    linker.AddLookupValue(FontPointerType.ptrMap, bw.BaseStream.Position + 0x8U);
                     count = 0;
                     foreach (var cmap in cmapHeaders)
                     {
-                        MainForm.Log($"CMAP {count} Start: {bw.BaseStream.Position}");
+                        MainForm.Log($"0x{bw.BaseStream.Position.ToString("X8")} CMAP {count} Start");
                         cmap.Serialize(bw, linker);
-                        MainForm.Log($"CMAP {count} End: {bw.BaseStream.Position}");
+                        MainForm.Log($"0x{bw.BaseStream.Position.ToString("X8")} CMAP {count} End");
                         count++;
                     }
-                    MainForm.Log($"CMAP End: {bw.BaseStream.Position}");
+                    MainForm.Log($"0x{bw.BaseStream.Position.ToString("X8")} CMAP End");
+                    linker.AddLookupValue(FontPointerType.fileSize, bw.BaseStream.Position);
 
                     linker.MakeBlockLink(bw);
                 }

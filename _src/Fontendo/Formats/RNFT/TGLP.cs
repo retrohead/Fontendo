@@ -2,6 +2,7 @@
 using Fontendo.Extensions.BinaryTools;
 using System;
 using System.Runtime.CompilerServices;
+using static Fontendo.Extensions.FontBase;
 
 public class TGLP
 {
@@ -90,18 +91,18 @@ public class TGLP
     public void Serialize(BinaryWriterX bw, BlockLinker linker, List<byte[]> sheets, uint align)
     {
         // Increment block count
-        linker.IncLookupValue("blockCount", 1);
+        linker.IncLookupValue(FontPointerType.blockCount, 1);
 
         // Write header
         bw.WriteUInt32(Magic);
 
         // Patch glyph length
-        linker.AddPatchAddr(bw.BaseStream.Position, "glyphLength");
+        linker.AddPatchAddr(bw.BaseStream.Position, FontPointerType.glyphLength);
         bw.WriteUInt32(Length);
 
         // Record glyph pointer
         long ptr = bw.BaseStream.Position;
-        linker.AddLookupValue("ptrGlyph", ptr);
+        linker.AddLookupValue(FontPointerType.ptrGlyph, ptr);
 
         bw.WriteByte(CellWidth);
         bw.WriteByte(CellHeight);
@@ -116,9 +117,9 @@ public class TGLP
         bw.WriteUInt16(SheetHeight);
 
         // Patch sheet pointer
-        linker.AddPatchAddr(bw.BaseStream.Position, "sheetPtr");
+        linker.AddPatchAddr(bw.BaseStream.Position, FontPointerType.sheetPtr);
         bw.WriteUInt32(SheetPtr);
-        MainForm.Log($"TGLP End: {bw.BaseStream.Position}");
+        MainForm.Log($"0x{bw.BaseStream.Position.ToString("X8")} TGLP End");
 
         // Pad to next align boundary (e.g. 0x10)
         long padBytes = align - (bw.BaseStream.Position % align);
@@ -128,9 +129,9 @@ public class TGLP
                 bw.WriteByte((byte)0x0);
         }
 
-        MainForm.Log($"Sheets Start: {bw.BaseStream.Position}");
+        MainForm.Log($"0x{bw.BaseStream.Position.ToString("X8")} Sheets Start");
         // Image data
-        linker.AddLookupValue("sheetPtr", bw.BaseStream.Position);
+        linker.AddLookupValue(FontPointerType.sheetPtr, bw.BaseStream.Position);
         foreach (var sheet in sheets)
         {
             bw.WriteBytes(sheet, 0, sheet.Length);
@@ -143,9 +144,9 @@ public class TGLP
             for (uint i = 0; i < padBytes; i++)
                 bw.WriteByte((byte)0x0);
         }
-        MainForm.Log($"Sheets End: {bw.BaseStream.Position}");
+        MainForm.Log($"0x{bw.BaseStream.Position.ToString("X8")} Sheets End");
 
         // Update glyph length
-        linker.AddLookupValue("glyphLength", bw.BaseStream.Position - ptr + 0x8U);
+        linker.AddLookupValue(FontPointerType.glyphLength, bw.BaseStream.Position - ptr + 0x8U);
     }
 }

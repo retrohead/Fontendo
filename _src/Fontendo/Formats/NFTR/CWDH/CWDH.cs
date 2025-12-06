@@ -1,4 +1,6 @@
 ﻿using Fontendo.Extensions.BinaryTools;
+using System.Data;
+using static Fontendo.Extensions.FontBase;
 
 namespace Fontendo.Formats.CTR
 {
@@ -90,34 +92,34 @@ namespace Fontendo.Formats.CTR
 
         public void Serialize(BinaryWriterX bw, BlockLinker linker)
         {
-            linker.IncLookupValue("blockCount", 1);
-            linker.IncLookupValue("CWDH", 1);
+            linker.IncLookupValue(FontPointerType.blockCount, 1);
+            linker.IncLookupValue(FontPointerType.CWHD, 1);
 
             long startPos = bw.BaseStream.Position;
-            long sectionNum = linker.GetLookupValue("CWDH");
+            long sectionNum = linker.GetLookupValue(FontPointerType.CWHD);
 
-            linker.AddLookupValue($"CWDH{sectionNum}", startPos);
+            linker.AddLookupValueByName($"{nameof(FontPointerType.CWHD)}Len{sectionNum}", startPos);
 
             bw.WriteUInt32(Magic);
 
-            linker.AddPatchAddr(bw.BaseStream.Position, $"CWDHLen{sectionNum}");
+            linker.AddPatchAddrByName(bw.BaseStream.Position, $"{nameof(FontPointerType.CWHD)}Len{sectionNum}");
             bw.WriteUInt32(Length);
 
             if (sectionNum == 1)
-                linker.AddLookupValue("ptrWidth", bw.BaseStream.Position);
+                linker.AddLookupValue(FontPointerType.ptrWidth, bw.BaseStream.Position);
 
             bw.WriteUInt16(IndexBegin);
             bw.WriteUInt16(IndexEnd);
 
-            linker.AddPatchAddr(bw.BaseStream.Position, $"CWDH{sectionNum + 1}");
+            linker.AddPatchAddrByName(bw.BaseStream.Position, $"{nameof(FontPointerType.CWHD)}{sectionNum + 1}");
             bw.WriteUInt32(PtrNext);
 
-            MainForm.Log($"Writing {Entries.Count()} Entries at offset {bw.BaseStream.Position}");
+            MainForm.Log($"0x{bw.BaseStream.Position.ToString("X8")} Wrote {Entries.Count()} Entries at offset");
             foreach (var entry in Entries)
             {
                 entry.Serialize(bw);
             }
-            MainForm.Log($"Entries end at {bw.BaseStream.Position} rest is padding");
+            MainForm.Log($"0x{bw.BaseStream.Position.ToString("X8")}  Entries end rest is padding");
 
             // Padding to 4-byte boundary, not sure this is needed
             long padBytes = 0x4 - (bw.BaseStream.Position % 0x4);
@@ -127,7 +129,7 @@ namespace Fontendo.Formats.CTR
                     bw.WriteByte((byte)0x0);
             }
 
-            linker.AddLookupValue($"CWDHLen{sectionNum}", (uint)bw.BaseStream.Position - startPos);
+            linker.AddLookupValueByName($"{nameof(FontPointerType.CWHD)}Len{sectionNum}", (uint)bw.BaseStream.Position - startPos);
         }
     }
 }

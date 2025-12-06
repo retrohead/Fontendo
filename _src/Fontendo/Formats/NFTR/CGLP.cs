@@ -2,6 +2,7 @@
 using System;
 using System.Reflection.PortableExecutable;
 using System.Runtime.CompilerServices;
+using static Fontendo.Extensions.FontBase;
 
 namespace Fontendo.Formats.CTR
 {
@@ -86,18 +87,18 @@ namespace Fontendo.Formats.CTR
         public void Serialize(BinaryWriterX bw, BlockLinker linker, List<byte[]> images)
         {
             // Increment block count
-            linker.IncLookupValue("blockCount", 1);
+            linker.IncLookupValue(FontPointerType.blockCount, 1);
 
             // Write header
             bw.WriteUInt32(Magic);
 
             // Patch glyph length
-            linker.AddPatchAddr((uint)bw.BaseStream.Position, "glyphLength");
+            linker.AddPatchAddr((uint)bw.BaseStream.Position, FontPointerType.glyphLength);
             bw.WriteUInt32(Length);
 
             // Record glyph pointer
             uint ptr = (uint)bw.BaseStream.Position;
-            linker.AddLookupValue("ptrGlyph", ptr);
+            linker.AddLookupValue(FontPointerType.ptrGlyph, ptr);
 
             bw.WriteByte(CellWidth);
             bw.WriteByte(CellHeight);
@@ -125,7 +126,7 @@ namespace Fontendo.Formats.CTR
             }
 
             // Update glyph length
-            linker.AddLookupValue("glyphLength", (uint)bw.BaseStream.Position - ptr + 0x8U);
+            linker.AddLookupValue(FontPointerType.glyphLength, (uint)bw.BaseStream.Position - ptr + 0x8U);
         }
     }
 }

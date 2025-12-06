@@ -3,6 +3,7 @@ using Fontendo.Extensions.BinaryTools;
 using System;
 using System.Collections.Generic;
 using System.Reflection.PortableExecutable;
+using static Fontendo.Extensions.FontBase;
 using static Fontendo.FontProperties.GlyphProperties;
 using static System.Net.Mime.MediaTypeNames;
 namespace Fontendo.Formats.CTR
@@ -73,12 +74,12 @@ namespace Fontendo.Formats.CTR
                 PtrNext = br.ReadUInt32();
                 EntriesOffset = (UInt32)br.BaseStream.Position;
 
-                MainForm.Log($"Parsing CMAP: Start={br.BaseStream.Position}, CodeBegin={CodeBegin}, CodeEnd={CodeEnd}, MappingMethod={MappingMethod}");
+                MainForm.Log($"0x{br.BaseStream.Position.ToString("X8")} CMAP CodeBegin={CodeBegin}, CodeEnd={CodeEnd}, MappingMethod={MappingMethod}");
 
-                MainForm.Log($"CMAP Entries Start {br.BaseStream.Position}");
+                MainForm.Log($"0x{br.BaseStream.Position.ToString("X8")} CMAP Entries Start");
                 // read entries
                 ActionResult result = ReadEntries(br);
-                MainForm.Log($"CMAP Read {Entries.Count} entries using method {MappingMethod} ending at {br.BaseStream.Position}");
+                MainForm.Log($"0x{br.BaseStream.Position.ToString("X8")} CMAP Entries={Entries.Count}");
                 if (!result.Success)
                     return result;
             }
@@ -142,7 +143,7 @@ namespace Fontendo.Formats.CTR
         /// <summary>
         /// Create "direct" CMAP entries: contiguous runs of glyphs with sequential codes and indices.
         /// </summary>
-        public static List<(Glyph First, Glyph Last)> CreateDirectEntries(List<Glyph> glyphs)
+        public static List<(Glyph First, Glyph Last)> CreateDirectEntries(ref List<Glyph> glyphs)
         {
             var result = new List<(Glyph First, Glyph Last)>();
             int pos = 0;
@@ -182,7 +183,7 @@ namespace Fontendo.Formats.CTR
             public int? Second;
         }
 
-        public static List<List<CMAPEntry>> CreateTableEntries(List<Glyph> glyphs)
+        public static List<List<CMAPEntry>> CreateTableEntries(ref List<Glyph> glyphs)
         {
             var result = new List<List<CMAPEntry>>();
             var pos = 0; // index into glyphs
@@ -391,19 +392,18 @@ namespace Fontendo.Formats.CTR
 
         public void Serialize(BinaryWriterX bw, BlockLinker linker)
         {
-            MainForm.Log($"Serializing CMAP: Start={bw.BaseStream.Position}, CodeBegin={CodeBegin}, CodeEnd={CodeEnd}, MappingMethod={MappingMethod}, Entries={Entries.Count()}");
-
-            linker.IncLookupValue("blockCount", 1);
-            linker.IncLookupValue("CMAP", 1);
+            linker.IncLookupValue(FontPointerType.blockCount, 1);
+            linker.IncLookupValue(FontPointerType.CMAP, 1);
 
             long startPos = bw.BaseStream.Position;
-            long sectionNum = linker.GetLookupValue("CMAP");
+            long sectionNum = linker.GetLookupValue(FontPointerType.CMAP);
+            MainForm.Log($"0x{bw.BaseStream.Position.ToString()} CMAP {sectionNum} start");
 
-            linker.AddLookupValue($"CMAP{sectionNum}", startPos + 0x8);
+            linker.AddLookupValueByName($"{nameof(FontPointerType.CMAP)}{sectionNum}", startPos + 0x8);
 
             bw.WriteUInt32(Magic);
 
-            linker.AddPatchAddr(bw.BaseStream.Position, $"CMAPLen{sectionNum}");
+            linker.AddPatchAddrByName(bw.BaseStream.Position, $"{nameof(FontPointerType.CMAP)}Len{sectionNum}");
             bw.WriteUInt32(Length);
 
             bw.WriteUInt16(CodeBegin);
@@ -411,10 +411,11 @@ namespace Fontendo.Formats.CTR
             bw.WriteUInt16(MappingMethod);
             bw.WriteUInt16(Reserved);
 
-            linker.AddPatchAddr(bw.BaseStream.Position, $"CMAP{sectionNum + 1}");
+            linker.AddPatchAddrByName(bw.BaseStream.Position, $"{nameof(FontPointerType.CMAP)}{sectionNum + 1}");
             bw.WriteUInt32(PtrNext);
 
-            MainForm.Log($"CMAP Entries start {bw.BaseStream.Position}");
+            MainForm.Log($"0x{bw.BaseStream.Position.ToString("X8")} CMAP Entries CodeBegin={CodeBegin}, CodeEnd={CodeEnd}, MappingMethod={MappingMethod}, Entries={Entries.Count()}");
+
             switch (MappingMethod)
             {
                 case 0: // Direct
@@ -426,6 +427,7 @@ namespace Fontendo.Formats.CTR
                     {
                         bw.WriteUInt16(entry.Index);
                     }
+                    MainForm.Log($"0x{bw.BaseStream.Position.ToString()} Wrote {Entries.Count()} ending at {bw.BaseStream.Position}");
                     break;
 
                 case 2: // Scan
@@ -434,9 +436,9 @@ namespace Fontendo.Formats.CTR
                     {
                         entry.Serialize(bw);
                     }
+                    MainForm.Log($"0x{bw.BaseStream.Position.ToString()} Wrote {Entries.Count()}");
                     break;
             }
-            MainForm.Log($"Wrote {Entries.Count()} ending at {bw.BaseStream.Position}");
 
             // Padding to 4-byte boundary
             uint padBytes = 0x4 - ((uint)bw.BaseStream.Position % 0x4);
@@ -446,7 +448,7 @@ namespace Fontendo.Formats.CTR
                     bw.WriteByte((byte)0x0);
             }
 
-            linker.AddLookupValue($"CMAPLen{sectionNum}", (uint)bw.BaseStream.Position - startPos);
+            linker.AddLookupValueByName($"{nameof(FontPointerType.CMAP)}Len{sectionNum}", (uint)bw.BaseStream.Position - startPos);
         }
 
     }
