@@ -1,0 +1,66 @@
+﻿<UserControl x:Class="Fontendo.Controls.NumericUpDown"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             MinHeight="24" MinWidth="60">
+    <Border BorderThickness="1"
+            Background="{Binding Background}"
+            BorderBrush="{DynamicResource ControlBorder}"
+            CornerRadius="3" HorizontalAlignment="Stretch">
+        <Grid HorizontalAlignment="Stretch">
+            <Grid.ColumnDefinitions>
+                <!-- for "0x" label -->
+                <ColumnDefinition Width="*"/>
+                <!-- for textbox -->
+                <ColumnDefinition Width="Auto" />
+                <!-- for buttons -->
+                <ColumnDefinition Width="22" />
+            </Grid.ColumnDefinitions>
+            
+            <!-- "0x" prefix -->
+            <TextBlock Text="0x"
+                       Foreground="{DynamicResource LabelTextBrush}"
+                       VerticalAlignment="Center"
+                       Padding="5,0,0,0"
+                       TextAlignment="Right"
+                       Visibility="{Binding DisplayAsHex, RelativeSource={RelativeSource AncestorType=UserControl}, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+
+
+            <Border Grid.Column="0" Grid.ColumnSpan="1"
+            Background="Transparent"
+            MouseDown="Overlay_MouseDown" Cursor="IBeam"/>
+            
+            <!-- TextBox inherits Foreground from UserControl -->
+            <TextBox x:Name="PART_TextBox"
+                     Text=""
+                     Grid.Column="1"
+                     Foreground="{DynamicResource ControlTextInactive}"
+                     VerticalContentAlignment="Center"
+                     Padding="0,3,3,3"
+                     BorderThickness="0"
+                     Background="Transparent"
+                     HorizontalContentAlignment="Right" PreviewMouseDown="PART_TextBox_PreviewMouseDown"/>
+
+            <!-- Buttons -->
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!-- Increase button -->
+                <RepeatButton x:Name="UpButton"
+                              Style="{DynamicResource IncreaseButtonStyle}"
+                              Content="▴"
+                              Grid.Row="0"
+                              Focusable="False"/>
+
+                <!-- Decrease button -->
+                <RepeatButton x:Name="DownButton"
+                              Style="{DynamicResource DecreaseButtonStyle}"
+                              Content="▾"
+                              Grid.Row="1"
+                              Focusable="False"/>
+            </Grid>
+        </Grid>
+    </Border>
+</UserControl>

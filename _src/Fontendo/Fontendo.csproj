@@ -4,20 +4,34 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
-    <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
-    <ApplicationIcon>fontendo logo.ico</ApplicationIcon>
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <FileVersion>1.0.0.5</FileVersion>
+    <UseWPF>true</UseWPF>
+    <ApplicationIcon>Resources\Fontendo.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Resources\accept_green.png" />
+    <None Remove="Resources\cancel_round.png" />
     <None Remove="Resources\DerivedName.txt" />
-    <None Remove="Resources\fontendo logo.ico" />
+    <None Remove="Resources\export.png" />
+    <None Remove="Resources\Fontendo.ico" />
+    <None Remove="Resources\Fontendo.png" />
+    <None Remove="Resources\Fontendo_small.png" />
+    <None Remove="Resources\Fontendo_tiny.png" />
+    <None Remove="Resources\import.png" />
+    <None Remove="Resources\recycle.png" />
+    <None Remove="Resources\theme.png" />
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="fontendo logo.ico" />
+    <Resource Include="Resources\Fontendo.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Extended.Wpf.Toolkit" Version="5.0.0" />
+    <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.135" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="System.Drawing.Common" Version="10.0.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -25,37 +39,32 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <Resource Include="Resources\accept_green.png" />
+    <Resource Include="Resources\cancel_round.png" />
+    <Resource Include="Resources\export.png" />
+    <Resource Include="Resources\Fontendo.png" />
+    <Resource Include="Resources\Fontendo_small.png" />
+    <Resource Include="Resources\Fontendo_tiny.png" />
+    <Resource Include="Resources\import.png" />
+    <Resource Include="Resources\recycle.png" />
+    <Resource Include="Resources\theme.png" />
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="Resources\fontendo logo.ico" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Update="Controls\FontEditor.cs">
-      <SubType>UserControl</SubType>
+    <Compile Update="DockManager\CustomWindow.xaml.cs">
+      <SubType>Code</SubType>
     </Compile>
-    <Compile Update="Controls\SaturationTrackBar.cs">
-      <SubType>Component</SubType>
+    <Compile Update="DockManager\DockablePanel.xaml.cs">
+      <SubType>Code</SubType>
     </Compile>
-    <Compile Update="Properties\Resources.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resources.resx</DependentUpon>
+    <Compile Update="UI\UI_GlyphEditor.xaml.cs">
+      <SubType>Code</SubType>
     </Compile>
     <Compile Update="Properties\Settings.Designer.cs">
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <AutoGen>True</AutoGen>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Update="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>

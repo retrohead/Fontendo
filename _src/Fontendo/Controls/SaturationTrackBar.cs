@@ -1,29 +1,62 @@
 ﻿using Fontendo.Extensions;
+using Fontendo.UI;
 using System;
-using System.Drawing;
-using System.Windows.Forms;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
+using System.Windows.Media;
+using System.Windows.Shapes;
 
 namespace Fontendo.Controls
 {
-    public class SaturationTrackBar : Control
+    public class SaturationTrackBar : UserControl
     {
-        private TrackBar trackBar;
-        private PictureBox satBar;
+        private Slider slider;
+        private Rectangle satBar;
 
+        // Event to notify saturation changes
         public event EventHandler? SaturationChanged;
 
-        // Saturation value 0–100
+        // Register the dependency property
+        public static readonly DependencyProperty SaturationProperty =
+            DependencyProperty.Register(
+                nameof(Saturation),
+                typeof(int),
+                typeof(SaturationTrackBar),
+                new FrameworkPropertyMetadata(0, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, OnSaturationChanged, CoerceSaturation));
+
+        // CLR wrapper
         public int Saturation
         {
-            get => trackBar.Value;
-            set
+            get => (int)GetValue(SaturationProperty);
+            set => SetValue(SaturationProperty, value);
+        }
+
+        // Called when Saturation changes
+        private static void OnSaturationChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var control = (SaturationTrackBar)d;
+
+            // Update slider value if needed
+            if (control.slider != null)
+                control.slider.Value = (int)e.NewValue;
+
+            // Raise event
+            control.SaturationChanged?.Invoke(control, EventArgs.Empty);
+        }
+
+        // Coerce callback ensures value stays within slider bounds
+        private static object CoerceSaturation(DependencyObject d, object baseValue)
+        {
+            var control = (SaturationTrackBar)d;
+            var value = (int)baseValue;
+
+            if (control.slider != null)
             {
-                if (trackBar.Value != value)
-                {
-                    trackBar.Value = Math.Max(trackBar.Minimum, Math.Min(trackBar.Maximum, value));
-                    SaturationChanged?.Invoke(this, EventArgs.Empty);
-                }
+                return Math.Max((int)control.slider.Minimum, Math.Min((int)control.slider.Maximum, value));
             }
+
+            return value;
         }
 
         // The hue we’re saturating (0–360)
@@ -43,65 +76,52 @@ namespace Fontendo.Controls
 
         public SaturationTrackBar()
         {
-            this.Size = new Size(260, 40);
+            var grid = new Grid();
+            grid.VerticalAlignment = VerticalAlignment.Center;
+            grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(22) });
+            grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(4) });
 
-            trackBar = new TrackBar
+            slider = new Slider
             {
                 Minimum = 0,
                 Maximum = 100,
-                TickStyle = TickStyle.None,
-                Dock = DockStyle.Top,
-                Height = 30,
+                TickPlacement = System.Windows.Controls.Primitives.TickPlacement.None,
+                VerticalAlignment = VerticalAlignment.Stretch,
+                Style = (Style)UI_MainWindow.Self.FindResource("SliderStylePointer")
             };
-            trackBar.ValueChanged += (s, e) => SaturationChanged?.Invoke(this, EventArgs.Empty);
+            slider.ValueChanged += (s, e) => { Saturation = (int)slider.Value; SaturationChanged?.Invoke(this, EventArgs.Empty); };
 
-            int margin = 13;
-            int satBarY = 22;
-
-            satBar = new PictureBox
+            satBar = new Rectangle
             {
                 Height = 4,
-                Left = margin,
-                Width = this.Width - (margin * 2),
-                Top = satBarY,
-                Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top
+                Margin = new Thickness(5, 0, 5, 0)
             };
-            satBar.Image = GenerateSaturationImage(this.Width - (margin * 2), satBar.Height, hue);
+            Grid.SetRow(satBar, 1);
+            RegenerateGradient();
 
-            this.Resize += (s, e) =>
-            {
-                RegenerateGradient();
-                satBar.Top = satBarY;
-                satBar.Width = this.Width - (margin * 2);
-                trackBar.Height = this.Height;
-            };
+            grid.Children.Add(slider);
+            grid.Children.Add(satBar);
 
-            Controls.Add(satBar);
-            Controls.Add(trackBar);
+            Content = grid;
         }
 
         private void RegenerateGradient()
         {
-            satBar.Image?.Dispose();
-            satBar.Image = GenerateSaturationImage(satBar.Width, satBar.Height, hue);
-        }
-
-        private Bitmap GenerateSaturationImage(int width, int height, int hue)
-        {
-            var bmp = new Bitmap(width, height);
-            using (Graphics g = Graphics.FromImage(bmp))
+            var brush = new LinearGradientBrush
             {
-                for (int x = 0; x < width; x++)
-                {
-                    double s = x / (double)width; // 0 → 1
-                    Color c = ColorHelper.GetColorFromHsb(hue, s, 1);
-                    using (Pen pen = new Pen(c))
-                    {
-                        g.DrawLine(pen, x, 0, x, height);
-                    }
-                }
+                StartPoint = new Point(0, 0),
+                EndPoint = new Point(1, 0)
+            };
+
+            // Build gradient stops across saturation 0 → 1
+            for (int i = 0; i <= 10; i++)
+            {
+                double s = i / 10.0;
+                var c = ColorHelper.GetColorFromHsbA(255, hue, s, 1);
+                brush.GradientStops.Add(new GradientStop(c, s));
             }
-            return bmp;
+
+            satBar.Fill = brush;
         }
     }
 }

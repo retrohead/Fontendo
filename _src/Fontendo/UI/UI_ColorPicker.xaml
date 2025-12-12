@@ -1,0 +1,40 @@
+﻿<dockm:CustomWindowContentBase x:Class="Fontendo.UI.UI_ColorPicker"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:Fontendo.UI"
+             xmlns:dockm="clr-namespace:Fontendo.DockManager"
+             xmlns:controls="clr-namespace:Fontendo.Controls"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="100*" />
+            <RowDefinition Height="40" />
+        </Grid.RowDefinitions>
+
+        <controls:ColorPicker x:Name="ColorPickerControl" SelectedColor="AliceBlue" SelectedColorChanged="ColorPickerControl_SelectedColorChanged" />
+
+        <Grid Grid.Row="1" Margin="10,0,10,5">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="50*" />
+                <ColumnDefinition Width="50*" />
+            </Grid.ColumnDefinitions>
+            <Button 
+            x:Name="btnConfirm" 
+            ToolTip="Cofirm the selected color" 
+            Click="btnConfirm_Click" 
+            Content="Confirm" 
+            Grid.Column="0" Background="{DynamicResource WindowBackgroundBrushMedium}" Margin="0,0,2,0" Height="25" HorizontalAlignment="Stretch" Cursor="Hand" Style="{DynamicResource ButtonStyleImage}" />
+
+            <Button 
+            x:Name="btnCancel" 
+            ToolTip="Cancel selecting a color" 
+            Click="btnCancel_Click" 
+            Content="Cancel" 
+            Grid.Column="1" Background="{DynamicResource WindowBackgroundBrushMedium}" Margin="2,0,0,0" Height="25" HorizontalAlignment="Stretch" Cursor="Hand" Style="{DynamicResource ButtonStyleImage}" />
+
+        </Grid>
+    </Grid>
+</dockm:CustomWindowContentBase>

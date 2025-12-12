@@ -1,7 +1,9 @@
 ﻿using Fontendo.Extensions;
 using Fontendo.Extensions.BinaryTools;
+using Fontendo.UI;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Reflection.PortableExecutable;
 using static Fontendo.Extensions.FontBase;
 using static Fontendo.FontProperties.GlyphProperties;
@@ -74,12 +76,12 @@ namespace Fontendo.Formats.CTR
                 PtrNext = br.ReadUInt32();
                 EntriesOffset = (UInt32)br.BaseStream.Position;
 
-                MainForm.Log($"0x{br.BaseStream.Position.ToString("X8")} CMAP CodeBegin={CodeBegin}, CodeEnd={CodeEnd}, MappingMethod={MappingMethod}");
+                UI_MainWindow.Log($"0x{br.BaseStream.Position.ToString("X8")} CMAP CodeBegin={CodeBegin}, CodeEnd={CodeEnd}, MappingMethod={MappingMethod}");
 
-                MainForm.Log($"0x{br.BaseStream.Position.ToString("X8")} CMAP Entries Start");
+                UI_MainWindow.Log($"0x{br.BaseStream.Position.ToString("X8")} CMAP Entries Start");
                 // read entries
                 ActionResult result = ReadEntries(br);
-                MainForm.Log($"0x{br.BaseStream.Position.ToString("X8")} CMAP Entries={Entries.Count}");
+                UI_MainWindow.Log($"0x{br.BaseStream.Position.ToString("X8")} CMAP Entries={Entries.Count}");
                 if (!result.Success)
                     return result;
             }
@@ -100,7 +102,7 @@ namespace Fontendo.Formats.CTR
             return true;
         }
 
-        private ActionResult ReadEntries(BinaryReader br)
+        private ActionResult ReadEntries(BinaryReaderX br)
         {
             Entries = new List<CMAPEntry>();
             if (EntriesOffset == 0)
@@ -399,7 +401,7 @@ namespace Fontendo.Formats.CTR
 
             long startPos = bw.BaseStream.Position;
             long sectionNum = linker.GetLookupValue(FontPointerType.CMAP);
-            MainForm.Log($"0x{bw.BaseStream.Position.ToString("X8")} CMAP {sectionNum - 1} start");
+            UI_MainWindow.Log($"0x{bw.BaseStream.Position.ToString("X8")} CMAP {sectionNum - 1} start");
 
             linker.AddLookupValueByName($"{nameof(FontPointerType.CMAP)}{sectionNum}", startPos + 0x8);
 
@@ -416,13 +418,13 @@ namespace Fontendo.Formats.CTR
             linker.AddPatchAddrByName(bw.BaseStream.Position, $"{nameof(FontPointerType.CMAP)}{sectionNum + 1}");
             bw.WriteUInt32(PtrNext);
 
-            MainForm.Log($"0x{bw.BaseStream.Position.ToString("X8")} CMAP Entries CodeBegin={CodeBegin}, CodeEnd={CodeEnd}, MappingMethod={MappingMethod}, Entries={Entries.Count()}");
+            UI_MainWindow.Log($"0x{bw.BaseStream.Position.ToString("X8")} CMAP Entries CodeBegin={CodeBegin}, CodeEnd={CodeEnd}, MappingMethod={MappingMethod}, Entries={Entries.Count()}");
 
             switch (MappingMethod)
             {
                 case 0: // Direct
                     bw.WriteUInt16(Entries[0].Index);
-                    MainForm.Log($"0x{bw.BaseStream.Position.ToString()} Wrote {(CodeEnd - CodeBegin) + 1}");
+                    UI_MainWindow.Log($"0x{bw.BaseStream.Position.ToString()} Wrote {(CodeEnd - CodeBegin) + 1}");
                     break;
 
                 case 1: // Table
@@ -430,7 +432,7 @@ namespace Fontendo.Formats.CTR
                     {
                         bw.WriteUInt16(entry.Index);
                     }
-                    MainForm.Log($"0x{bw.BaseStream.Position.ToString()} Wrote {Entries.Count()} of which {Entries.FindAll(e => e.Index != 0xFFFFU).Count()} where not just 0xFFFF");
+                    UI_MainWindow.Log($"0x{bw.BaseStream.Position.ToString()} Wrote {Entries.Count()} of which {Entries.FindAll(e => e.Index != 0xFFFFU).Count()} where not just 0xFFFF");
                     break;
 
                 case 2: // Scan
@@ -439,7 +441,7 @@ namespace Fontendo.Formats.CTR
                     {
                         entry.Serialize(bw);
                     }
-                    MainForm.Log($"0x{bw.BaseStream.Position.ToString()} Wrote {Entries.Count()} of which {Entries.FindAll(e => e.Index != 0xFFFFU).Count()} where not just 0xFFFF");
+                    UI_MainWindow.Log($"0x{bw.BaseStream.Position.ToString()} Wrote {Entries.Count()} of which {Entries.FindAll(e => e.Index != 0xFFFFU).Count()} where not just 0xFFFF");
                     break;
             }
 

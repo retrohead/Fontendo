@@ -1,5 +1,7 @@
 ﻿using Fontendo.FontProperties;
 using System.ComponentModel;
+using System.Drawing;
+using System.Windows.Data;
 using static Fontendo.FontProperties.GlyphProperties;
 using static Fontendo.FontProperties.PropertyList;
 
@@ -155,28 +157,61 @@ namespace Fontendo.Extensions
                 Properties.UpdateValueRange(property, range);
             }
 
-            public bool GetBindingForObject(GlyphProperty property, out Binding? binding)
+            public bool GetBindingsForObject(GlyphProperty property, out List<Binding> bindings)
             {
+
+                bindings = new List<Binding>();
                 switch (property)
                 {
                     case GlyphProperty.Index:
-                        binding = null;
                         return false;
+
                     case GlyphProperty.Left:
-                        binding = new Binding("Value", this, nameof(Left), false, DataSourceUpdateMode.OnPropertyChanged);
+                        bindings.Add(new Binding(nameof(Left))
+                        {
+                            Source = this,
+                            Mode = BindingMode.TwoWay,
+                            UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
+                        });
                         return true;
+
                     case GlyphProperty.GlyphWidth:
-                        binding = new Binding("Value", this, nameof(GlyphWidth), false, DataSourceUpdateMode.OnPropertyChanged);
+                        bindings.Add(new Binding(nameof(GlyphWidth))
+                        {
+                            Source = this,
+                            Mode = BindingMode.TwoWay,
+                            UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
+                        });
                         return true;
+
                     case GlyphProperty.CharWidth:
-                        binding = new Binding("Value", this, nameof(CharWidth), false, DataSourceUpdateMode.OnPropertyChanged);
+                        bindings.Add(new Binding(nameof(CharWidth))
+                        {
+                            Source = this,
+                            Mode = BindingMode.TwoWay,
+                            UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
+                        });
                         return true;
+
                     case GlyphProperty.Code:
-                        binding = new Binding("HexValue", this, nameof(CodePoint), false, DataSourceUpdateMode.OnPropertyChanged);
+                        bindings.Add(new Binding(nameof(CodePoint))
+                        {
+                            Source = this,
+                            Mode = BindingMode.TwoWay,
+                            UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
+                            //Converter = new HexValueConverter() // implement IValueConverter for hex formatting
+                        });
                         return true;
+
                     case GlyphProperty.Image:
-                        binding = new Binding("Image", this, nameof(Image), false, DataSourceUpdateMode.OnPropertyChanged);
+                        bindings.Add(new Binding(nameof(Image))
+                        {
+                            Source = this,
+                            Mode = BindingMode.TwoWay,
+                            UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
+                        });
                         return true;
+
                     default:
                         throw new NotImplementedException($"No binding implemented for property {property}");
                 }

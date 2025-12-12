@@ -1,0 +1,88 @@
+﻿<dockm:CustomWindowContentBase x:Class="Fontendo.UI.UI_FontEditor"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:Fontendo.Controls"
+             xmlns:dockm="clr-namespace:Fontendo.DockManager"
+             MinWidth="180" MinHeight="350">
+
+    <Grid x:Name="tableMainTable"
+          HorizontalAlignment="Stretch"
+          VerticalAlignment="Top" Margin="0,10,0,0">
+
+        <!-- Column definitions: 50% | 120px | 50% -->
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="180" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- Row definitions -->
+        <Grid.RowDefinitions>
+            <!-- panelFontProperties -->
+            <RowDefinition Height="100*" />
+            <!-- separator -->
+            <RowDefinition Height="10" />
+            <!-- colorPickerBgColour -->
+            <RowDefinition Height="40" />
+            <!-- separator -->
+            <RowDefinition Height="10" />
+            <!-- btnExportSheet -->
+            <RowDefinition Height="40" />
+            <!-- btnReplaceSheet -->
+            <RowDefinition Height="40" />
+            <!-- spare -->
+            <RowDefinition Height="100*" />
+        </Grid.RowDefinitions>
+
+        <!-- panelFontProperties -->
+        <Border
+                Grid.Row="0" Grid.Column="1"
+                MinHeight="50"
+                Background="{DynamicResource WindowBackgroundBrushDark}"
+                HorizontalAlignment="Stretch" VerticalAlignment="Top">
+            <StackPanel x:Name="panelFontProperties" Orientation="Vertical" Margin="5,0,10,0"></StackPanel>
+        </Border>
+
+        <!-- (separator line) -->
+        <Border Grid.Row="1" Grid.ColumnSpan="3"
+                Background="{DynamicResource ControlBorder}"
+                Height="1" Margin="10,0" />
+
+        <!-- colorPickerBgColour -->
+        <Grid Grid.Row="2" Grid.Column="1" Margin="5,0,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="85" />
+                <ColumnDefinition Width="32" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <Label Content="Background" Foreground="{DynamicResource LabelTextBrush}" Grid.Column="0" Grid.Row="0" HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="12" FontFamily="{DynamicResource FontendoFont}" />
+
+            <local:ColorPickerButton x:Name="colorPicker" Grid.Column="1" Height="20" Width="20" SelectedColor="{Binding SelectedColor, Mode=TwoWay}" EnableAlphaChannel="True" SelectedColorChanged="ColorPickerButton_SelectedColorChanged" PreviewSelectedColorChanged="colorPicker_PreviewSelectedColorChanged" />
+        </Grid>
+
+
+        <!-- (separator line) -->
+        <Border Grid.Row="3" Grid.ColumnSpan="3"
+                Background="{DynamicResource ControlBorder}"
+                Height="1" Margin="10,0" />
+
+        <!-- btnExportSheet -->
+        <Button 
+            x:Name="btnExportSheet" 
+            ToolTip="Export the selected sheet to an image file" 
+            Click="btnExportSheet_Click" 
+            Content="Export Sheet" 
+            Grid.Row="4" Grid.Column="1" Background="{DynamicResource WindowBackgroundBrushMedium}" Margin="15,0,15,0" Height="25" HorizontalAlignment="Stretch" Cursor="Hand" Style="{DynamicResource ButtonStyleImage}" />
+
+
+        <!-- btnReplaceSheet -->
+        <Button 
+        x:Name="btnReplaceSheet" 
+        ToolTip="Replace the selected sheet with a new image" 
+        Click="btnReplaceSheet_Click" 
+        Content="Replace Sheet" 
+        Grid.Row="5" Grid.Column="1" Background="{DynamicResource WindowBackgroundBrushMedium}" Margin="15,0,15,0" Height="25" HorizontalAlignment="Stretch" Cursor="Hand" Style="{DynamicResource ButtonStyleImage}" />
+        
+    </Grid>
+</dockm:CustomWindowContentBase>

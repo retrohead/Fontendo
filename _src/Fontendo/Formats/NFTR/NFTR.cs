@@ -1,4 +1,6 @@
-﻿namespace Fontendo.Formats.CTR
+﻿using Fontendo.Extensions.BinaryTools;
+
+namespace Fontendo.Formats.CTR
 {
     public class NFTR
     {
@@ -9,7 +11,7 @@
         public UInt16 PtrInfo; //Pointer to the begining of FINF section
         public UInt16 DataBlocks; //Number of data blocks in the file
 
-        public ActionResult Parse(BinaryReader br)
+        public ActionResult Parse(BinaryReaderX br)
         {
             try
             {

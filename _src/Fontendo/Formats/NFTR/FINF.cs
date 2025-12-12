@@ -2,7 +2,6 @@
 using System;
 using System.Reflection.PortableExecutable;
 using System.Text;
-using System.Windows.Forms;
 using static Fontendo.Extensions.FontBase;
 
 namespace Fontendo.Formats.CTR

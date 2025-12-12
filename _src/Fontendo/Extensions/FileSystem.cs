@@ -1,4 +1,7 @@
 ﻿using Fontendo;
+using Fontendo.UI;
+using Microsoft.Win32;
+using System.IO;
 using System.Security.Cryptography;
 
 public class FileSystemHelper
@@ -160,16 +163,14 @@ public class FileSystemHelper
     {
         string filePath = "";
         string filter = string.Join("|", filters);
-        using (OpenFileDialog openFileDialog = new OpenFileDialog())
-        {
-            openFileDialog.Filter = filter;
-            openFileDialog.Title = title;
-            openFileDialog.RestoreDirectory = true;
+        OpenFileDialog openFileDialog = new OpenFileDialog();
+        openFileDialog.Filter = filter;
+        openFileDialog.Title = title;
+        openFileDialog.RestoreDirectory = true;
 
-            if (openFileDialog.ShowDialog(MainForm.Self) == DialogResult.OK)
-            {
-                filePath = openFileDialog.FileName;
-            }
+        if (openFileDialog.ShowDialog(UI_MainWindow.Self.Window) == true)
+        {
+            filePath = openFileDialog.FileName;
         }
 
         return filePath;
@@ -202,14 +203,14 @@ public class FileSystemHelper
     {
         string filePath = string.Empty;
         string filter = fileType == null ? "All files (*.*)|*.*" : FileTypes.GetFilter((FileType)fileType);
-        using (SaveFileDialog saveFileDialog = new SaveFileDialog())
+        SaveFileDialog saveFileDialog = new SaveFileDialog();
         {
             saveFileDialog.Filter = filter;
             saveFileDialog.Title = title;
             saveFileDialog.RestoreDirectory = true;
             saveFileDialog.FileName = defaultFilename;
 
-            if (saveFileDialog.ShowDialog(MainForm.Self) == DialogResult.OK)
+            if (saveFileDialog.ShowDialog(UI_MainWindow.Self.Window) == true)
             {
                 filePath = saveFileDialog.FileName;
             }
@@ -227,14 +228,13 @@ public class FileSystemHelper
     {
         string folderPath = string.Empty;
 
-        using (FolderBrowserDialog folderDialog = new FolderBrowserDialog())
+        OpenFolderDialog folderDialog = new OpenFolderDialog();
         {
-            folderDialog.Description = description;
-            folderDialog.ShowNewFolderButton = true;
+            folderDialog.Title = description;
 
-            if (folderDialog.ShowDialog(MainForm.Self) == DialogResult.OK)
+            if (folderDialog.ShowDialog(UI_MainWindow.Self.Window) == true)
             {
-                folderPath = folderDialog.SelectedPath;
+                folderPath = folderDialog.FolderName;
             }
         }
 

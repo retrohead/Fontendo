@@ -1,0 +1,75 @@
+﻿<UserControl x:Class="Fontendo.Controls.ColorPickerButton"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             mc:Ignorable="d"
+             d:DesignHeight="60" d:DesignWidth="60">
+
+    <UserControl.Resources>
+
+        <!-- Outer Border Style -->
+        <Style x:Key="OuterBorderStyle" TargetType="Border">
+            <Setter Property="CornerRadius" Value="3"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ControlBorder}"/>
+            <Setter Property="Background" Value="{DynamicResource WindowBackgroundBrushMedium}"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Focusable" Value="True"/>
+            <Setter Property="FocusVisualStyle" Value="{DynamicResource OptionButtonFocusVisual}"/>
+
+            <Style.Triggers>
+
+                <!-- Hover -->
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderActive}"/>
+                    <Setter Property="Background" Value="{DynamicResource ButtonMouseOverBrush}"/>
+                </Trigger>
+
+                <!-- Pressed -->
+                <DataTrigger Binding="{Binding IsPressed, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True">
+                </DataTrigger>
+                <!-- Focused -->
+                <DataTrigger Binding="{Binding IsFocused, RelativeSource={RelativeSource Self}}" Value="True">
+                </DataTrigger>
+
+            </Style.Triggers>
+        </Style>
+
+        <!-- Inner Preview Panel Style -->
+        <Style x:Key="InnerPreviewStyle" TargetType="Border">
+            <Setter Property="CornerRadius" Value="16"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="{Binding Background}"/>
+            <Setter Property="Margin" Value="3"/>
+            <Style.Triggers>
+
+                <!-- Hover (inner border changes on hover of outer) -->
+                <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True">
+                    <Setter Property="BorderBrush" Value="{DynamicResource ButtonSelectedBrush}"/>
+                </DataTrigger>
+
+                <!-- Pressed (inner border stays visible but outer background changes) -->
+                <DataTrigger Binding="{Binding IsPressed, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True">
+                    <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderActive}"/>
+                </DataTrigger>
+
+            </Style.Triggers>
+        </Style>
+
+    </UserControl.Resources>
+
+    <!-- Outer Border -->
+    <Border Style="{StaticResource OuterBorderStyle}"
+            PreviewMouseDown="Border_PreviewMouseDown"
+            PreviewKeyDown="Border_PreviewKeyDown">
+        <Grid>
+            <Border x:Name="previewPanel" Style="{DynamicResource AlphaPreviewStyle}" CornerRadius="16" Margin="4" BorderThickness="1" BorderBrush="Transparent" />
+            <!-- Inner Preview Panel -->
+            <Border x:Name="previewColor"
+                        Style="{StaticResource InnerPreviewStyle}"
+                        Background="Black"/>
+
+        </Grid>
+    </Border>
+</UserControl>

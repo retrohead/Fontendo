@@ -1,4 +1,5 @@
 ﻿using Fontendo.Extensions.BinaryTools;
+using Fontendo.UI;
 using System.Data;
 using static Fontendo.Extensions.FontBase;
 
@@ -114,12 +115,12 @@ namespace Fontendo.Formats.CTR
             linker.AddPatchAddrByName(bw.BaseStream.Position, $"{nameof(FontPointerType.CWHD)}{sectionNum + 1}");
             bw.WriteUInt32(PtrNext);
 
-            MainForm.Log($"0x{bw.BaseStream.Position.ToString("X8")} Wrote {Entries.Count()} Entries at offset");
+            UI_MainWindow.Log($"0x{bw.BaseStream.Position.ToString("X8")} Wrote {Entries.Count()} Entries at offset");
             foreach (var entry in Entries)
             {
                 entry.Serialize(bw);
             }
-            MainForm.Log($"0x{bw.BaseStream.Position.ToString("X8")}  Entries end rest is padding");
+            UI_MainWindow.Log($"0x{bw.BaseStream.Position.ToString("X8")}  Entries end rest is padding");
 
             // Padding to 4-byte boundary, not sure this is needed
             long padBytes = 0x4 - (bw.BaseStream.Position % 0x4);

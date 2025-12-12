@@ -1,29 +1,66 @@
 ﻿using Fontendo.Extensions;
+using Fontendo.UI;
 using System;
-using System.Drawing;
-using System.Windows.Forms;
+using System.Reflection.Metadata;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
+using System.Windows.Shapes;
 
 namespace Fontendo.Controls
 {
-    public class BrightnessTrackBar : Control
+    public class BrightnessTrackBar : UserControl
     {
-        private TrackBar trackBar;
-        private PictureBox brightBar;
+        private Slider slider;
+        private Rectangle gradientBar;
 
         public event EventHandler? BrightnessChanged;
+        
+        // Register the dependency property
+        public static readonly DependencyProperty BrightnessProperty =
+            DependencyProperty.Register(
+                nameof(Brightness),
+                typeof(int),
+                typeof(BrightnessTrackBar),
+                new FrameworkPropertyMetadata(
+                    0, // default value
+                    FrameworkPropertyMetadataOptions.BindsTwoWayByDefault,
+                    OnBrightnessChanged,
+                    CoerceBrightness));
 
-        // Brightness value 0–100
+        // CLR wrapper
         public int Brightness
         {
-            get => trackBar.Value;
-            set
+            get => (int)GetValue(BrightnessProperty);
+            set => SetValue(BrightnessProperty, value);
+        }
+
+        // Called when Brightness changes
+        private static void OnBrightnessChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var control = (BrightnessTrackBar)d;
+            int newValue = (int)e.NewValue;
+
+            // Update slider if available
+            if (control.slider != null)
+                control.slider.Value = newValue;
+
+            // Raise event
+            control.BrightnessChanged?.Invoke(control, EventArgs.Empty);
+        }
+
+        // Clamp the value to slider bounds
+        private static object CoerceBrightness(DependencyObject d, object baseValue)
+        {
+            var control = (BrightnessTrackBar)d;
+            int value = (int)baseValue;
+
+            if (control.slider != null)
             {
-                if (trackBar.Value != value)
-                {
-                    trackBar.Value = Math.Max(trackBar.Minimum, Math.Min(trackBar.Maximum, value));
-                    BrightnessChanged?.Invoke(this, EventArgs.Empty);
-                }
+                return Math.Max((int)control.slider.Minimum, Math.Min((int)control.slider.Maximum, value));
             }
+
+            return value;
         }
 
         // The hue we’re brightening (0–360)
@@ -43,65 +80,58 @@ namespace Fontendo.Controls
 
         public BrightnessTrackBar()
         {
-            this.Size = new Size(260, 40);
+            var grid = new Grid();
+            grid.VerticalAlignment = VerticalAlignment.Center;
+            grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(22) });
+            grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(4) });
 
-            trackBar = new TrackBar
+            slider = new Slider
             {
                 Minimum = 0,
                 Maximum = 100,
-                TickStyle = TickStyle.None,
-                Dock = DockStyle.Top,
-                Height = 30,
+                TickPlacement = System.Windows.Controls.Primitives.TickPlacement.None,
+                VerticalAlignment = VerticalAlignment.Stretch,
+                Style = (Style)UI_MainWindow.Self.FindResource("SliderStylePointer")
             };
-            trackBar.ValueChanged += (s, e) => BrightnessChanged?.Invoke(this, EventArgs.Empty);
+            slider.ValueChanged += (s, e) => { Brightness = (int)slider.Value; BrightnessChanged?.Invoke(this, EventArgs.Empty); };
 
-            int margin = 13;
-            int brightBarY = 22;
-
-            brightBar = new PictureBox
+            gradientBar = new Rectangle
             {
                 Height = 4,
-                Left = margin,
-                Width = this.Width - (margin * 2),
-                Top = brightBarY,
-                Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top
+                Margin = new Thickness(5, 0, 5, 0)
             };
-            brightBar.Image = GenerateBrightnessImage(this.Width - (margin * 2), brightBar.Height, hue);
+            Grid.SetRow(gradientBar, 1);
+            RegenerateGradient();
 
-            this.Resize += (s, e) =>
-            {
-                RegenerateGradient();
-                brightBar.Top = brightBarY;
-                brightBar.Width = this.Width - (margin * 2);
-                trackBar.Height = this.Height;
-            };
+            grid.Children.Add(slider);
+            grid.Children.Add(gradientBar);
 
-            Controls.Add(brightBar);
-            Controls.Add(trackBar);
+            Content = grid;
         }
 
         private void RegenerateGradient()
         {
-            brightBar.Image?.Dispose();
-            brightBar.Image = GenerateBrightnessImage(brightBar.Width, brightBar.Height, hue);
+            gradientBar.Fill = GenerateBrightnessBrush(hue);
         }
 
-        private Bitmap GenerateBrightnessImage(int width, int height, int hue)
+        private Brush GenerateBrightnessBrush(int hue)
         {
-            var bmp = new Bitmap(width, height);
-            using (Graphics g = Graphics.FromImage(bmp))
+            var brush = new LinearGradientBrush
             {
-                for (int x = 0; x < width; x++)
-                {
-                    double v = x / (double)width; // 0 → 1
-                    Color c = ColorHelper.GetColorFromHsb(hue, 1, v);
-                    using (Pen pen = new Pen(c))
-                    {
-                        g.DrawLine(pen, x, 0, x, height);
-                    }
-                }
+                StartPoint = new Point(0, 0),
+                EndPoint = new Point(1, 0)
+            };
+
+            // Build gradient stops from 0 → 1 brightness
+            for (int i = 0; i <= 10; i++)
+            {
+                double v = i / 10.0;
+                var c = ColorHelper.GetColorFromHsbA(255, hue, 1, v); // full alpha channel
+                brush.GradientStops.Add(new GradientStop(
+                    Color.FromArgb(c.A, c.R, c.G, c.B), v));
             }
-            return bmp;
+
+            return brush;
         }
     }
 }

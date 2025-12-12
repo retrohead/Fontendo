@@ -1,0 +1,25 @@
+﻿ <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:Themes="clr-namespace:Microsoft.Windows.Themes;assembly=PresentationFramework.Aero2"
+    xmlns:local="clr-namespace:Fontendo">
+
+    <Color x:Key="ColorDark">#083040</Color>
+    <Color x:Key="ColorMedium">#0D4054</Color>
+    <Color x:Key="ColorLight">#165B75</Color>
+    <Color x:Key="ColorSelected">#FF2F6E87</Color>
+    <Color x:Key="ColorHighlight">#FF17495C</Color>
+    <Color x:Key="ColorPanelAlpha">#44000000</Color>
+
+    <Color x:Key="ColorInactiveText">#C4C4C4</Color>
+    <Color x:Key="ColorActiveText">#E6E6E6</Color>
+    <Color x:Key="ColorNegativeText">#BD3F3F</Color>
+    <Color x:Key="ColorPositiveText">#407D00</Color>
+
+    <Color x:Key="ColorHeaderText">#E6E6E6</Color>
+    <Color x:Key="ColorLabelText">#A0B8BD</Color>
+
+    <Color x:Key="ColorControlBorder">#6D0898A0</Color>
+    <Color x:Key="ColorControlHighlightBorder">#CF0898A0</Color>
+
+    <Color x:Key="ColorShadowAlpha">#FF000000</Color>
+</ResourceDictionary>

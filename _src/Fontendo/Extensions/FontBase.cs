@@ -3,10 +3,12 @@ using Fontendo.Formats.CTR;
 using Fontendo.Interfaces;
 using Fontendo.Properties;
 using System.ComponentModel;
-using System.Windows.Forms;
+using System.Windows.Data;
+using System.Drawing;
 using static Fontendo.FontProperties.FontPropertyList;
 using static Fontendo.FontProperties.GlyphProperties;
 using static Fontendo.FontProperties.PropertyList;
+using System.Windows.Media.Imaging;
 
 namespace Fontendo.Extensions
 {
@@ -28,15 +30,15 @@ namespace Fontendo.Extensions
         }
         public class FontSettings : INotifyPropertyChanged
         {
-            private FontPropertyRegistry Properties {  get; set; } = new FontPropertyRegistry();
+            private FontPropertyRegistry Properties { get; set; } = new FontPropertyRegistry();
 
             private List<FontProperty> CreatedProperties = new List<FontProperty>();
 
             public class SheetsType : INotifyPropertyChanged
             {
                 private int _width;
-                public int Width 
-                { 
+                public int Width
+                {
                     get
                     { return _width; }
                     set
@@ -132,11 +134,11 @@ namespace Fontendo.Extensions
             }
 
             // font properties
-            public bool Endianness
+            public Endianness.Endian Endianness
             {
                 get
                 {
-                    return Properties.GetValue<bool>(FontProperty.Endianness);
+                    return Properties.GetValue<Endianness.Endian>(FontProperty.Endianness);
                 }
                 set
                 {
@@ -194,7 +196,7 @@ namespace Fontendo.Extensions
                         OnPropertyChanged(nameof(LineFeed));
                     }
                 }
-                }
+            }
             public byte Height
             {
                 get
@@ -215,7 +217,7 @@ namespace Fontendo.Extensions
                         OnPropertyChanged(nameof(Height));
                     }
                 }
-                }
+            }
             public byte Width
             {
                 get
@@ -333,12 +335,12 @@ namespace Fontendo.Extensions
 
             // NTR-specific
 
-                //NtrBpp,
-                //NtrVertical,
-                //NtrRotation,
-                //NtrGameFreak,
+            //NtrBpp,
+            //NtrVertical,
+            //NtrRotation,
+            //NtrGameFreak,
 
-                // RVL only
+            // RVL only
             public ImageFormats NtrRvlImageFormat
             {
                 get
@@ -404,42 +406,95 @@ namespace Fontendo.Extensions
             }
 
 
-
-            public bool GetBindingForObject(FontProperty property, out List<Binding>? bindings)
+            public bool GetBindingsForObject(FontProperty property, out List<Binding> bindings)
             {
                 bindings = new List<Binding>();
+
                 switch (property)
                 {
                     case FontProperty.Endianness:
-                        bindings.Add(new Binding("LitteEndian", this, nameof(Endianness), false, DataSourceUpdateMode.OnPropertyChanged));
+                        bindings.Add(new Binding(nameof(Endianness))
+                        {
+                            Source = this,
+                            Mode = BindingMode.TwoWay,
+                            UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
+                        });
                         return true;
+
                     case FontProperty.CharEncoding:
-                        bindings.Add(new Binding("Text", this, nameof(CharEncoding), false, DataSourceUpdateMode.OnPropertyChanged));
+                        bindings.Add(new Binding(nameof(CharEncoding))
+                        {
+                            Source = this,
+                            Mode = BindingMode.TwoWay,
+                            UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
+                        });
                         return true;
+
                     case FontProperty.LineFeed:
-                        bindings.Add(new Binding("Value", this, nameof(LineFeed), false, DataSourceUpdateMode.OnPropertyChanged));
+                        bindings.Add(new Binding(nameof(LineFeed))
+                        {
+                            Source = this,
+                            Mode = BindingMode.TwoWay,
+                            UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
+                        });
                         return true;
+
                     case FontProperty.Height:
-                        bindings.Add(new Binding("Value", this, nameof(Height), false, DataSourceUpdateMode.OnPropertyChanged));
+                        bindings.Add(new Binding(nameof(Height))
+                        {
+                            Source = this,
+                            Mode = BindingMode.TwoWay,
+                            UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
+                        });
                         return true;
+
                     case FontProperty.Width:
-                        bindings.Add(new Binding("Value", this, nameof(Width), false, DataSourceUpdateMode.OnPropertyChanged));
+                        bindings.Add(new Binding(nameof(Width))
+                        {
+                            Source = this,
+                            Mode = BindingMode.TwoWay,
+                            UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
+                        });
                         return true;
+
                     case FontProperty.Ascent:
-                        bindings.Add(new Binding("Value", this, nameof(Ascent), false, DataSourceUpdateMode.OnPropertyChanged));
+                        bindings.Add(new Binding(nameof(Ascent))
+                        {
+                            Source = this,
+                            Mode = BindingMode.TwoWay,
+                            UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
+                        });
                         return true;
+
                     case FontProperty.Baseline:
-                        bindings.Add(new Binding("Value", this, nameof(Baseline), false, DataSourceUpdateMode.OnPropertyChanged));
+                        bindings.Add(new Binding(nameof(Baseline))
+                        {
+                            Source = this,
+                            Mode = BindingMode.TwoWay,
+                            UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
+                        });
                         return true;
+
                     case FontProperty.NtrRvlImageFormat:
-                        bindings.Add(new Binding("Text", this, nameof(NtrRvlImageFormat), false, DataSourceUpdateMode.OnPropertyChanged));
+                        bindings.Add(new Binding(nameof(NtrRvlImageFormat))
+                        {
+                            Source = this,
+                            Mode = BindingMode.TwoWay,
+                            UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
+                        });
                         return true;
+
                     case FontProperty.Version:
-                        var vb = new Binding("Text", this, nameof(Version), false, DataSourceUpdateMode.OnPropertyChanged);
-                        vb.Format += PropertyList.BindingFormatter_Hex;
-                        vb.Parse += PropertyList.BindingParser_Hex;
+                        var vb = new Binding(nameof(Version))
+                        {
+                            Source = this,
+                            Mode = BindingMode.TwoWay,
+                            UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
+                            Converter = new HexValueConverter() // implement IValueConverter for hex formatting/parsing
+                        };
                         bindings.Add(vb);
                         return true;
+
                     default:
                         throw new NotImplementedException($"No binding implemented for property {property}");
                 }
@@ -531,8 +586,8 @@ namespace Fontendo.Extensions
                     TextureCodec = new Fontendo.Codecs.RVL.RVLTextureCodec();
                     // TODO: Implement RVL fonts
                     throw new NotImplementedException("RVL font not implemented yet");
-                    //Font = new BCFNT();
-                    //break;
+                //Font = new BCFNT();
+                //break;
                 case Platform.CTR:
                     TextureCodec = new Fontendo.Codecs.CTR.CTRTextureCodec();
                     Font = new BCFNT(this);
@@ -552,8 +607,8 @@ namespace Fontendo.Extensions
                     // TODO: Implement NTR fonts
                     TextureCodec = new Fontendo.Codecs.NTR.NTRTextureCodec();
                     throw new NotImplementedException("NTR font not implemented yet");
-                    //Font = new BCFNT();
-                    //break;
+                //Font = new BCFNT();
+                //break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(platform));
             }
@@ -563,7 +618,7 @@ namespace Fontendo.Extensions
             FileSystemHelper.FileType fontFileType = FileSystemHelper.GetFileTypeFromPath(path);
             if (fontFileType == FileSystemHelper.FileType.All)
                 return new ActionResult(false, "File extension is not recognised");
-            if(Font != null)
+            if (Font != null)
                 Font.Dispose();
             Font = new BCFNT(this);
             ActionResult result = Font.Load(this, path);

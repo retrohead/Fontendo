@@ -1,0 +1,111 @@
+﻿<dockm:CustomWindowContentBase x:Class="Fontendo.UI.UI_GlyphEditor"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:Fontendo.Controls"
+             xmlns:dockm="clr-namespace:Fontendo.DockManager"
+             xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+             MinWidth="180" MinHeight="350">
+
+    <Grid x:Name="tableMainTable"
+          HorizontalAlignment="Stretch"
+          VerticalAlignment="Top" Margin="0,10,0,0">
+
+        <!-- Column definitions: 50% | 120px | 50% -->
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="180" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- Row definitions -->
+        <Grid.RowDefinitions>
+            <!-- glyph image -->
+            <RowDefinition Height="142" />
+            <!-- spacing -->
+            <RowDefinition Height="10" />
+            <!-- glyph character -->
+            <RowDefinition Height="60" />
+            <!-- character name -->
+            <RowDefinition Height="*" />
+            <!-- properties -->
+            <RowDefinition Height="*" />
+            <!-- splitter -->
+            <RowDefinition Height="10" />
+            <!-- btnExportSheet -->
+            <RowDefinition Height="40" />
+            <!-- btnReplaceSheet -->
+            <RowDefinition Height="40" />
+            <!-- spare -->
+            <RowDefinition Height="100*" />
+        </Grid.RowDefinitions>
+
+        <!-- glyph image -->
+        <Grid Grid.Column="1" Margin="35,0,35,0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="100*" />
+                <RowDefinition Height="32" />
+            </Grid.RowDefinitions>
+            <Border Grid.Row="0" BorderBrush="{DynamicResource ControlBorder}" BorderThickness="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0">
+                <Border x:Name="borderGlyphImageBorder" Grid.Row="0" Style="{DynamicResource AlphaPreviewStyle}" BorderBrush="Transparent" BorderThickness="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="0,0,0,0">
+                    <Border x:Name="borderGlyphImage" Grid.Row="0" Background="Black" BorderThickness="0" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,0">
+                    <Border.Effect>
+                        <DropShadowEffect ShadowDepth="0" BlurRadius="25" Color="Black" />
+                    </Border.Effect>
+                    <Image x:Name="imgGlyphPreview"
+                           Stretch="None"
+                           RenderOptions.BitmapScalingMode="NearestNeighbor"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center">
+                    </Image>
+                    </Border>
+                </Border>
+            </Border>
+                <Slider x:Name="sliderZoom" Style="{DynamicResource SliderStyle}" Minimum="0" Grid.Row="1" Maximum="100" Value="50"
+                TickFrequency="1" IsSnapToTickEnabled="True"
+                Orientation="Horizontal" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ValueChanged="sliderZoom_ValueChanged"/>
+        </Grid>
+        <!-- glyph character -->
+        <Grid Grid.Row="2" Grid.Column="1">
+            <Border Width="50" Height="50" BorderThickness="1" BorderBrush="{DynamicResource ControlBorder}">
+                <TextBox x:Name="textGlyphSymbol"  FontSize="32" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" IsReadOnly="True" BorderThickness="0" Background="{DynamicResource WindowBackgroundBrushMedium}" Foreground="{DynamicResource ControlTextInactive}" />
+            </Border>
+        </Grid>
+        <!-- character name -->
+        <Grid Grid.Row="3" Grid.Column="1">
+            <TextBlock x:Name="lblGlyphName" TextWrapping="Wrap" TextAlignment="Center" Foreground="{DynamicResource ControlTextInactive}" Margin="20,0" HorizontalAlignment="Center" />
+        </Grid>
+            
+
+        <!-- glyphProperties -->
+        <Border
+                Grid.Row="4" Grid.Column="1"
+                MinHeight="50"
+                Background="{DynamicResource WindowBackgroundBrushDark}"
+                HorizontalAlignment="Stretch" VerticalAlignment="Top">
+            <StackPanel x:Name="panelGlyphProperties" Orientation="Vertical" Margin="5,0,10,10"></StackPanel>
+        </Border>
+
+        <!-- groupBox1 (separator line) -->
+        <Border x:Name="groupBox1"
+                Grid.Row="5" Grid.ColumnSpan="3"
+                Background="{DynamicResource ControlBorder}"
+                Height="1" Margin="10,0" />
+
+        <!-- btnExportSheet -->
+        <Button 
+            x:Name="btnExportGlyph" 
+            ToolTip="Export the selected glyph to an image file" 
+            Click="btnExportGlyph_Click" 
+            Content="Export Glyph" 
+            Grid.Row="6" Grid.Column="1" Background="{DynamicResource WindowBackgroundBrushMedium}" Margin="15,0,15,0" Height="25" HorizontalAlignment="Stretch" Cursor="Hand" Style="{DynamicResource ButtonStyleImage}" />
+
+
+        <!-- btnReplaceSheet -->
+        <Button 
+            x:Name="btnReplaceGlyph" 
+            ToolTip="Replace the selected glyph with a new image" 
+            Click="btnReplaceGlyph_Click" 
+            Content="Replace Glyph" 
+            Grid.Row="7" Grid.Column="1" Background="{DynamicResource WindowBackgroundBrushMedium}" Margin="15,0,15,0" Height="25" HorizontalAlignment="Stretch" Cursor="Hand" Style="{DynamicResource ButtonStyleImage}" />
+    </Grid>
+</dockm:CustomWindowContentBase>

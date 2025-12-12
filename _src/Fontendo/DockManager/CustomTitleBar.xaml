@@ -1,0 +1,38 @@
+﻿<UserControl x:Class="Fontendo.Controls.CustomTitleBar"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:Fontendo.Controls"
+             xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit" HorizontalAlignment="Stretch" VerticalAlignment="Top">
+    <UserControl.Resources>
+        
+    </UserControl.Resources>
+    <Grid Background="{DynamicResource BackgroundBrushMedium}">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="100*" />
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+        <Image Source="{Binding Icon, RelativeSource={RelativeSource AncestorType=UserControl}}" HorizontalAlignment="Left"  Width="16" Margin="8,0,0,4" />
+        <!-- Title -->
+        <TextBlock Text="{Binding Title, RelativeSource={RelativeSource AncestorType=Window}}"
+                   HorizontalAlignment="Stretch" VerticalAlignment="Center" Margin="5,0,0,3" Grid.Column="1"
+                   FontSize="{Binding FontSize, RelativeSource={RelativeSource AncestorType=Window}}" Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+
+        <!-- Minimize -->
+        <Button x:Name="btnMin" Grid.Column="2" Style="{DynamicResource TitleBarButtonStyle}" PreviewMouseLeftButtonUp="Minimize_MouseUp">
+            <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE921;" FontSize="10"/>
+        </Button>
+
+        <!-- Maximize/Restore -->
+        <Button x:Name="btnMax" Grid.Column="3" Style="{DynamicResource TitleBarButtonStyle}" PreviewMouseLeftButtonUp="MaximizeRestore_MouseUp">
+            <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE922;" FontSize="10"/>
+        </Button>
+
+        <!-- Close -->
+        <Button x:Name="btnClose" Grid.Column="4" Style="{DynamicResource TitleBarCloseButtonStyle}" PreviewMouseLeftButtonUp="Close_MouseUp">
+            <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE8BB;" FontSize="10"/>
+        </Button>
+    </Grid>
+</UserControl>

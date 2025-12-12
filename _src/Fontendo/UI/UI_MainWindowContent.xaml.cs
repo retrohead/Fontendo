@@ -1,0 +1,634 @@
+﻿using Fontendo.Controls;
+using Fontendo.Extensions;
+using System.ComponentModel;
+using System.Drawing;
+using System.IO;
+using System.Reflection;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using static FileSystemHelper;
+using static Fontendo.Extensions.FontBase;
+using static Fontendo.Extensions.FontBase.FontSettings;
+using Fontendo.DockManager;
+
+namespace Fontendo.UI
+{
+    /// <summary>
+    /// Interaction logic for UI_MainWindow.xaml
+    /// </summary>
+    public partial class UI_MainWindowContent : CustomWindowContentBase, INotifyPropertyChanged
+    {
+        public static dynamic? loadedTab = null;
+        public int RecentItem_Clicked { get; private set; }
+
+        private FontBase? _FontendoFont;
+        public FontBase? FontendoFont
+        {
+            get { return _FontendoFont; }
+            set
+            {
+                if (value != _FontendoFont)
+                {
+                    _FontendoFont = value;
+                    Self.OnPropertyChanged(nameof(FontendoFont));
+                }
+            }
+        }
+        public UnicodeNames UnicodeNames;
+        public UI_GlyphEditor GlyphEditor = new UI_GlyphEditor();
+        public UI_FontEditor FontEditor = new UI_FontEditor();
+        private bool debugMode = false;
+
+        public static UI_MainWindowContent Self;
+        public class MainFormButtonEnabler : INotifyPropertyChanged
+        {
+            private readonly FontBase _font;
+            private readonly ListView _sheetsList;
+            private readonly ListView _glyphList;
+
+            public MainFormButtonEnabler(FontBase font, ListView sheetsList, ListView glyphList)
+            {
+                _font = font;
+                _sheetsList = sheetsList;
+                _glyphList = glyphList;
+
+                // Subscribe to font property changes
+                _font.PropertyChanged += (s, e) =>
+                {
+                    if (e.PropertyName == nameof(FontBase.IsLoaded))
+                        RaiseAll();
+                };
+
+                // Subscribe to selection changes
+                _sheetsList.SelectionChanged += (s, e) => RaiseAll();
+                _glyphList.SelectionChanged += (s, e) => RaiseAll();
+            }
+
+            public bool IsGlyphSelected =>
+                _font.IsLoaded && _glyphList.SelectedItems.Count > 0;
+
+            public bool IsSheetSelected =>
+                _font.IsLoaded && _sheetsList.SelectedItems.Count > 0;
+
+            private void RaiseAll()
+            {
+                OnPropertyChanged(nameof(IsGlyphSelected));
+                OnPropertyChanged(nameof(IsSheetSelected));
+            }
+
+            public event PropertyChangedEventHandler? PropertyChanged;
+            protected void OnPropertyChanged(string name) =>
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+
+        }
+
+
+        private MainFormButtonEnabler? _buttonEnabler;
+        public MainFormButtonEnabler? ButtonEnabler
+        {
+            get { return _buttonEnabler; }
+            set { _buttonEnabler = value; OnPropertyChanged(nameof(ButtonEnabler)); }
+        }
+
+        public class SheetItem : INotifyPropertyChanged
+        {
+            private string _Label = "";
+            public string Label
+            {
+                get
+                {
+                    return _Label;
+                }
+                set
+                {
+                    if (_Label != value)
+                    {
+                        _Label = value;
+                        OnPropertyChanged(nameof(Label));
+                    }
+                }
+            }
+            private BitmapImage? _Image;
+            public BitmapImage? Image
+            {
+                get
+                {
+                    return _Image;
+                }
+                set
+                {
+                    if (_Image != value)
+                    {
+                        _Image = value;
+                        OnPropertyChanged(nameof(Image));
+                        OnPropertyChanged(nameof(OriginalWidth));
+                    }
+                }
+            }
+
+            private object? _Tag;
+            public object? Tag
+            {
+                get
+                {
+                    return _Tag;
+                }
+                set
+                {
+                    if (_Tag != value)
+                    {
+                        _Tag = value;
+                        OnPropertyChanged(nameof(Tag));
+                    }
+                }
+            }
+
+            public double OriginalWidth => Image?.PixelWidth ?? 0;
+            public event PropertyChangedEventHandler? PropertyChanged;
+            protected void OnPropertyChanged(string name) =>
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+        }
+        public class GlyphItem : INotifyPropertyChanged
+        {
+            private string _Label = "";
+            public string Label
+            {
+                get
+                {
+                    return _Label;
+                }
+                set
+                {
+                    if (_Label != value)
+                    {
+                        _Label = value;
+                        OnPropertyChanged(nameof(Label));
+                    }
+                }
+            }
+            private BitmapImage? _Image;
+            public BitmapImage? Image
+            {
+                get
+                {
+                    return _Image;
+                }
+                set
+                {
+                    if (_Image != value)
+                    {
+                        _Image = value;
+                        OnPropertyChanged(nameof(Image));
+                        OnPropertyChanged(nameof(OriginalWidth));
+                    }
+                }
+            }
+            private object? _Tag;
+            public object? Tag
+            {
+                get
+                {
+                    return _Tag;
+                }
+                set
+                {
+                    if (_Tag != value)
+                    {
+                        _Tag = value;
+                        OnPropertyChanged(nameof(Tag));
+                    }
+                }
+            }
+            public double OriginalWidth => Image?.PixelWidth ?? 0;
+            public event PropertyChangedEventHandler? PropertyChanged;
+            protected void OnPropertyChanged(string name) =>
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+        }
+
+        public UI_MainWindowContent()
+        {
+            Self = this;
+            InitializeComponent();
+            // At application startup, choose which file types to support
+            FileSystemHelper.Initialize(new List<FileType>
+            {
+                FileType.BinaryCrustFont
+            });
+            UnicodeNames = new UnicodeNames();
+            // Get the version from the assembly
+            string? fileVersion = Assembly
+                    .GetEntryAssembly()?
+                    .GetCustomAttribute<AssemblyFileVersionAttribute>()?
+                    .Version;
+
+            FontendoFont = new FontBase(Platform.CTR);
+            ButtonEnabler = new MainFormButtonEnabler(FontendoFont, listViewSheets, listViewCharacters);
+            FontEditor.SelectedColor = ColorHelper.ToMediaColor(Properties.Settings.Default.FontBackgroundColor);
+            UI_MainWindowContent.Self.SetBackgroundColour(Properties.Settings.Default.FontBackgroundColor, true);
+            FontEditor.ShowFontDetails(null);
+            GlyphEditor.ShowGlyphDetails(null);
+        }
+
+
+
+        public int SelectedSheet
+        {
+            get
+            {
+                if (listViewSheets.SelectedItems.Count == 0)
+                    return -1;
+                return listViewSheets.Items.IndexOf(listViewSheets.SelectedItem);
+            }
+        }
+        private double GetMinimumSize()
+        {
+            var grid = mainGrid; // your 3-column grid
+            var leftCol = grid.ColumnDefinitions[0];
+            var middleCol = grid.ColumnDefinitions[2];
+            var rightCol = grid.ColumnDefinitions[4];
+
+            // Calculate the minimum width required:
+            return leftCol.MinWidth + middleCol.MinWidth + rightCol.MinWidth + 50;
+        }
+        public void resize(object sender, SizeChangedEventArgs e)
+        {
+            if (loadedTab != null)
+                loadedTab.Content.resize(e.NewSize.Height, e.NewSize.Width);
+            RecalculateColumnConstraints();
+            double min = GetMinimumSize();
+            if (UI_MainWindow.Self.MinWidth != min)
+            {
+                // Stop shrinking further by snapping back
+                UI_MainWindow.Self.MinWidth = min;
+            }
+        }
+
+        public static bool CanLoseChanges()
+        {
+            return true;
+        }
+
+        private void MenuItem_Open_Click(object sender, RoutedEventArgs e)
+        {
+            string filename = FileSystemHelper.BrowseForSupportedFile("Select a font file");
+            if (string.IsNullOrEmpty(filename)) return;
+            LoadFont(filename);
+        }
+
+        private void MenuItem_Save_Click(object sender, RoutedEventArgs e)
+        {
+            if (!FontendoFont.IsLoaded) return;
+
+            ActionResult result = FontendoFont.SaveFont(FontendoFont.LoadedFontFilePath);
+            if (!result.Success)
+            {
+                MessageBox.Show($"Font failed to save {result.Message}", "Font Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            else
+            {
+                MessageBox.Show("Font saved successfully.", "Font Saved", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+        }
+
+        private void MenuItem_SaveAs_Click(object sender, RoutedEventArgs e)
+        {
+            if (!FontendoFont.IsLoaded) return;
+
+            string filepath = FileSystemHelper.BrowseForSaveFile(
+                FontendoFont.LoadedFontFileType,
+                "Save font file",
+                Path.GetFileName(FontendoFont.LoadedFontFilePath)
+                );
+            if (string.IsNullOrEmpty(filepath)) return;
+            ActionResult result = FontendoFont.SaveFont(filepath);
+            if (!result.Success)
+            {
+                MessageBox.Show($"Font failed to save {result.Message}", "Font Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            else
+            {
+                textFontFilePath.Text = FontendoFont.LoadedFontFilePath;
+                MessageBox.Show("Font saved successfully.", "Font Saved", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+        }
+
+        private void MenuItem_Close_Click(object sender, RoutedEventArgs e)
+        {
+            Application.Current.Shutdown();
+        }
+        private void AddNoRecentItemsMenu(System.Windows.Style? style)
+        {
+            // add a blank item showing no recent files
+            menuRecent.Items.Add(new System.Windows.Controls.MenuItem()
+            {
+                Header = "No Recent Files",
+                IsEnabled = false,
+                Icon = null,
+                Style = style,
+                FontSize = 12
+            });
+        }
+        private void RecentItem_Click(object sender, RoutedEventArgs e)
+        {
+            if (!CanLoseChanges())
+                return;
+            System.Windows.Controls.MenuItem item = (System.Windows.Controls.MenuItem)sender;
+            RecentFilesManager.RecentFile data = (RecentFilesManager.RecentFile)item.Tag;
+            if (data == null)
+                return;
+
+            if (!File.Exists(data.FilePath))
+            {
+                if (MessageBox.Show("The selected file no longer exists.\n\n" +
+                    data.FilePath + "\n\n" +
+                    "Would you like to remove it from your recent files list?", "File no longer exists", MessageBoxButton.YesNo, MessageBoxImage.Exclamation) == MessageBoxResult.Yes)
+                {
+                    RecentFilesManager.RemoveRecentFile(data.FilePath);
+                }
+                return;
+            }
+
+            if (!File.Exists(data.FilePath))
+            {
+                if (MessageBox.Show("The file no longer exists, do you want to remove it from your recent files list?", "Missing File", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                    RecentFilesManager.RemoveRecentFile(data.FilePath);
+                return;
+            }
+            LoadFont(data.FilePath);
+        }
+        public void OpenRecentFile(string fn)
+        {
+            LoadFont(fn);
+        }
+
+        private void upperMenu_SubmenuOpened(object sender, RoutedEventArgs e)
+        {
+            if (e.OriginalSource.GetType() != typeof(System.Windows.Controls.MenuItem))
+                return;
+            System.Windows.Controls.MenuItem itemclicked = (System.Windows.Controls.MenuItem)e.OriginalSource;
+            if (nameof(upperFileMenu) == itemclicked.Name)
+            {
+                System.Windows.Style? style = (System.Windows.Style?)UI_MainWindow.Self?.FindResource("MenuItemStyle");
+                menuRecent.Items.Clear();
+                if (RecentFilesManager.RecentFiles != null)
+                {
+                    foreach (RecentFilesManager.RecentFile file in RecentFilesManager.RecentFiles)
+                    {
+                        var tooltip = new ToolTip();
+                        tooltip.Background = (SolidColorBrush?)UI_MainWindow.Self?.FindResource("WindowBackgroundBrushMedium");
+                        tooltip.Foreground = (SolidColorBrush?)UI_MainWindow.Self?.FindResource("ControlTextInactive");
+                        tooltip.Content = file.FilePath;
+                        var item = new System.Windows.Controls.MenuItem()
+                        {
+                            Header = ShortenPath(file.FilePath),
+                            Tag = file,
+                            Style = style,
+                            FontSize = 11,
+                            ToolTip = tooltip
+                        };
+                        item.Click += RecentItem_Click;
+
+                        menuRecent.Items.Add(item);
+
+                    }
+                }
+                if (menuRecent.Items.Count == 0)
+                    AddNoRecentItemsMenu(style);
+
+                upperFileMenu.UpdateLayout();
+                menuRecent.UpdateLayout();
+            }
+        }
+
+        public static string ShortenPath(string path, int maxLength = 50)
+        {
+            if (string.IsNullOrEmpty(path) || path.Length <= maxLength)
+                return path;
+
+            // Split into directory segments
+            string[] parts = path.Split(System.IO.Path.DirectorySeparatorChar, System.IO.Path.AltDirectorySeparatorChar);
+
+            // Always keep first and last segment
+            string first = parts[0];
+            string last = parts[^1];
+
+            // Build middle segments until we exceed maxLength
+            var middle = new List<string>();
+            int totalLength = first.Length + last.Length + 5; // 5 for "...\"
+            for (int i = 1; i < parts.Length - 1; i++)
+            {
+                int nextLen = parts[i].Length + 1; // +1 for separator
+                if (totalLength + nextLen > maxLength)
+                {
+                    middle.Add("...");
+                    break;
+                }
+                middle.Add(parts[i]);
+                totalLength += nextLen;
+            }
+
+            return string.Join(System.IO.Path.DirectorySeparatorChar.ToString(),
+                new[] { first }.Concat(middle).Concat(new[] { last }));
+        }
+
+        public void SetBackgroundColour(System.Drawing.Color color, bool save)
+        {
+            // Wrap the Color in a SolidColorBrush for WPF
+            var mediaColor = ColorHelper.ToMediaColor(color);
+            var backgroundBrush = new SolidColorBrush(mediaColor);
+
+            listViewSheets.Background = backgroundBrush;
+            listViewCharacters.Background = backgroundBrush;
+
+            GlyphEditor.GlyphBackground = color;
+
+            // Decide font colour based on luminance
+            double luminance = Fontendo.Extensions.ColorHelper.GetLuminance(color);
+            var foregroundBrush = luminance < 0.5
+                ? System.Windows.Media.Brushes.White
+                : System.Windows.Media.Brushes.Black;
+
+            listViewSheets.Foreground = foregroundBrush;
+            listViewCharacters.Foreground = foregroundBrush;
+
+            // Save settings
+            if (save)
+            {
+                Properties.Settings.Default.FontBackgroundColor = color;
+                Properties.Settings.Default.Save();
+            }
+        }
+
+        public void LoadFont(string filename)
+        {
+            textFontFilePath.Text = "";
+            FontEditor.ShowFontDetails(null);
+            GlyphEditor.ShowGlyphDetails(null);
+            ActionResult result = FontendoFont.LoadFont(filename);
+
+            if (!result.Success)
+            {
+                MessageBox.Show($"Font failed to load {result.Message}", "Font Error", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                return;
+            }
+            else if (result.Message != "OK")
+            {
+                MessageBox.Show($"Font loaded with warnings:\n\n{result.Message}", "Font Warnings Occurred", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            textFontFilePath.Text = filename;
+            RecentFilesManager.AddRecentFile(textFontFilePath.Text, Path.GetFileName(textFontFilePath.Text));
+            ListFontSheets();
+            FontEditor.ShowFontDetails(FontendoFont);
+        }
+        public static BitmapImage ConvertBitmap(System.Drawing.Bitmap bmp)
+        {
+            using (var ms = new MemoryStream())
+            {
+                bmp.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+                ms.Position = 0;
+
+                var img = new BitmapImage();
+                img.BeginInit();
+                img.CacheOption = BitmapCacheOption.OnLoad;
+                img.StreamSource = ms;
+                img.EndInit();
+                img.Freeze();
+                return img;
+            }
+        }
+        private void ListFontSheets()
+        {
+            if (FontendoFont == null) return;
+            if (FontendoFont.Settings.Sheets == null) return;
+
+            SheetsType sheets = FontendoFont.Settings.Sheets;
+
+            var items = new List<SheetItem>();
+
+            for (int i = 0; i < sheets.Images.Count; i++)
+            {
+                Bitmap bmp = sheets.Images[i];
+                items.Add(new SheetItem
+                {
+                    Label = $"Sheet {i + 1}",
+                    Image = ConvertBitmap(bmp),
+                    Tag = sheets.Images[i], // store the Bitmap in Tag
+                });
+            }
+
+            listViewSheets.ItemsSource = items;
+
+            // optional: select first item
+            if (listViewSheets.Items.Count > 0)
+                listViewSheets.SelectedIndex = 0;
+        }
+
+        private void UserControl_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (UI_MainWindow.Self == null) throw new Exception("Main window not intialized properly");
+            DockHandler.Register(UI_MainWindow.Self.Window, dockablePanelGlyph, GlyphEditor, "Glyph Properties");
+            DockHandler.Register(UI_MainWindow.Self.Window, dockablePanelFont, FontEditor, "Font Properties");
+        }
+        private void sideSplittersDragDelta(object sender, DragDeltaEventArgs e)
+        {
+            RecalculateColumnConstraints();
+        }
+
+        private void RecalculateColumnConstraints()
+        {
+            var grid = mainGrid; // your 3-column grid
+
+            var leftCol = grid.ColumnDefinitions[0];
+            var middleCol = grid.ColumnDefinitions[2];
+            var rightCol = grid.ColumnDefinitions[4];
+
+            // Clamp both sides so middle never shrinks below MinWidth
+            leftCol.MaxWidth = rightCol.ActualWidth + middleCol.MinWidth;
+            rightCol.MaxWidth = leftCol.ActualWidth + middleCol.MinWidth;
+        }
+
+        private void MenuItem_Options_Click(object sender, RoutedEventArgs e)
+        {
+            dynamic pop = new popUpOptions(UI_MainWindow.Self, this);
+            popUps.loadPopUp(UI_MainWindow.Self, "Theme Settings", "theme.png", ref pop, true);
+        }
+
+        private void listViewSheets_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (listViewSheets.SelectedIndex < 0)
+                return;
+
+            int sheetIndex = listViewSheets.SelectedIndex;
+
+            // Get all CharImages belonging to this sheet
+            var glyphsForSheet = FontendoFont.Settings.Glyphs?
+                .Where(g => g.Sheet == sheetIndex);
+
+            if (glyphsForSheet == null)
+                return;
+
+            var items = new List<GlyphItem>();
+            foreach (var glyph in glyphsForSheet)
+            {
+                items.Add(new GlyphItem
+                {
+                    Label = $"Char {glyph.Index}",
+                    Image = ConvertBitmap(glyph.Settings.Image),
+                    Tag = glyph
+                });
+            }
+
+            listViewCharacters.ItemsSource = items;
+
+            if (listViewCharacters.Items.Count > 0)
+                listViewCharacters.SelectedIndex = 0;
+        }
+
+        private void listViewCharacters_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            GlyphEditor.ClearGlyphDetails();
+            if (listViewCharacters.SelectedItems.Count == 0) return;
+            GlyphItem? glyph = (GlyphItem?)listViewCharacters.SelectedItems[0];
+            if (glyph == null) return;
+            Glyph? glyphdata = (Glyph?)glyph.Tag;
+            if (glyphdata == null) return;
+            GlyphEditor.ShowGlyphDetails(glyphdata);
+        }
+
+        public GlyphItem? GetSelectedCharacterItem()
+        {
+            return (GlyphItem?)listViewCharacters.SelectedItem;
+        }
+        public SheetItem? GetSelectedSheetItem()
+        {
+            return (SheetItem?)listViewSheets.SelectedItem;
+        }
+
+        private void ExportSheet_Click(object sender, RoutedEventArgs e)
+        {
+            FontEditor.ExportSheet();
+        }
+
+        private void ReplaceSheet_Click(object sender, RoutedEventArgs e)
+        {
+            FontEditor.ReplaceSheet();
+        }
+        private void ExportGlyph_Click(object sender, RoutedEventArgs e)
+        {
+            GlyphEditor.ExportGlyph();
+        }
+
+        private void ReplaceGlyph_Click(object sender, RoutedEventArgs e)
+        {
+            GlyphEditor.ReplaceGlyph();
+        }
+
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+        protected void OnPropertyChanged(string name) =>
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+    }
+}

@@ -1,5 +1,6 @@
 ﻿using Fontendo.Extensions.BinaryTools;
 using Fontendo.Interfaces;
+using System.IO;
 using static Fontendo.Extensions.FontBase;
 using static Fontendo.Interfaces.ITextureCodec;
 

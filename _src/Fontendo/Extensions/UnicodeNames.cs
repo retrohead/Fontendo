@@ -8,6 +8,7 @@ namespace Fontendo.Extensions
     using System.Globalization;
     using System.IO;
     using System.Reflection;
+    using System.Windows;
 
     public class UnicodeNames
     {
@@ -77,7 +78,7 @@ namespace Fontendo.Extensions
             catch
             {
                 nameLookupTable.Clear();
-                MessageBox.Show("DerivedName.txt file is corrupted and will not be used", "DerivedName.txt Corrupted", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                MessageBox.Show("DerivedName.txt file is corrupted and will not be used", "DerivedName.txt Corrupted", MessageBoxButton.OK, MessageBoxImage.Exclamation);
             }
         }
 

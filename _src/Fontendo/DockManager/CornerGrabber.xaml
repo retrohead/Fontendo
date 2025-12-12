@@ -1,0 +1,19 @@
+﻿<UserControl x:Class="Fontendo.Controls.CornerGrabber"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Width="16" Height="16"
+             IsHitTestVisible="False">
+    <Canvas Width="16" Height="16">
+        <!-- Longest line (bottom) -->
+        <Line X1="2" Y1="14" X2="14" Y2="2"
+              Stroke="{DynamicResource ControlBorder}" StrokeThickness="1" />
+
+        <!-- Middle line -->
+        <Line X1="6" Y1="14" X2="14" Y2="6"
+              Stroke="{DynamicResource ControlBorder}" StrokeThickness="1" />
+
+        <!-- Shortest line (top) -->
+        <Line X1="10" Y1="14" X2="14" Y2="10"
+              Stroke="{DynamicResource ControlBorder}" StrokeThickness="1" />
+    </Canvas>
+</UserControl>

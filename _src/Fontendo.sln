@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.13.35931.197 d17.13
+VisualStudioVersion = 17.13.35931.197
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fontendo", "Fontendo\Fontendo.csproj", "{4849309C-3C2A-4975-BD47-C48A7BFB971B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fontendo", "Fontendo\Fontendo.csproj", "{5DB58632-9B4E-4B5C-A2D9-3B69A3A57E7D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,15 +11,15 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{4849309C-3C2A-4975-BD47-C48A7BFB971B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4849309C-3C2A-4975-BD47-C48A7BFB971B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4849309C-3C2A-4975-BD47-C48A7BFB971B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4849309C-3C2A-4975-BD47-C48A7BFB971B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5DB58632-9B4E-4B5C-A2D9-3B69A3A57E7D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5DB58632-9B4E-4B5C-A2D9-3B69A3A57E7D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5DB58632-9B4E-4B5C-A2D9-3B69A3A57E7D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5DB58632-9B4E-4B5C-A2D9-3B69A3A57E7D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {EAEC1CE5-F2CF-48CC-8EDA-115B4063777D}
+		SolutionGuid = {F727958A-0EDA-4B6F-A2C4-A98AB87BD5EC}
 	EndGlobalSection
 EndGlobal

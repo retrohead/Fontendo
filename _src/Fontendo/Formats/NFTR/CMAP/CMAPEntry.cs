@@ -1,5 +1,6 @@
 ﻿using Fontendo.Extensions.BinaryTools;
 using System;
+using System.IO;
 
 namespace Fontendo.Formats.CTR
 {
@@ -8,8 +9,8 @@ namespace Fontendo.Formats.CTR
         public UInt16 Code; //Character code
         public UInt16 Index; //Glyph index
 
-        private readonly BinaryReader? br;
-        public CMAPEntry(BinaryReader br)
+        private readonly BinaryReaderX? br;
+        public CMAPEntry(BinaryReaderX br)
         {
             this.br = br;
         }

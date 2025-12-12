@@ -1,0 +1,94 @@
+﻿<dockm:CustomWindowContentBase x:Class="Fontendo.Controls.ColorPicker"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:Fontendo.Controls"
+             xmlns:dockm="clr-namespace:Fontendo.DockManager"
+             mc:Ignorable="d" Height="Auto">
+    <UserControl.Resources>
+        <DrawingBrush x:Key="CheckerBrush"
+                  TileMode="Tile"
+                  Viewport="0,0,16,16"
+                  ViewportUnits="Absolute">
+            <DrawingBrush.Drawing>
+                <DrawingGroup>
+                    <GeometryDrawing Brush="#FFF0F0F0">
+                        <GeometryDrawing.Geometry>
+                            <RectangleGeometry Rect="0,0,16,16"/>
+                        </GeometryDrawing.Geometry>
+                    </GeometryDrawing>
+
+                    <GeometryDrawing Brush="#FFD0D0D0">
+                        <GeometryDrawing.Geometry>
+                            <GeometryGroup>
+                                <RectangleGeometry Rect="0,0,8,8"/>
+                                <RectangleGeometry Rect="8,8,8,8"/>
+                            </GeometryGroup>
+                        </GeometryDrawing.Geometry>
+                    </GeometryDrawing>
+                </DrawingGroup>
+            </DrawingBrush.Drawing>
+        </DrawingBrush>
+    </UserControl.Resources>
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="100" />
+            <RowDefinition Height="100*" />
+        </Grid.RowDefinitions>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="50*" />
+                <ColumnDefinition Width="50*" />
+            </Grid.ColumnDefinitions>
+            <Image Source="/Resources/Fontendo_small.png" Stretch="Uniform"  Height="50" />
+
+            <Border Grid.Column="1" BorderBrush="{DynamicResource ControlBorder}" BorderThickness="1" Background="{StaticResource CheckerBrush}">
+                <StackPanel x:Name="previewPanel" Background="Black" />
+            </Border>
+        </Grid>
+        <Grid Grid.Row="1" Margin="0,15,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="80" />
+                <ColumnDefinition Width="65" />
+                <ColumnDefinition Width="5" />
+                <ColumnDefinition Width="100*" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="32" />
+                <RowDefinition Height="32" />
+                <RowDefinition Height="32" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="32" />
+                <RowDefinition Height="32" />
+                <RowDefinition Height="32" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <Label Content="Hue" Foreground="{DynamicResource LabelTextBrush}" Grid.Row="0" />
+            <Label Content="Saturation" Foreground="{DynamicResource LabelTextBrush}" Grid.Row="1" />
+            <Label Content="Brightness" Foreground="{DynamicResource LabelTextBrush}" Grid.Row="2" />
+            <Label x:Name="lblAlpha" Content="Alpha" Foreground="{DynamicResource LabelTextBrush}" Grid.Row="3" />
+            <Label Content="Red" Foreground="{DynamicResource LabelTextBrush}" Grid.Row="4" />
+            <Label Content="Green" Foreground="{DynamicResource LabelTextBrush}" Grid.Row="5" />
+            <Label Content="Blue" Foreground="{DynamicResource LabelTextBrush}" Grid.Row="6" />
+            <Label Content="Hex" Foreground="{DynamicResource LabelTextBrush}" Grid.Row="7" />
+
+            <local:NumericUpDown x:Name="numHue" Minimum="0" Maximum="360" Grid.Row="0" Grid.Column="1" Margin="0,3,0,3" ValueChanged="numUpDown_HSBValueChanged" />
+            <local:NumericUpDown x:Name="numSat" Minimum="0" Maximum="100" Grid.Row="1" Grid.Column="1" Margin="0,3,0,3" ValueChanged="numUpDown_HSBValueChanged" />
+            <local:NumericUpDown x:Name="numBright" Minimum="0" Maximum="100" Grid.Row="2" Grid.Column="1" Margin="0,3,0,3" ValueChanged="numUpDown_HSBValueChanged" />
+            <local:NumericUpDown x:Name="numAlpha" Height="25" Minimum="0" Maximum="255" Grid.Row="3" Grid.Column="1" Margin="0,3,0,3" ValueChanged="numUpDown_ARGBValueChanged" />
+            <local:NumericUpDown x:Name="numRed" Minimum="0" Maximum="255" Grid.Row="4" Grid.Column="1" Margin="0,3,0,3" ValueChanged="numUpDown_ARGBValueChanged" />
+            <local:NumericUpDown x:Name="numGreen" Minimum="0" Maximum="255" Grid.Row="5" Grid.Column="1" Margin="0,3,0,3" ValueChanged="numUpDown_ARGBValueChanged" />
+            <local:NumericUpDown x:Name="numBlue" Minimum="0" Maximum="255" Grid.Row="6" Grid.Column="1" Margin="0,3,0,3" ValueChanged="numUpDown_ARGBValueChanged" />
+
+            <local:HueTrackBar x:Name="sliderHue" Grid.Row="0" Grid.Column="3" HorizontalAlignment="Stretch" HueChanged="Slider_HSBValueChanged" />
+            <local:SaturationTrackBar x:Name="sliderSat" Grid.Row="1" Grid.Column="3" HorizontalAlignment="Stretch" SaturationChanged="Slider_HSBValueChanged" />
+            <local:BrightnessTrackBar x:Name="sliderBright" Grid.Row="2" Grid.Column="3" HorizontalAlignment="Stretch" BrightnessChanged="Slider_HSBValueChanged"/>
+            <Slider x:Name="sliderAlpha" Grid.Row="3" Grid.Column="3" Minimum="0" Maximum="255" HorizontalAlignment="Stretch" Style="{DynamicResource SliderStyle}" ValueChanged="Slider_ARGBValueChanged" />
+            <Slider x:Name="sliderRed" Grid.Row="4" Grid.Column="3" Minimum="0" Maximum="255" HorizontalAlignment="Stretch" Style="{DynamicResource SliderStyle}" ValueChanged="Slider_ARGBValueChanged" />
+            <Slider x:Name="sliderGreen" Grid.Row="5" Grid.Column="3" Minimum="0" Maximum="255" HorizontalAlignment="Stretch" Style="{DynamicResource SliderStyle}" ValueChanged="Slider_ARGBValueChanged" />
+            <Slider x:Name="sliderBlue" Grid.Row="6" Grid.Column="3" Minimum="0" Maximum="255" HorizontalAlignment="Stretch" Style="{DynamicResource SliderStyle}" ValueChanged="Slider_ARGBValueChanged" />
+            <TextBox x:Name="textHex" TextChanged="textHex_TextChanged" PreviewKeyDown="textHex_PreviewKeyDown" LostFocus="textHex_LostFocus" Grid.Row="7" Height="27" VerticalAlignment="Top" Margin="0,2,3,0" Grid.Column="3" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" Style="{DynamicResource TextBoxStyle1}" />
+        </Grid>
+    </Grid>
+</dockm:CustomWindowContentBase>
