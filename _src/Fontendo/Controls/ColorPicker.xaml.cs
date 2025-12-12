@@ -30,8 +30,18 @@ namespace Fontendo.Controls
                 nameof(SelectedColor),
                 typeof(Color),
                 typeof(ColorPicker),
-                new PropertyMetadata(Colors.Black));
+                new PropertyMetadata(Colors.Black, OnSelectedColorChanged));
 
+        private static void OnSelectedColorChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var control = (ColorPicker)d;
+            control.previewPanel.Background = new SolidColorBrush(control.SelectedColor);
+            if (!control.textHex.IsFocused)
+                control.textHex.Text = ColorHelper.ColorToHex(control.SelectedColor, control.EnableAlphaChannel);
+
+            control.SelectedColorChanged?.Invoke(control, new ColorChangedEventArgs(control.SelectedColor));
+            control.UpdateHSBControlsFromSelectedColor();
+        }
 
         public Color SelectedColor
         {
@@ -41,10 +51,6 @@ namespace Fontendo.Controls
                 if (value != SelectedColor)
                 {
                     SetValue(SelectedColorProperty, value);
-                    previewPanel.Background = new SolidColorBrush(value);
-                    if(!textHex.IsFocused)
-                        textHex.Text = ColorHelper.ColorToHex(value, EnableAlphaChannel);
-                    SelectedColorChanged?.Invoke(this, new ColorChangedEventArgs(value));
                 }
             }
         }
@@ -119,6 +125,9 @@ namespace Fontendo.Controls
             UpdatingColors = true;
             {
                 sliderHue.Hue = (int)Math.Round(ColorHelper.GetHueFromColor(SelectedColor));
+                sliderSat.Hue = sliderHue.Hue;
+                sliderBright.Hue = sliderHue.Hue;
+
                 sliderSat.Saturation = (int)Math.Round(ColorHelper.GetSaturationFromColor(SelectedColor) * 100);
                 sliderBright.Brightness = (int)Math.Round(ColorHelper.GetBrightnessFromColor(SelectedColor) * 100);
 

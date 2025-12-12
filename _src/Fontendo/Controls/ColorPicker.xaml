@@ -73,13 +73,13 @@
             <Label Content="Blue" Foreground="{DynamicResource LabelTextBrush}" Grid.Row="6" />
             <Label Content="Hex" Foreground="{DynamicResource LabelTextBrush}" Grid.Row="7" />
 
-            <local:NumericUpDown x:Name="numHue" Minimum="0" Maximum="360" Grid.Row="0" Grid.Column="1" Margin="0,3,0,3" ValueChanged="numUpDown_HSBValueChanged" />
-            <local:NumericUpDown x:Name="numSat" Minimum="0" Maximum="100" Grid.Row="1" Grid.Column="1" Margin="0,3,0,3" ValueChanged="numUpDown_HSBValueChanged" />
-            <local:NumericUpDown x:Name="numBright" Minimum="0" Maximum="100" Grid.Row="2" Grid.Column="1" Margin="0,3,0,3" ValueChanged="numUpDown_HSBValueChanged" />
-            <local:NumericUpDown x:Name="numAlpha" Height="25" Minimum="0" Maximum="255" Grid.Row="3" Grid.Column="1" Margin="0,3,0,3" ValueChanged="numUpDown_ARGBValueChanged" />
-            <local:NumericUpDown x:Name="numRed" Minimum="0" Maximum="255" Grid.Row="4" Grid.Column="1" Margin="0,3,0,3" ValueChanged="numUpDown_ARGBValueChanged" />
-            <local:NumericUpDown x:Name="numGreen" Minimum="0" Maximum="255" Grid.Row="5" Grid.Column="1" Margin="0,3,0,3" ValueChanged="numUpDown_ARGBValueChanged" />
-            <local:NumericUpDown x:Name="numBlue" Minimum="0" Maximum="255" Grid.Row="6" Grid.Column="1" Margin="0,3,0,3" ValueChanged="numUpDown_ARGBValueChanged" />
+            <local:NumericUpDown x:Name="numHue" Minimum="0" Maximum="360" Grid.Row="0" Grid.Column="1" Margin="0,3,0,3" ValueChanged="numUpDown_HSBValueChanged" Background="{DynamicResource WindowBackgroundBrushMedium}" />
+            <local:NumericUpDown x:Name="numSat" Minimum="0" Maximum="100" Grid.Row="1" Grid.Column="1" Margin="0,3,0,3" ValueChanged="numUpDown_HSBValueChanged" Background="{DynamicResource WindowBackgroundBrushMedium}" />
+            <local:NumericUpDown x:Name="numBright" Minimum="0" Maximum="100" Grid.Row="2" Grid.Column="1" Margin="0,3,0,3" ValueChanged="numUpDown_HSBValueChanged" Background="{DynamicResource WindowBackgroundBrushMedium}" />
+            <local:NumericUpDown x:Name="numAlpha" Height="25" Minimum="0" Maximum="255" Grid.Row="3" Grid.Column="1" Margin="0,3,0,3" ValueChanged="numUpDown_ARGBValueChanged" Background="{DynamicResource WindowBackgroundBrushMedium}" />
+            <local:NumericUpDown x:Name="numRed" Minimum="0" Maximum="255" Grid.Row="4" Grid.Column="1" Margin="0,3,0,3" ValueChanged="numUpDown_ARGBValueChanged" Background="{DynamicResource WindowBackgroundBrushMedium}" />
+            <local:NumericUpDown x:Name="numGreen" Minimum="0" Maximum="255" Grid.Row="5" Grid.Column="1" Margin="0,3,0,3" ValueChanged="numUpDown_ARGBValueChanged" Background="{DynamicResource WindowBackgroundBrushMedium}" />
+            <local:NumericUpDown x:Name="numBlue" Minimum="0" Maximum="255" Grid.Row="6" Grid.Column="1" Margin="0,3,0,3" ValueChanged="numUpDown_ARGBValueChanged" Background="{DynamicResource WindowBackgroundBrushMedium}" />
 
             <local:HueTrackBar x:Name="sliderHue" Grid.Row="0" Grid.Column="3" HorizontalAlignment="Stretch" HueChanged="Slider_HSBValueChanged" />
             <local:SaturationTrackBar x:Name="sliderSat" Grid.Row="1" Grid.Column="3" HorizontalAlignment="Stretch" SaturationChanged="Slider_HSBValueChanged" />

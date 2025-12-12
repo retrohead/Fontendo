@@ -39,6 +39,8 @@ namespace Fontendo.Controls
             PART_TextBox.Text = DisplayAsHex
                     ? Value.ToString("X" + HexLength)   // hex formatting
                     : Value.ToString();
+            if (!PART_TextBox.IsFocused)
+                PART_TextBox.Focus();
         }
 
         private void ValidateText()
@@ -63,8 +65,7 @@ namespace Fontendo.Controls
             }
 
             PART_TextBox.Text = DisplayAsHex ? Value.ToString("X" + HexLength) : Value.ToString();
-            if (PART_TextBox.IsFocused)
-                PART_TextBox.SelectAll();
+            PART_TextBox.SelectAll();
         }
 
         // Dependency properties
