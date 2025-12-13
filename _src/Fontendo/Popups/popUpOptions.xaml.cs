@@ -466,6 +466,7 @@ namespace Fontendo
             SettingsManager.Settings.AnimationSpeed = initialanimSpeed;
             changesMade = false;
             Theme.applyTheme(mainWindow);
+            DockHandler.ApplyThemeColorsToOpenWindows(Theme.getThemeColorsFromWindowResources(mainWindow));
             popUpObj.closePopUp(null, null);
         }
         private void setThemeEditorAsSelectedTheme()

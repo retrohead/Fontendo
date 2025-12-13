@@ -144,7 +144,6 @@ namespace Fontendo.Controls
             Theme.loadTheme(this, "Theme_00.xaml");
             Theme.loadTheme(this, "Theme_Templates.xaml");
             Theme.applyTheme(this);
-            DarkTitleBar.Apply(this);
             Theme.applyThemeColors(this, Theme.getThemeColorsFromWindowResources(Owner));
             CustomWindowReady?.Invoke(this, EventArgs.Empty);
             AdjustBordersForWindowSize(Options.WindowType);
