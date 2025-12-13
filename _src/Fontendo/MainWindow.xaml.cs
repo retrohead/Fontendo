@@ -247,14 +247,6 @@ namespace Fontendo
             //    }
             //}
             //progressImage.ImagesSource = images;
-
-
-            // Load progress bar
-            lblProgress.DataContext = formFields;
-            formFields.Status = "Initialising";
-
-            mainProgress.DataContext = formFields;
-            queueProgress.DataContext = formFields;
         }
 
         /// <summary>

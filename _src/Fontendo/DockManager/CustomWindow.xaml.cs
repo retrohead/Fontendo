@@ -311,7 +311,7 @@ namespace Fontendo.Controls
         }
         public IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
         {
-            if (WindowState == WindowState.Maximized || Options.WindowType == WindowTypes.DockLeft || Options.WindowType == WindowTypes.DockRight) // dont fire on full screen
+            if (WindowState == WindowState.Maximized || Options.WindowType == WindowTypes.Fixed || Options.WindowType == WindowTypes.DockLeft || Options.WindowType == WindowTypes.DockRight) // dont fire on full screen
                 return IntPtr.Zero;
             return windowHelper.WndProc(hwnd, msg, wParam, lParam, ref handled);
         }
