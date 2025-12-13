@@ -6,7 +6,6 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Controls.Primitives;
-using Fontendo.UI;
 
 public class contextMenuHelper
 {
@@ -35,7 +34,7 @@ public class contextMenuHelper
         }
     }
 
-    private static UI_MainWindow ? MainWindow;
+    private static MainWindow ? MainWindow;
     public static void contextMenuItemMouseOver(object sender, RoutedEventArgs e)
     {
         Grid grid = (Grid)VisualTreeHelper.GetChild((DependencyObject)sender, 0);
@@ -90,7 +89,7 @@ public class contextMenuHelper
             }
         }
     }
-    public static MenuItem createContextMenuItem(UI_MainWindow mainFrm, contextMenuData item)
+    public static MenuItem createContextMenuItem(MainWindow mainFrm, contextMenuData item)
     {
         MainWindow = mainFrm;
 
@@ -147,7 +146,7 @@ public class contextMenuHelper
         mi.Tag = item.tag;
         return mi;
     }
-    public static ContextMenu createContextMenu(UI_MainWindow? mainFrm, FrameworkElement parent, List<contextMenuData> items)
+    public static ContextMenu createContextMenu(MainWindow? mainFrm, FrameworkElement parent, List<contextMenuData> items)
     {
         if(mainFrm == null)
         {

@@ -1,497 +1,640 @@
 ﻿using Fontendo.Controls;
-using Fontendo.DockManager;
 using Fontendo.Extensions;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
+using System.Drawing;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
+using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+using static FileSystemHelper;
+using static Fontendo.Extensions.FontBase;
+using static Fontendo.Extensions.FontBase.FontSettings;
+using Fontendo.DockManager;
 
 namespace Fontendo.UI
 {
     /// <summary>
     /// Interaction logic for UI_MainWindow.xaml
     /// </summary>
-    public partial class UI_MainWindow : CustomWindowContentBase
+    public partial class UI_MainWindow : CustomWindowContentBase, INotifyPropertyChanged
     {
+        public static dynamic? loadedTab = null;
+        public int RecentItem_Clicked { get; private set; }
 
-        public static UI_MainWindow? Self;
-        public const string appname = "Fontendo";
-        public static string appDataPath = "";
-        public const string appver = "2.0.0.0";
-        public const string appdeveloper = "retrohead";
-        public const string appfirstyear = "2025";
-        public static objectAnimations? objectAnim;
+        private FontBase? _FontendoFont;
+        public FontBase? FontendoFont
+        {
+            get { return _FontendoFont; }
+            set
+            {
+                if (value != _FontendoFont)
+                {
+                    _FontendoFont = value;
+                    Self.OnPropertyChanged(nameof(FontendoFont));
+                }
+            }
+        }
+        public UnicodeNames UnicodeNames;
+        public UI_GlyphEditor GlyphEditor = new UI_GlyphEditor();
+        public UI_FontEditor FontEditor = new UI_FontEditor();
         private bool debugMode = false;
-        public class runFunctionsType
-        {
-            public hexAndMathFunctions hexAndMathFunction = new hexAndMathFunctions();
-        }
 
-        #region form fields
-
-        /// <summary>
-        /// Class to hold form fields and their properties for data binding in the UI.
-        /// </summary>
-        public class formFieldsType : INotifyPropertyChanged
+        public static UI_MainWindow Self;
+        public class MainFormButtonEnabler : INotifyPropertyChanged
         {
+            private readonly FontBase _font;
+            private readonly ListView _sheetsList;
+            private readonly ListView _glyphList;
+
+            public MainFormButtonEnabler(FontBase font, ListView sheetsList, ListView glyphList)
+            {
+                _font = font;
+                _sheetsList = sheetsList;
+                _glyphList = glyphList;
+
+                // Subscribe to font property changes
+                _font.PropertyChanged += (s, e) =>
+                {
+                    if (e.PropertyName == nameof(FontBase.IsLoaded))
+                        RaiseAll();
+                };
+
+                // Subscribe to selection changes
+                _sheetsList.SelectionChanged += (s, e) => RaiseAll();
+                _glyphList.SelectionChanged += (s, e) => RaiseAll();
+            }
+
+            public bool IsGlyphSelected =>
+                _font.IsLoaded && _glyphList.SelectedItems.Count > 0;
+
+            public bool IsSheetSelected =>
+                _font.IsLoaded && _sheetsList.SelectedItems.Count > 0;
+
+            private void RaiseAll()
+            {
+                OnPropertyChanged(nameof(IsGlyphSelected));
+                OnPropertyChanged(nameof(IsSheetSelected));
+            }
+
             public event PropertyChangedEventHandler? PropertyChanged;
+            protected void OnPropertyChanged(string name) =>
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 
-            private double _progress_val = 0;
-            public double ProgressValue
+        }
+
+
+        private MainFormButtonEnabler? _buttonEnabler;
+        public MainFormButtonEnabler? ButtonEnabler
+        {
+            get { return _buttonEnabler; }
+            set { _buttonEnabler = value; OnPropertyChanged(nameof(ButtonEnabler)); }
+        }
+
+        public class SheetItem : INotifyPropertyChanged
+        {
+            private string _Label = "";
+            public string Label
             {
                 get
                 {
-                    return _progress_val;
+                    return _Label;
                 }
                 set
                 {
-                    _progress_val = value;
-
-                    OnPropertyChanged(new PropertyChangedEventArgs(nameof(ProgressValue)));
+                    if (_Label != value)
+                    {
+                        _Label = value;
+                        OnPropertyChanged(nameof(Label));
+                    }
                 }
             }
-
-            private double _progress_queue_val = 0;
-            public double ProgressQueueValue
+            private BitmapImage? _Image;
+            public BitmapImage? Image
             {
                 get
                 {
-                    return _progress_queue_val;
+                    return _Image;
                 }
                 set
                 {
-                    _progress_queue_val = value;
-
-                    OnPropertyChanged(new PropertyChangedEventArgs(nameof(ProgressQueueValue)));
+                    if (_Image != value)
+                    {
+                        _Image = value;
+                        OnPropertyChanged(nameof(Image));
+                        OnPropertyChanged(nameof(OriginalWidth));
+                    }
                 }
             }
 
-            private string? _copyright;
-            public string? Copyright
+            private object? _Tag;
+            public object? Tag
             {
                 get
                 {
-                    return _copyright;
+                    return _Tag;
                 }
                 set
                 {
-                    _copyright = value;
-
-                    OnPropertyChanged(new PropertyChangedEventArgs(nameof(Copyright)));
+                    if (_Tag != value)
+                    {
+                        _Tag = value;
+                        OnPropertyChanged(nameof(Tag));
+                    }
                 }
             }
 
-            private string? _status;
-            public string? Status
+            public double OriginalWidth => Image?.PixelWidth ?? 0;
+            public event PropertyChangedEventHandler? PropertyChanged;
+            protected void OnPropertyChanged(string name) =>
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+        }
+        public class GlyphItem : INotifyPropertyChanged
+        {
+            private string _Label = "";
+            public string Label
             {
                 get
                 {
-                    return _status;
+                    return _Label;
                 }
                 set
                 {
-                    _status = value;
-
-                    OnPropertyChanged(new PropertyChangedEventArgs(nameof(Status)));
+                    if (_Label != value)
+                    {
+                        _Label = value;
+                        OnPropertyChanged(nameof(Label));
+                    }
                 }
             }
-
-            public void OnPropertyChanged(PropertyChangedEventArgs e)
+            private BitmapImage? _Image;
+            public BitmapImage? Image
             {
-                PropertyChanged?.Invoke(this, e);
-            }
-        }
-        public formFieldsType formFields = new formFieldsType();
-
-
-        /// <summary>
-        /// Update the progress label with a string value.
-        /// </summary>
-        /// <param name="txt"></param>
-        public void updateProgressLabel(string txt)
-        {
-            txt = txt.Replace(" And ", " and ");
-            txt = txt.Replace(" Of ", " of ");
-            txt = txt.Replace(" For ", " for ");
-            formFields.Status = txt;
-            if ((txt != "") & (txt.Trim().ToLower() != "completed"))
-            {
-                Dispatcher.BeginInvoke(() =>
+                get
                 {
-                    panelSmallProgress.Visibility = Visibility.Visible;
-                });
-            }
-            else if ((txt == "") | (txt.Trim().ToLower() == "completed"))
-            {
-                Dispatcher.BeginInvoke(() =>
+                    return _Image;
+                }
+                set
                 {
-                    panelSmallProgress.Visibility = Visibility.Hidden;
-                });
-            }
-        }
-
-        /// <summary>
-        /// Update the main progress bar with a value and maximum value.
-        /// </summary>
-        /// <param name="val"></param>
-        /// <param name="max"></param>
-        public void updateProgress(double val, double max)
-        {
-            double percent = max == 0 ? 0 : (val / max);
-            formFields.ProgressValue = percent * 100;
-            if ((formFields.ProgressQueueValue == 0) || (formFields.ProgressQueueValue == 100) || (formFields.ProgressQueueValue is double.NaN))
-            {
-                // hide the queue progress bar
-                Dispatcher.BeginInvoke(() =>
-                {
-                    progressGrid.RowDefinitions[2].Height = new GridLength(0);
-                    progressGrid.RowDefinitions[3].Height = new GridLength(56);
-                    queueProgress.Visibility = Visibility.Collapsed;
-                });
-            }
-        }
-
-        /// <summary>
-        /// Update the queue progress bar with a value and maximum value.
-        /// </summary>
-        /// <param name="val"></param>
-        /// <param name="max"></param>
-        public void updateProgressQueue(double val, double max)
-        {
-            double percent = (val / max);
-            formFields.ProgressQueueValue = percent * 100;
-            // show the queue progress bar
-            Dispatcher.BeginInvoke(() =>
-            {
-                progressGrid.RowDefinitions[2].Height = new GridLength(28);
-                progressGrid.RowDefinitions[3].Height = new GridLength(28);
-                queueProgress.Visibility = Visibility.Visible;
-            });
-        }
-
-
-        private void panelSmallProgress_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
-        {
-
-        }
-
-        /// <summary>
-        /// Check if changes have been made in a pop-up window and confirm if the user wants to lose those changes.
-        /// </summary>
-        /// <param name="popUp"></param>
-        /// <returns></returns>
-        public bool canLoseChanges(dynamic popUp)
-        {
-            if ((popUp.changesMade == true))
-            {
-                if ((App.CustomMessageBox.Show("Changes made are about to be lost. Are you sure you want to quit without saving?", "Confirm Data Loss", MessageBoxButton.OKCancel, MessageBoxImage.Question) == MessageBoxResult.Cancel))
-                {
-                    return false;
+                    if (_Image != value)
+                    {
+                        _Image = value;
+                        OnPropertyChanged(nameof(Image));
+                        OnPropertyChanged(nameof(OriginalWidth));
+                    }
                 }
             }
-            popUp.changesMade = false;
-            return true;
+            private object? _Tag;
+            public object? Tag
+            {
+                get
+                {
+                    return _Tag;
+                }
+                set
+                {
+                    if (_Tag != value)
+                    {
+                        _Tag = value;
+                        OnPropertyChanged(nameof(Tag));
+                    }
+                }
+            }
+            public double OriginalWidth => Image?.PixelWidth ?? 0;
+            public event PropertyChangedEventHandler? PropertyChanged;
+            protected void OnPropertyChanged(string name) =>
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
-        #endregion
 
-        #region form
         public UI_MainWindow()
         {
-            Self = this;
-            InitializeComponent();
-            appDataPath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), appname);
-            if (!Directory.Exists(appDataPath))
-                Directory.CreateDirectory(appDataPath);
-
-            string themePath = System.IO.Path.Combine(UI_MainWindow.appDataPath, "Themes");
-            if (!Directory.Exists(themePath))
-                Directory.CreateDirectory(themePath);
-
-            lblCopy.DataContext = formFields;
-            formFields.Copyright = "Application version " + appver + " ©️ " + appdeveloper + " " + appfirstyear + " - " + DateTime.Now.Year;
-
-            lblProgress.DataContext = formFields;
-            formFields.Status = "Initialising";
-
-            mainProgress.DataContext = formFields;
-            queueProgress.DataContext = formFields;
-
-            updateProgressQueue(0, 0);
-            updateProgress(0, 0);
-
-            // Load animation images for progress bar
-            //List<ImageSource?> images = new List<ImageSource?>();
-            //for (int i = 1; i <= 60; i++)
-            //{
-            //    if (i < 10)
-            //    {
-            //        images.Add(appImages.getImageFromResources($"Animation/frame_apngframe0{i}.png"));
-            //    }
-            //    else
-            //    {
-            //        images.Add(appImages.getImageFromResources($"Animation/frame_apngframe{i}.png"));
-            //    }
-            //}
-            //progressImage.ImagesSource = images;
-
-
-            // Load progress bar
-            lblProgress.DataContext = formFields;
-            formFields.Status = "Initialising";
-
-            mainProgress.DataContext = formFields;
-            queueProgress.DataContext = formFields;
-        }
-
-        /// <summary>
-        /// Event handler for when the main window is loaded. It registers syntax highlighting definitions and initializes the progress panel.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        /// 
-
-        private void Window_Loaded(object sender, RoutedEventArgs e)
-        {
-            panelSmallProgress.Visibility = Visibility.Hidden;
-            Title = appname;
-
-
-            Window.StateChanged += Window_StateChanged;
-            Window.Closing += Window_Closing;
-        }
-
-
-        /// <summary>
-        /// Event handler for when the main window is closing. It checks if there are any active pop-up windows and prompts the user to close them before closing the application.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void Window_Closing(object sender, CancelEventArgs e)
-        {
-            if (popUps.IsOpen())
+            try
             {
-                App.CustomMessageBox.Show("Please close the active pop-up windows before closing the application", "Active Pop-Ups", MessageBoxButton.OK, MessageBoxImage.Information);
-                e.Cancel = true;
-                return;
-            }
-
-            if (!UI_MainWindowContent.CanLoseChanges())
+                Self = this;
+                InitializeComponent();
+                // At application startup, choose which file types to support
+                FileSystemHelper.Initialize(new List<FileType>
             {
-                e.Cancel = true;
-                return;
+                FileType.BinaryCrustFont
+            });
+                UnicodeNames = new UnicodeNames();
+                // Get the version from the assembly
+                string? fileVersion = Assembly
+                        .GetEntryAssembly()?
+                        .GetCustomAttribute<AssemblyFileVersionAttribute>()?
+                        .Version;
+
+                FontendoFont = new FontBase(Platform.CTR);
+                ButtonEnabler = new MainFormButtonEnabler(FontendoFont, listViewSheets, listViewCharacters);
+                FontEditor.SelectedColor = ColorHelper.ToMediaColor(ColorHelper.HexToColor(SettingsManager.Settings.FontBackgroundColor));
+                UI_MainWindow.Self.SetBackgroundColour(ColorHelper.ToDrawingColor(FontEditor.SelectedColor), true);
+                FontEditor.ShowFontDetails(null);
+                GlyphEditor.ShowGlyphDetails(null);
+            } catch
+            {
+                MessageBox.Show("Error during initialization of main window.");
             }
         }
 
-        /// <summary>
-        /// Event handler for when the main window state changes (e.g., maximized or minimized). It saves the full size state to application settings.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void Window_StateChanged(object sender, EventArgs? e)
+
+
+        public int SelectedSheet
         {
-            if (WindowState == WindowState.Maximized)
+            get
             {
-                Properties.Settings.Default.FullSize = true;
-                Properties.Settings.Default.Save();
-            }
-            else if (WindowState == WindowState.Normal)
-            {
-                Properties.Settings.Default.FullSize = false;
-                Properties.Settings.Default.Save();
+                if (listViewSheets.SelectedItems.Count == 0)
+                    return -1;
+                return listViewSheets.Items.IndexOf(listViewSheets.SelectedItem);
             }
         }
-
-        /// <summary>
-        /// Get the value of a resource from the specified object and resource name.
-        /// </summary>
-        /// <param name="obj"></param>
-        /// <param name="name"></param>
-        /// <returns></returns>
-        public static string getResourceVal(dynamic obj, string name)
+        private double GetMinimumSize()
         {
-            ResourceDictionary res = obj.Resources;
-            return res[name].ToString() ?? "";
+            var grid = mainGrid; // your 3-column grid
+            var leftCol = grid.ColumnDefinitions[0];
+            var middleCol = grid.ColumnDefinitions[2];
+            var rightCol = grid.ColumnDefinitions[4];
+
+            // Calculate the minimum width required:
+            return leftCol.MinWidth + middleCol.MinWidth + rightCol.MinWidth + 50;
         }
-
-
-        /// <summary>
-        /// Overwrite a resource value in the specified object with a new value.
-        /// </summary>
-        /// <param name="obj"></param>
-        /// <param name="name"></param>
-        /// <param name="value"></param>
-        public static void overwriteResource(dynamic obj, string name, string value)
+        public void resize(object sender, SizeChangedEventArgs e)
         {
-            ResourceDictionary res = obj.Resources;
-            res[name] = ColorConverter.ConvertFromString(value);
-        }
-
-        /// <summary>
-        /// Load a theme from a specified file and merge it into the application's resources.
-        /// </summary>
-        /// <param name="themeFile"></param>
-        public static void loadTheme(string themeFile)
-        {
-            Uri uri = new Uri(@"/Fontendo;component/Resources/Themes/" + themeFile, UriKind.Relative);
-            ResourceDictionary rs = (ResourceDictionary)System.Windows.Application.LoadComponent(uri);
-            System.Windows.Application.Current.Resources.MergedDictionaries.Add(rs);
-        }
-
-        /// <summary>
-        /// Disable the form by setting the visibility of the enabled panel to visible and disabling the main form.
-        /// </summary>
-        public void disableForm()
-        {
-            enableForm(false);
-        }
-
-        /// <summary>
-        /// Enable the pop-up panel by setting its visibility to hidden or visible based on the enabled parameter.
-        /// </summary>
-        /// <param name="enabled"></param>
-        public void enablePopUp(bool enabled)
-        {
-            if ((enabled))
+            if (loadedTab != null)
+                loadedTab.Content.resize(e.NewSize.Height, e.NewSize.Width);
+            RecalculateColumnConstraints();
+            double min = GetMinimumSize();
+            if (MainWindow.Self.MinWidth != min)
             {
-                Dispatcher.BeginInvoke(() =>
-                {
-                    panelPopUpEnabled.Visibility = Visibility.Hidden;
-                });
+                // Stop shrinking further by snapping back
+                MainWindow.Self.MinWidth = min;
+            }
+        }
+
+        public static bool CanLoseChanges()
+        {
+            return true;
+        }
+
+        private void MenuItem_Open_Click(object sender, RoutedEventArgs e)
+        {
+            string filename = FileSystemHelper.BrowseForSupportedFile("Select a font file");
+            if (string.IsNullOrEmpty(filename)) return;
+            LoadFont(filename);
+        }
+
+        private void MenuItem_Save_Click(object sender, RoutedEventArgs e)
+        {
+            if (!FontendoFont.IsLoaded) return;
+
+            ActionResult result = FontendoFont.SaveFont(FontendoFont.LoadedFontFilePath);
+            if (!result.Success)
+            {
+                MessageBox.Show($"Font failed to save {result.Message}", "Font Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             else
-                Dispatcher.BeginInvoke(() =>
-                {
-                    panelPopUpEnabled.Visibility = Visibility.Visible;
-                });
-        }
-
-        /// <summary>
-        /// Enable or disable the main form based on the enabled parameter. If the pop-up is not open, it enables the pop-up panel.
-        /// </summary>
-        /// <param name="enabled"></param>
-        public void enableForm(bool enabled)
-        {
-            Dispatcher.BeginInvoke(() =>
             {
-                if ((popUps.IsOpen() == false))
-                    enablePopUp(true);
-                if ((enabled))
-                {
-                    panelEnabled.Visibility = Visibility.Hidden;
-                    enableMainWindow();
-                }
-                else
-                {
-                    panelEnabled.Visibility = Visibility.Visible;
-                    disableMainWindow();
-                }
-            });
-        }
-
-
-        public void disableMainWindow()
-        {
-            if (popUps.Exist())
-                return;
-            mainWindow.IsEnabled = false;
-        }
-        public void enableMainWindow()
-        {
-            if (popUps.Exist())
-                return;
-            mainWindow.IsEnabled = true;
-        }
-
-        public delegate void setObjectVisibilityDelegate(dynamic o, Visibility vis);
-        public delegate void setObjectOpacityDelegate(dynamic o, double opacity);
-        public static void setObjectOpacity(dynamic o, double opacity)
-        {
-
-            UI_MainWindow.Self?.Dispatcher.Invoke(() =>
-            {
-                o.Opacity = opacity;
-            });
-        }
-        public static void setObjectVisibility(dynamic o, Visibility vis)
-        {
-            UI_MainWindow.Self?.Dispatcher.Invoke(() =>
-            {
-                o.Visibility = vis;
-            });
-        }
-        private void lst_DragDelta(object sender, System.Windows.Controls.Primitives.DragDeltaEventArgs e)
-        {
-            //Do nothing for the moment, event Is added during listviewdata load
-        }
-        private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
-        {
-            popUps.resize(e.NewSize.Height);
-            if (mainWindow != null)
-                mainWindow.resize(sender, e);
-        }
-        public static T? FindVisualChild<T>(DependencyObject parent) where T : DependencyObject
-        {
-            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
-            {
-                DependencyObject child = VisualTreeHelper.GetChild(parent, i);
-                if (child is T tChild)
-                {
-                    return tChild;
-                }
-
-                T? childOfChild = FindVisualChild<T>(child);
-                if (childOfChild != null)
-                {
-                    return childOfChild;
-                }
+                MessageBox.Show("Font saved successfully.", "Font Saved", MessageBoxButton.OK, MessageBoxImage.Information);
             }
-            return null;
         }
 
-        public static void UpdateTitle(string extratitle)
+        private void MenuItem_SaveAs_Click(object sender, RoutedEventArgs e)
         {
-            if (Self == null)
-                return;
-            if (extratitle == "")
-                Self.Title = appname;
+            if (!FontendoFont.IsLoaded) return;
+
+            string filepath = FileSystemHelper.BrowseForSaveFile(
+                FontendoFont.LoadedFontFileType,
+                "Save font file",
+                Path.GetFileName(FontendoFont.LoadedFontFilePath)
+                );
+            if (string.IsNullOrEmpty(filepath)) return;
+            ActionResult result = FontendoFont.SaveFont(filepath);
+            if (!result.Success)
+            {
+                MessageBox.Show($"Font failed to save {result.Message}", "Font Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
             else
-                Self.Title = $"{appname} - {extratitle}";
+            {
+                textFontFilePath.Text = FontendoFont.LoadedFontFilePath;
+                MessageBox.Show("Font saved successfully.", "Font Saved", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
         }
-        #endregion
 
-
-
-        static bool deletelog = true;
-        public static void Log(string message)
+        private void MenuItem_Close_Click(object sender, RoutedEventArgs e)
         {
-            if (!Self?.debugMode ?? false)
+            Application.Current.Shutdown();
+        }
+        private void AddNoRecentItemsMenu(System.Windows.Style? style)
+        {
+            // add a blank item showing no recent files
+            menuRecent.Items.Add(new System.Windows.Controls.MenuItem()
+            {
+                Header = "No Recent Files",
+                IsEnabled = false,
+                Icon = null,
+                Style = style,
+                FontSize = 12
+            });
+        }
+        private void RecentItem_Click(object sender, RoutedEventArgs e)
+        {
+            if (!CanLoseChanges())
                 return;
-            // get application directory and create/open log file
-            string path = AppDomain.CurrentDomain.BaseDirectory;
-            if (deletelog)
+            System.Windows.Controls.MenuItem item = (System.Windows.Controls.MenuItem)sender;
+            RecentFilesManager.RecentFile data = (RecentFilesManager.RecentFile)item.Tag;
+            if (data == null)
+                return;
+
+            if (!File.Exists(data.FilePath))
             {
-                deletelog = false;
-                if (File.Exists(System.IO.Path.Combine(path, "fontendo.log")))
+                if (MessageBox.Show("The selected file no longer exists.\n\n" +
+                    data.FilePath + "\n\n" +
+                    "Would you like to remove it from your recent files list?", "File no longer exists", MessageBoxButton.YesNo, MessageBoxImage.Exclamation) == MessageBoxResult.Yes)
                 {
-                    File.Delete(System.IO.Path.Combine(path, "fontendo.log"));
+                    RecentFilesManager.RemoveRecentFile(data.FilePath);
                 }
+                return;
             }
-            using (var writer = new StreamWriter(System.IO.Path.Combine(path, "fontendo.log"), true))
+
+            if (!File.Exists(data.FilePath))
             {
-                writer.WriteLine($"[{DateTime.Now}] {message}");
+                if (MessageBox.Show("The file no longer exists, do you want to remove it from your recent files list?", "Missing File", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                    RecentFilesManager.RemoveRecentFile(data.FilePath);
+                return;
+            }
+            LoadFont(data.FilePath);
+        }
+        public void OpenRecentFile(string fn)
+        {
+            LoadFont(fn);
+        }
+
+        private void upperMenu_SubmenuOpened(object sender, RoutedEventArgs e)
+        {
+            if (e.OriginalSource.GetType() != typeof(System.Windows.Controls.MenuItem))
+                return;
+            System.Windows.Controls.MenuItem itemclicked = (System.Windows.Controls.MenuItem)e.OriginalSource;
+            if (nameof(upperFileMenu) == itemclicked.Name)
+            {
+                System.Windows.Style? style = (System.Windows.Style?)MainWindow.Self?.FindResource("MenuItemStyle");
+                menuRecent.Items.Clear();
+                if (RecentFilesManager.RecentFiles != null)
+                {
+                    foreach (RecentFilesManager.RecentFile file in RecentFilesManager.RecentFiles)
+                    {
+                        var tooltip = new ToolTip();
+                        tooltip.Background = (SolidColorBrush?)MainWindow.Self?.FindResource("WindowBackgroundBrushMedium");
+                        tooltip.Foreground = (SolidColorBrush?)MainWindow.Self?.FindResource("ControlTextInactive");
+                        tooltip.Content = file.FilePath;
+                        var item = new System.Windows.Controls.MenuItem()
+                        {
+                            Header = ShortenPath(file.FilePath),
+                            Tag = file,
+                            Style = style,
+                            FontSize = 11,
+                            ToolTip = tooltip
+                        };
+                        item.Click += RecentItem_Click;
+
+                        menuRecent.Items.Add(item);
+
+                    }
+                }
+                if (menuRecent.Items.Count == 0)
+                    AddNoRecentItemsMenu(style);
+
+                upperFileMenu.UpdateLayout();
+                menuRecent.UpdateLayout();
             }
         }
+
+        public static string ShortenPath(string path, int maxLength = 50)
+        {
+            if (string.IsNullOrEmpty(path) || path.Length <= maxLength)
+                return path;
+
+            // Split into directory segments
+            string[] parts = path.Split(System.IO.Path.DirectorySeparatorChar, System.IO.Path.AltDirectorySeparatorChar);
+
+            // Always keep first and last segment
+            string first = parts[0];
+            string last = parts[^1];
+
+            // Build middle segments until we exceed maxLength
+            var middle = new List<string>();
+            int totalLength = first.Length + last.Length + 5; // 5 for "...\"
+            for (int i = 1; i < parts.Length - 1; i++)
+            {
+                int nextLen = parts[i].Length + 1; // +1 for separator
+                if (totalLength + nextLen > maxLength)
+                {
+                    middle.Add("...");
+                    break;
+                }
+                middle.Add(parts[i]);
+                totalLength += nextLen;
+            }
+
+            return string.Join(System.IO.Path.DirectorySeparatorChar.ToString(),
+                new[] { first }.Concat(middle).Concat(new[] { last }));
+        }
+
+        public void SetBackgroundColour(System.Drawing.Color color, bool save)
+        {
+            // Wrap the Color in a SolidColorBrush for WPF
+            var mediaColor = ColorHelper.ToMediaColor(color);
+            var backgroundBrush = new SolidColorBrush(mediaColor);
+
+            listViewSheets.Background = backgroundBrush;
+            listViewCharacters.Background = backgroundBrush;
+
+            GlyphEditor.GlyphBackground = color;
+
+            // Decide font colour based on luminance
+            double luminance = Fontendo.Extensions.ColorHelper.GetLuminance(color);
+            var foregroundBrush = luminance < 0.5
+                ? System.Windows.Media.Brushes.White
+                : System.Windows.Media.Brushes.Black;
+
+            listViewSheets.Foreground = foregroundBrush;
+            listViewCharacters.Foreground = foregroundBrush;
+
+            // Save settings
+            if (save)
+            {
+                SettingsManager.Settings.FontBackgroundColor = ColorHelper.ColorToHex(color);
+                SettingsManager.Save();
+            }
+        }
+
+        public void LoadFont(string filename)
+        {
+            textFontFilePath.Text = "";
+            FontEditor.ShowFontDetails(null);
+            GlyphEditor.ShowGlyphDetails(null);
+            ActionResult result = FontendoFont.LoadFont(filename);
+
+            if (!result.Success)
+            {
+                MessageBox.Show($"Font failed to load {result.Message}", "Font Error", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                return;
+            }
+            else if (result.Message != "OK")
+            {
+                MessageBox.Show($"Font loaded with warnings:\n\n{result.Message}", "Font Warnings Occurred", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            textFontFilePath.Text = filename;
+            RecentFilesManager.AddRecentFile(textFontFilePath.Text, Path.GetFileName(textFontFilePath.Text));
+            ListFontSheets();
+            FontEditor.ShowFontDetails(FontendoFont);
+        }
+        public static BitmapImage ConvertBitmap(System.Drawing.Bitmap bmp)
+        {
+            using (var ms = new MemoryStream())
+            {
+                bmp.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+                ms.Position = 0;
+
+                var img = new BitmapImage();
+                img.BeginInit();
+                img.CacheOption = BitmapCacheOption.OnLoad;
+                img.StreamSource = ms;
+                img.EndInit();
+                img.Freeze();
+                return img;
+            }
+        }
+        private void ListFontSheets()
+        {
+            if (FontendoFont == null) return;
+            if (FontendoFont.Settings.Sheets == null) return;
+
+            SheetsType sheets = FontendoFont.Settings.Sheets;
+
+            var items = new List<SheetItem>();
+
+            for (int i = 0; i < sheets.Images.Count; i++)
+            {
+                Bitmap bmp = sheets.Images[i];
+                items.Add(new SheetItem
+                {
+                    Label = $"Sheet {i + 1}",
+                    Image = ConvertBitmap(bmp),
+                    Tag = sheets.Images[i], // store the Bitmap in Tag
+                });
+            }
+
+            listViewSheets.ItemsSource = items;
+
+            // optional: select first item
+            if (listViewSheets.Items.Count > 0)
+                listViewSheets.SelectedIndex = 0;
+        }
+
+        private void UserControl_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (MainWindow.Self == null) throw new Exception("Main window not intialized properly");
+            DockHandler.Register(MainWindow.Self.Window, dockablePanelGlyph, GlyphEditor, "Glyph Properties");
+            DockHandler.Register(MainWindow.Self.Window, dockablePanelFont, FontEditor, "Font Properties");
+        }
+        private void sideSplittersDragDelta(object sender, DragDeltaEventArgs e)
+        {
+            RecalculateColumnConstraints();
+        }
+
+        private void RecalculateColumnConstraints()
+        {
+            var grid = mainGrid; // your 3-column grid
+
+            var leftCol = grid.ColumnDefinitions[0];
+            var middleCol = grid.ColumnDefinitions[2];
+            var rightCol = grid.ColumnDefinitions[4];
+
+            // Clamp both sides so middle never shrinks below MinWidth
+            leftCol.MaxWidth = rightCol.ActualWidth + middleCol.MinWidth;
+            rightCol.MaxWidth = leftCol.ActualWidth + middleCol.MinWidth;
+        }
+
+        private void MenuItem_Options_Click(object sender, RoutedEventArgs e)
+        {
+            dynamic pop = new popUpOptions(MainWindow.Self, this);
+            popUps.loadPopUp(MainWindow.Self, "Theme Settings", "theme.png", ref pop, true);
+        }
+
+        private void listViewSheets_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (listViewSheets.SelectedIndex < 0)
+                return;
+
+            int sheetIndex = listViewSheets.SelectedIndex;
+
+            // Get all CharImages belonging to this sheet
+            var glyphsForSheet = FontendoFont.Settings.Glyphs?
+                .Where(g => g.Sheet == sheetIndex);
+
+            if (glyphsForSheet == null)
+                return;
+
+            var items = new List<GlyphItem>();
+            foreach (var glyph in glyphsForSheet)
+            {
+                items.Add(new GlyphItem
+                {
+                    Label = $"Char {glyph.Index}",
+                    Image = ConvertBitmap(glyph.Settings.Image),
+                    Tag = glyph
+                });
+            }
+
+            listViewCharacters.ItemsSource = items;
+
+            if (listViewCharacters.Items.Count > 0)
+                listViewCharacters.SelectedIndex = 0;
+        }
+
+        private void listViewCharacters_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            GlyphEditor.ClearGlyphDetails();
+            if (listViewCharacters.SelectedItems.Count == 0) return;
+            GlyphItem? glyph = (GlyphItem?)listViewCharacters.SelectedItems[0];
+            if (glyph == null) return;
+            Glyph? glyphdata = (Glyph?)glyph.Tag;
+            if (glyphdata == null) return;
+            GlyphEditor.ShowGlyphDetails(glyphdata);
+        }
+
+        public GlyphItem? GetSelectedCharacterItem()
+        {
+            return (GlyphItem?)listViewCharacters.SelectedItem;
+        }
+        public SheetItem? GetSelectedSheetItem()
+        {
+            return (SheetItem?)listViewSheets.SelectedItem;
+        }
+
+        private void ExportSheet_Click(object sender, RoutedEventArgs e)
+        {
+            FontEditor.ExportSheet();
+        }
+
+        private void ReplaceSheet_Click(object sender, RoutedEventArgs e)
+        {
+            FontEditor.ReplaceSheet();
+        }
+        private void ExportGlyph_Click(object sender, RoutedEventArgs e)
+        {
+            GlyphEditor.ExportGlyph();
+        }
+
+        private void ReplaceGlyph_Click(object sender, RoutedEventArgs e)
+        {
+            GlyphEditor.ReplaceGlyph();
+        }
+
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+        protected void OnPropertyChanged(string name) =>
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
     }
 }

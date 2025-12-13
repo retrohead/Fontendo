@@ -104,7 +104,7 @@ namespace Fontendo.Controls
         {
             IsPressed = true;
             ((Border)Content).Focus();
-            window = DockHandler.CreateCustomWindow(UI_MainWindow.Self.Window, new CustomWindowOptions() { WindowType = CustomWindow.WindowTypes.Fixed });
+            window = DockHandler.CreateCustomWindow(MainWindow.Self.Window, new CustomWindowOptions() { WindowType = CustomWindow.WindowTypes.Fixed });
             window.WindowStartupLocation = WindowStartupLocation.CenterOwner;
             UI_ColorPicker picker = new UI_ColorPicker(SelectedColor, EnableAlphaChannel) { Width = 260, Height = EnableAlphaChannel ? 432 : 400 };
             picker.PreviewSelectedColorChanged += Picker_PreviewSelectedColorChanged;

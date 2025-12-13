@@ -18,7 +18,7 @@ namespace Fontendo
     /// </summary>
     public partial class popUpOptions : UserControl
     {
-        private UI_MainWindow mainWindow;
+        private MainWindow mainWindow;
 
         public popUps.popUpType popUpObj;
         private object listPanel;
@@ -32,7 +32,7 @@ namespace Fontendo
 
         private BackgroundWorker bgWorkLoadThemes = new BackgroundWorker();
 
-        public popUpOptions(UI_MainWindow main_win, object panelWithList)
+        public popUpOptions(MainWindow main_win, object panelWithList)
         {
             mainWindow = main_win;
             bgWorkLoadThemes = new BackgroundWorker();
@@ -59,7 +59,7 @@ namespace Fontendo
             comboAnimationSpeedData.Items.Add(new comboData("Instant", ((int)objectAnimations.animSpeed.instant).ToString()));
             comboAnimationSpeed.DataContext = comboAnimationSpeedData;
 
-            int index = Properties.Settings.Default.AnimationSpeed;
+            int index = SettingsManager.Settings.AnimationSpeed;
             comboAnimationSpeedData.SelectedComboItem = comboAnimationSpeedData.Items[index];
             comboAnimationSpeed.DataContext = comboAnimationSpeedData;
             initialanimSpeed = index;
@@ -163,7 +163,7 @@ namespace Fontendo
             // load the theme files
             themeFileCount = 0;
 
-            string[] files = System.IO.Directory.GetFiles(System.IO.Path.Combine(UI_MainWindow.appDataPath, "Themes"), "*.Theme.vth");
+            string[] files = System.IO.Directory.GetFiles(System.IO.Path.Combine(MainWindow.appDataPath, "Themes"), "*.Theme.vth");
             if ((files.Length > 0))
             {
                 foreach (string file in files)
@@ -324,9 +324,9 @@ namespace Fontendo
         {
             if ((result == null))
                 return;
-            string fn = System.IO.Path.Combine(UI_MainWindow.appDataPath, "Themes", themeFileCount + ".Theme.vth");
-            if (!System.IO.Directory.Exists(System.IO.Path.Combine(UI_MainWindow.appDataPath, "Themes")))
-                System.IO.Directory.CreateDirectory(System.IO.Path.Combine(UI_MainWindow.appDataPath, "Themes"));
+            string fn = System.IO.Path.Combine(MainWindow.appDataPath, "Themes", themeFileCount + ".Theme.vth");
+            if (!System.IO.Directory.Exists(System.IO.Path.Combine(MainWindow.appDataPath, "Themes")))
+                System.IO.Directory.CreateDirectory(System.IO.Path.Combine(MainWindow.appDataPath, "Themes"));
             if ((System.IO.File.Exists(fn)))
             {
                 MessageBox.Show("Fatal Error: A theme file already exists in the location but this should have been recognised already!" + Constants.vbNewLine + Constants.vbNewLine + fn, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -432,7 +432,7 @@ namespace Fontendo
                         }
                     }
                 }
-                string destfn = System.IO.Path.Combine(UI_MainWindow.appDataPath, "Themes", themeFileCount + ".Theme.vth");
+                string destfn = System.IO.Path.Combine(MainWindow.appDataPath, "Themes", themeFileCount + ".Theme.vth");
 
                 if ((System.IO.File.Exists(destfn)))
                 {
@@ -463,7 +463,7 @@ namespace Fontendo
         {
             if ((mainWindow.canLoseChanges(this) == false))
                 return;
-            Properties.Settings.Default.AnimationSpeed = initialanimSpeed;
+            SettingsManager.Settings.AnimationSpeed = initialanimSpeed;
             changesMade = false;
             Theme.applyTheme(mainWindow);
             popUpObj.closePopUp(null, null);
@@ -490,7 +490,7 @@ namespace Fontendo
         {
             setThemeEditorAsSelectedTheme();
 
-            Properties.Settings.Default.AnimationSpeed = int.Parse(comboAnimationSpeedData.SelectedComboItem.Value);
+            SettingsManager.Settings.AnimationSpeed = int.Parse(comboAnimationSpeedData.SelectedComboItem.Value);
             popUpObj.closePopUp(fadeCompleted, null);
         }
 
@@ -519,14 +519,14 @@ namespace Fontendo
             Theme.selectedTheme = Theme.loadedTheme;
 
             Theme.selectedTheme = -1; // this is no longer needed once the user has saved their own custom colours, reset to dark theme
-            Properties.Settings.Default.SelectedTheme = Theme.selectedTheme;
-            Properties.Settings.Default.ThemeColours = selectedThemeColoursString();
-            Properties.Settings.Default.Save();
+            SettingsManager.Settings.SelectedTheme = Theme.selectedTheme;
+            SettingsManager.Settings.ThemeColours = selectedThemeColoursString();
+            SettingsManager.Save();
         }
 
         private void btnTestAnimations_Click(object sender, RoutedEventArgs e)
         {
-            Properties.Settings.Default.AnimationSpeed = int.Parse(comboAnimationSpeedData.SelectedComboItem.Value);
+            SettingsManager.Settings.AnimationSpeed = int.Parse(comboAnimationSpeedData.SelectedComboItem.Value);
             mainWindow.enablePopUp(false);
             objectAnimations.makeDisappear(mainWindow, popUpObj.window, false, this, testAnim_FadeOut_Completed);
         }
@@ -539,7 +539,7 @@ namespace Fontendo
         private void testAnim_Completed()
         {
             mainWindow.enablePopUp(true);
-            Properties.Settings.Default.AnimationSpeed = initialanimSpeed;
+            SettingsManager.Settings.AnimationSpeed = initialanimSpeed;
         }
 
         private void Color_SelectedColorChanged(object sender, Controls.ColorPicker.ColorChangedEventArgs e)

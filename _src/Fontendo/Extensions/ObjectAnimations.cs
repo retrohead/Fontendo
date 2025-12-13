@@ -1,5 +1,5 @@
 ﻿using Fontendo;
-using Fontendo.UI;
+using Fontendo.Extensions;
 using System;
 using System.ComponentModel;
 using System.Windows;
@@ -23,7 +23,7 @@ public class objectAnimations
     public double opacity;
     public bool blockForm;
     public double alphaStep;
-    private UI_MainWindow mainFrm;
+    private MainWindow mainFrm;
     private BackgroundWorker bgwrk;
     private BackgroundWorker bgwrkAppearDelay;
 
@@ -48,7 +48,7 @@ public class objectAnimations
         }
     }
 
-    public objectAnimations(UI_MainWindow MainWindow, dynamic objToFade, animTypes animationType, animSpeed animSpeed, bool blockFormActions, dynamic onCompleteFunctionObj, Action onCompleteFunctionDelegate, object? onCompleteFunctionParams = null, double animSpeedMultiplyer = 1)
+    public objectAnimations(MainWindow MainWindow, dynamic objToFade, animTypes animationType, animSpeed animSpeed, bool blockFormActions, dynamic onCompleteFunctionObj, Action onCompleteFunctionDelegate, object? onCompleteFunctionParams = null, double animSpeedMultiplyer = 1)
     {
         completeFunctionObj = onCompleteFunctionObj;
         completeFunctionDelegate = onCompleteFunctionDelegate;
@@ -191,14 +191,14 @@ public class objectAnimations
         }
     }
 
-    public static void prepareAppear(ref UI_MainWindow mainFrm, dynamic obj, animSpeed animSpeed, bool blockFormActions, dynamic onCompleteFunctionObj, Action onCompleteFunctionDelegate, object? onCompleteFunctionParams = null, double animSpeedMulitpler = 1)
+    public static void prepareAppear(ref MainWindow mainFrm, dynamic obj, animSpeed animSpeed, bool blockFormActions, dynamic onCompleteFunctionObj, Action onCompleteFunctionDelegate, object? onCompleteFunctionParams = null, double animSpeedMulitpler = 1)
     {
         if ((obj.Opacity != 1))
         {
             try
             {
                 if ((obj.InvokeRequired))
-                    obj.BeginInvoke(new UI_MainWindow.setObjectOpacityDelegate(UI_MainWindow.setObjectOpacity), 0);
+                    obj.BeginInvoke(new MainWindow.setObjectOpacityDelegate(MainWindow.setObjectOpacity), 0);
                 else
                     obj.Opacity = 0;
             }
@@ -210,7 +210,7 @@ public class objectAnimations
         try
         {
             if ((obj.InvokeRequired))
-                obj.BeginInvoke(new UI_MainWindow.setObjectVisibilityDelegate(UI_MainWindow.setObjectVisibility), Visibility.Visible);
+                obj.BeginInvoke(new MainWindow.setObjectVisibilityDelegate(MainWindow.setObjectVisibility), Visibility.Visible);
             else
                 obj.Visibility = Visibility.Visible;
         }
@@ -219,7 +219,7 @@ public class objectAnimations
             obj.Visibility = Visibility.Visible;
         }
 
-        UI_MainWindow.objectAnim = new objectAnimations(mainFrm, obj, animTypes.appear, animSpeed, blockFormActions, onCompleteFunctionObj, onCompleteFunctionDelegate, onCompleteFunctionParams, animSpeedMulitpler);
+        MainWindow.objectAnim = new objectAnimations(mainFrm, obj, animTypes.appear, animSpeed, blockFormActions, onCompleteFunctionObj, onCompleteFunctionDelegate, onCompleteFunctionParams, animSpeedMulitpler);
     }
 
     private void bgwrkAppearDelay_DoWork(object? sender, System.ComponentModel.DoWorkEventArgs e)
@@ -240,30 +240,30 @@ public class objectAnimations
         }
 
         // now make the item appear
-        UI_MainWindow.objectAnim?.run();
+        MainWindow.objectAnim?.run();
     }
 
-    public static void panelAppear(ref UI_MainWindow? mainFrm, object? obj, bool blockFormActions, dynamic onCompleteFunctionObj, Action onCompleteFunctionDelegate, object onCompleteFunctionParams, dynamic delayCompleteFunctionObj, Action delayCompleteFunctionDelegate, object delayCompleteFunctionParams)
+    public static void panelAppear(ref MainWindow? mainFrm, object? obj, bool blockFormActions, dynamic onCompleteFunctionObj, Action onCompleteFunctionDelegate, object onCompleteFunctionParams, dynamic delayCompleteFunctionObj, Action delayCompleteFunctionDelegate, object delayCompleteFunctionParams)
     {
-        prepareAppear(ref mainFrm, obj, (animSpeed)Fontendo.Properties.Settings.Default.AnimationSpeed, blockFormActions, onCompleteFunctionObj, onCompleteFunctionDelegate, onCompleteFunctionParams);
+        prepareAppear(ref mainFrm, obj, (animSpeed)SettingsManager.Settings.AnimationSpeed, blockFormActions, onCompleteFunctionObj, onCompleteFunctionDelegate, onCompleteFunctionParams);
 
-        if (UI_MainWindow.objectAnim != null)
+        if (MainWindow.objectAnim != null)
         {
-            UI_MainWindow.objectAnim.completeFunctionObj = onCompleteFunctionObj;
-            UI_MainWindow.objectAnim.delayFunctionObj = delayCompleteFunctionObj;
-            UI_MainWindow.objectAnim.delayFunctionDelegate = delayCompleteFunctionDelegate;
-            UI_MainWindow.objectAnim.delayFunctionParams = delayCompleteFunctionParams;
-            UI_MainWindow.objectAnim.bgwrkAppearDelay.RunWorkerAsync();
+            MainWindow.objectAnim.completeFunctionObj = onCompleteFunctionObj;
+            MainWindow.objectAnim.delayFunctionObj = delayCompleteFunctionObj;
+            MainWindow.objectAnim.delayFunctionDelegate = delayCompleteFunctionDelegate;
+            MainWindow.objectAnim.delayFunctionParams = delayCompleteFunctionParams;
+            MainWindow.objectAnim.bgwrkAppearDelay.RunWorkerAsync();
         }
     }
 
-    public static void makeAppear(ref UI_MainWindow mainFrm, dynamic? obj, bool blockFormActions, dynamic? onCompleteFunctionObj, Action onCompleteFunctionDelegate, object? onCompleteFunctionParams = null, double animSpeedMulitpler = 1)
+    public static void makeAppear(ref MainWindow mainFrm, dynamic? obj, bool blockFormActions, dynamic? onCompleteFunctionObj, Action onCompleteFunctionDelegate, object? onCompleteFunctionParams = null, double animSpeedMulitpler = 1)
     {
-        animSpeed animSpeed = (animSpeed)Fontendo.Properties.Settings.Default.AnimationSpeed;
+        animSpeed animSpeed = (animSpeed)SettingsManager.Settings.AnimationSpeed;
         prepareAppear(ref mainFrm, obj, animSpeed,  blockFormActions, onCompleteFunctionObj, onCompleteFunctionDelegate, onCompleteFunctionParams, animSpeedMulitpler);
-        UI_MainWindow.objectAnim?.run();
+        MainWindow.objectAnim?.run();
     }
-    public static void makeDisappear(UI_MainWindow? mainFrm, dynamic? obj, bool blockFormActions, dynamic onCompleteFunctionObj, Action onCompleteFunctionDelegate, object? onCompleteFunctionParams = null, double animSpeedMulitpler = 1)
+    public static void makeDisappear(MainWindow? mainFrm, dynamic? obj, bool blockFormActions, dynamic onCompleteFunctionObj, Action onCompleteFunctionDelegate, object? onCompleteFunctionParams = null, double animSpeedMulitpler = 1)
     {
         if (obj == null)
             return;
@@ -282,9 +282,9 @@ public class objectAnimations
         }
         obj.Opacity = 1;
         obj.Visibility = Visibility.Visible;
-        animSpeed animSpeed = (animSpeed)Fontendo.Properties.Settings.Default.AnimationSpeed;
-        UI_MainWindow.objectAnim = new objectAnimations(mainFrm, obj, animTypes.disappear, animSpeed, blockFormActions, onCompleteFunctionObj, onCompleteFunctionDelegate, onCompleteFunctionParams, animSpeedMulitpler);
-        UI_MainWindow.objectAnim.run();
+        animSpeed animSpeed = (animSpeed)SettingsManager.Settings.AnimationSpeed;
+        MainWindow.objectAnim = new objectAnimations(mainFrm, obj, animTypes.disappear, animSpeed, blockFormActions, onCompleteFunctionObj, onCompleteFunctionDelegate, onCompleteFunctionParams, animSpeedMulitpler);
+        MainWindow.objectAnim.run();
     }
 
 }

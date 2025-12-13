@@ -74,7 +74,7 @@ namespace Fontendo.Controls
                 Maximum = 360,
                 TickPlacement = System.Windows.Controls.Primitives.TickPlacement.None,
                 VerticalAlignment = VerticalAlignment.Stretch,
-                Style = (Style)UI_MainWindow.Self.FindResource("SliderStylePointer")
+                Style = (Style)MainWindow.Self.FindResource("SliderStylePointer")
             };
             slider.ValueChanged += (s, e) => { Hue = (int)slider.Value; HueChanged?.Invoke(this, EventArgs.Empty); };
 

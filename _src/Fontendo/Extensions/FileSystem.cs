@@ -1,5 +1,4 @@
 ﻿using Fontendo;
-using Fontendo.UI;
 using Microsoft.Win32;
 using System.IO;
 using System.Security.Cryptography;
@@ -168,7 +167,7 @@ public class FileSystemHelper
         openFileDialog.Title = title;
         openFileDialog.RestoreDirectory = true;
 
-        if (openFileDialog.ShowDialog(UI_MainWindow.Self.Window) == true)
+        if (openFileDialog.ShowDialog(MainWindow.Self.Window) == true)
         {
             filePath = openFileDialog.FileName;
         }
@@ -210,7 +209,7 @@ public class FileSystemHelper
             saveFileDialog.RestoreDirectory = true;
             saveFileDialog.FileName = defaultFilename;
 
-            if (saveFileDialog.ShowDialog(UI_MainWindow.Self.Window) == true)
+            if (saveFileDialog.ShowDialog(MainWindow.Self.Window) == true)
             {
                 filePath = saveFileDialog.FileName;
             }
@@ -232,7 +231,7 @@ public class FileSystemHelper
         {
             folderDialog.Title = description;
 
-            if (folderDialog.ShowDialog(UI_MainWindow.Self.Window) == true)
+            if (folderDialog.ShowDialog(MainWindow.Self.Window) == true)
             {
                 folderPath = folderDialog.FolderName;
             }

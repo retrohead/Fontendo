@@ -1,5 +1,4 @@
 ﻿using Fontendo;
-using Fontendo.UI;
 using System;
 using System.Collections.Generic;
 using System.Windows;
@@ -64,7 +63,7 @@ public class appImages
     }
 
 
-    public static Rectangle createSpecialIcon(UI_MainWindow MainWindow, string iconName, int height, string brush)
+    public static Rectangle createSpecialIcon(MainWindow MainWindow, string iconName, int height, string brush)
     {
         ImageSource? icon;
         icon = appImages.getImageFromResources(iconName);
@@ -78,7 +77,7 @@ public class appImages
         rect.Height = height;
         return rect;
     }
-    public static Grid createChangeableSpecialIcon(UI_MainWindow MainWindow, string iconName, int height, string staticIconColorBrush)
+    public static Grid createChangeableSpecialIcon(MainWindow MainWindow, string iconName, int height, string staticIconColorBrush)
     {
         Grid g = new Grid();
         g.Children.Add(appImages.createSpecialIcon(MainWindow, iconName, height, staticIconColorBrush));

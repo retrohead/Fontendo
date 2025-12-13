@@ -10,6 +10,7 @@ using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Windows;
+using Fontendo.Extensions;
 
 namespace Fontendo
 {
@@ -77,7 +78,7 @@ namespace Fontendo
             }
         }
 
-        public static ObservableCollection<RecentFile>? RecentFiles = Newtonsoft.Json.JsonConvert.DeserializeObject<ObservableCollection<RecentFile>>(Properties.Settings.Default.RecentFiles);
+        public static ObservableCollection<RecentFile>? RecentFiles = Newtonsoft.Json.JsonConvert.DeserializeObject<ObservableCollection<RecentFile>>(SettingsManager.Settings.RecentFiles);
 
         public static void AddRecentFile(string filePath, string? name)
         {
@@ -99,8 +100,8 @@ namespace Fontendo
             }
 
             // Save back to settings
-            Properties.Settings.Default.RecentFiles = Newtonsoft.Json.JsonConvert.SerializeObject(RecentFiles, Newtonsoft.Json.Formatting.None);
-            Properties.Settings.Default.Save();
+            SettingsManager.Settings.RecentFiles = Newtonsoft.Json.JsonConvert.SerializeObject(RecentFiles, Newtonsoft.Json.Formatting.None);
+            SettingsManager.Save();
         }
         public static void RemoveRecentFile(string filePath)
         {
@@ -131,7 +132,7 @@ namespace Fontendo
                 }
                 return;
             }
-            UI_MainWindowContent.Self?.OpenRecentFile(file.FilePath);
+            UI_MainWindow.Self?.OpenRecentFile(file.FilePath);
         }
 
     }

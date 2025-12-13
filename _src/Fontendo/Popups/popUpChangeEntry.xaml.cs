@@ -11,7 +11,7 @@ namespace Fontendo
     public partial class popUpChangeEntry : UserControl
     {
         public popUps.popUpType? popUpObj;
-        private UI_MainWindow? mainWindow;
+        private MainWindow? mainWindow;
         private dynamic? listPanel;
         public bool changesMade = false;
         public dynamic? completeFunctionObj;
@@ -46,7 +46,7 @@ namespace Fontendo
             none
         }
 
-        public popUpChangeEntry(UI_MainWindow? mainWin, string? value_name, string? orig_val, int maxLen, object? panelWithList, object? OnCompleteFunctionObj, completedFunctionDelegate? OnCompleteFunctionDelegate)
+        public popUpChangeEntry(MainWindow? mainWin, string? value_name, string? orig_val, int maxLen, object? panelWithList, object? OnCompleteFunctionObj, completedFunctionDelegate? OnCompleteFunctionDelegate)
         {
 
             // This call is required by the designer.

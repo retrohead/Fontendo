@@ -4,7 +4,6 @@ using System.Windows;
 using Microsoft.VisualBasic;
 using Microsoft.Win32;
 using Fontendo;
-using Fontendo.UI;
 
 public class fileHelper
 {
@@ -149,7 +148,7 @@ public class fileHelper
             if ((clearedTemp == false))
             {
                 Process[] p;
-                p = Process.GetProcessesByName(UI_MainWindow.appname);
+                p = Process.GetProcessesByName(MainWindow.appname);
                 if ((p.Count() > 1))
                     clearTemp = false;
 

@@ -171,16 +171,16 @@ namespace Fontendo.Controls
 
         private void PART_TextBox_GotFocus(object sender, RoutedEventArgs e)
         {
-            mainBorder.Background = (Brush)UI_MainWindow.Self.FindResource("ButtonSelectedBrush");
-            PART_TextBox.Foreground = (Brush)UI_MainWindow.Self.FindResource("ControlTextActive");
-            PART_Label.Foreground = (Brush)UI_MainWindow.Self.FindResource("ControlTextActive");
+            mainBorder.Background = (Brush)MainWindow.Self.FindResource("ButtonSelectedBrush");
+            PART_TextBox.Foreground = (Brush)MainWindow.Self.FindResource("ControlTextActive");
+            PART_Label.Foreground = (Brush)MainWindow.Self.FindResource("ControlTextActive");
         }
 
         private void PART_TextBox_LostFocus(object sender, RoutedEventArgs e)
         {
-            mainBorder.Background = (Brush)UI_MainWindow.Self.FindResource("WindowBackgroundBrushMedium");
-            PART_TextBox.Foreground = (Brush)UI_MainWindow.Self.FindResource("ControlTextInactive");
-            PART_Label.Foreground = (Brush)UI_MainWindow.Self.FindResource("ControlTextInactive");
+            mainBorder.Background = (Brush)MainWindow.Self.FindResource("WindowBackgroundBrushMedium");
+            PART_TextBox.Foreground = (Brush)MainWindow.Self.FindResource("ControlTextInactive");
+            PART_Label.Foreground = (Brush)MainWindow.Self.FindResource("ControlTextInactive");
         }
 
         private void Grid_GotFocus(object sender, RoutedEventArgs e)

@@ -76,12 +76,12 @@ namespace Fontendo.Formats.CTR
                 PtrNext = br.ReadUInt32();
                 EntriesOffset = (UInt32)br.BaseStream.Position;
 
-                UI_MainWindow.Log($"0x{br.BaseStream.Position.ToString("X8")} CMAP CodeBegin={CodeBegin}, CodeEnd={CodeEnd}, MappingMethod={MappingMethod}");
+                MainWindow.Log($"0x{br.BaseStream.Position.ToString("X8")} CMAP CodeBegin={CodeBegin}, CodeEnd={CodeEnd}, MappingMethod={MappingMethod}");
 
-                UI_MainWindow.Log($"0x{br.BaseStream.Position.ToString("X8")} CMAP Entries Start");
+                MainWindow.Log($"0x{br.BaseStream.Position.ToString("X8")} CMAP Entries Start");
                 // read entries
                 ActionResult result = ReadEntries(br);
-                UI_MainWindow.Log($"0x{br.BaseStream.Position.ToString("X8")} CMAP Entries={Entries.Count}");
+                MainWindow.Log($"0x{br.BaseStream.Position.ToString("X8")} CMAP Entries={Entries.Count}");
                 if (!result.Success)
                     return result;
             }
@@ -401,7 +401,7 @@ namespace Fontendo.Formats.CTR
 
             long startPos = bw.BaseStream.Position;
             long sectionNum = linker.GetLookupValue(FontPointerType.CMAP);
-            UI_MainWindow.Log($"0x{bw.BaseStream.Position.ToString("X8")} CMAP {sectionNum - 1} start");
+            MainWindow.Log($"0x{bw.BaseStream.Position.ToString("X8")} CMAP {sectionNum - 1} start");
 
             linker.AddLookupValueByName($"{nameof(FontPointerType.CMAP)}{sectionNum}", startPos + 0x8);
 
@@ -418,13 +418,13 @@ namespace Fontendo.Formats.CTR
             linker.AddPatchAddrByName(bw.BaseStream.Position, $"{nameof(FontPointerType.CMAP)}{sectionNum + 1}");
             bw.WriteUInt32(PtrNext);
 
-            UI_MainWindow.Log($"0x{bw.BaseStream.Position.ToString("X8")} CMAP Entries CodeBegin={CodeBegin}, CodeEnd={CodeEnd}, MappingMethod={MappingMethod}, Entries={Entries.Count()}");
+            MainWindow.Log($"0x{bw.BaseStream.Position.ToString("X8")} CMAP Entries CodeBegin={CodeBegin}, CodeEnd={CodeEnd}, MappingMethod={MappingMethod}, Entries={Entries.Count()}");
 
             switch (MappingMethod)
             {
                 case 0: // Direct
                     bw.WriteUInt16(Entries[0].Index);
-                    UI_MainWindow.Log($"0x{bw.BaseStream.Position.ToString()} Wrote {(CodeEnd - CodeBegin) + 1}");
+                    MainWindow.Log($"0x{bw.BaseStream.Position.ToString()} Wrote {(CodeEnd - CodeBegin) + 1}");
                     break;
 
                 case 1: // Table
@@ -432,7 +432,7 @@ namespace Fontendo.Formats.CTR
                     {
                         bw.WriteUInt16(entry.Index);
                     }
-                    UI_MainWindow.Log($"0x{bw.BaseStream.Position.ToString()} Wrote {Entries.Count()} of which {Entries.FindAll(e => e.Index != 0xFFFFU).Count()} where not just 0xFFFF");
+                    MainWindow.Log($"0x{bw.BaseStream.Position.ToString()} Wrote {Entries.Count()} of which {Entries.FindAll(e => e.Index != 0xFFFFU).Count()} where not just 0xFFFF");
                     break;
 
                 case 2: // Scan
@@ -441,7 +441,7 @@ namespace Fontendo.Formats.CTR
                     {
                         entry.Serialize(bw);
                     }
-                    UI_MainWindow.Log($"0x{bw.BaseStream.Position.ToString()} Wrote {Entries.Count()} of which {Entries.FindAll(e => e.Index != 0xFFFFU).Count()} where not just 0xFFFF");
+                    MainWindow.Log($"0x{bw.BaseStream.Position.ToString()} Wrote {Entries.Count()} of which {Entries.FindAll(e => e.Index != 0xFFFFU).Count()} where not just 0xFFFF");
                     break;
             }
 

@@ -1,5 +1,4 @@
 ﻿using Fontendo;
-using Fontendo.UI;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows;
@@ -374,7 +373,7 @@ public interface IColumnInterface
 
 public class listViewDataType : INotifyPropertyChanged
 {
-    public UI_MainWindow? mainWindow;
+    public MainWindow? mainWindow;
     public GridViewColumn? _lastColumnHeaderClicked = null;
     public ListSortDirection _lastSortDirection = ListSortDirection.Ascending;
 
@@ -396,7 +395,7 @@ public class listViewDataType : INotifyPropertyChanged
     }
     public ListView? listview;
     private SelectionMode? selectMode;
-    public listViewDataType(UI_MainWindow? mainWin, ref ListView list)
+    public listViewDataType(MainWindow? mainWin, ref ListView list)
     {
         Items = new ObservableCollection<listViewItemDataType>();
         mainWindow = mainWin;
@@ -679,7 +678,7 @@ public class listViewDataType : INotifyPropertyChanged
             Items[i].SubItems[column].HasFilterResult = false;
     }
 
-    public void removeColumnFilter(UI_MainWindow mainWin, int colId)
+    public void removeColumnFilter(MainWindow mainWin, int colId)
     {
         if ((mainWin == null))
             return;
@@ -715,7 +714,7 @@ public class listViewDataType : INotifyPropertyChanged
     }
 
 
-    public void removeColumnFilters(UI_MainWindow mainWin, ListView list)
+    public void removeColumnFilters(MainWindow mainWin, ListView list)
     {
         listViewDataType data = (listViewDataType)list.DataContext;
         int i;
@@ -932,7 +931,7 @@ public class listViewDataType : INotifyPropertyChanged
     }
 
 
-    private void buildHeaderContextMenu(UI_MainWindow mainWin, object sender, ContextMenuEventArgs e)
+    private void buildHeaderContextMenu(MainWindow mainWin, object sender, ContextMenuEventArgs e)
     {
         mainWindow = mainWin;
         FrameworkElement fe = (FrameworkElement)e.Source;
@@ -969,7 +968,7 @@ public class listViewDataType : INotifyPropertyChanged
     }
 
 
-    public bool getItemClicked(UI_MainWindow? mainWin, ref listViewItemDataType? itemClicked, object sender, ContextMenuEventArgs e)
+    public bool getItemClicked(MainWindow? mainWin, ref listViewItemDataType? itemClicked, object sender, ContextMenuEventArgs e)
     {
         if (mainWin == null)
             return false;

@@ -10,14 +10,13 @@ using System.Windows;
 using System.Windows.Shapes;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
-using Fontendo.UI;
 using Fontendo.Popups;
 
 public class popUps
 {
     public class popUpType
     {
-        public popUpType(UI_MainWindow MainWindow, ref dynamic objectToShow, bool max_size)
+        public popUpType(MainWindow MainWindow, ref dynamic objectToShow, bool max_size)
         {
             maxSize = max_size;
             bgWorkDelay = new BackgroundWorker();
@@ -37,7 +36,7 @@ public class popUps
         public object ? appearDelayCompleteFunctionParams;
         public Action? cancelFunctionDelegate;
         public object ? cancelFunctionParams;
-        public UI_MainWindow mainFrm;
+        public MainWindow mainFrm;
         public bool IsOpen = false;
 
         public void appear(Action? delayCompleteFunctionDelegate = null, object? delayCompleteFunctionParams = null)
@@ -83,7 +82,7 @@ public class popUps
                 return;
             dynamic elm = (System.Windows.UIElement)obj;
             elm.MaxHeight = newsize - 180;
-            obj.resize(newsize, UI_MainWindow.Self?.ActualWidth ?? 0);
+            obj.resize(newsize, MainWindow.Self?.ActualWidth ?? 0);
         }
 
         public void popUpBgFade2_Complete()
@@ -159,7 +158,7 @@ public class popUps
                         obj.Dispatcher.BeginInvoke(appearDelayCompleteFunctionDelegate, appearDelayCompleteFunctionParams);
                 }
                 if (maxSize)
-                    obj.resize(UI_MainWindow.Self?.ActualHeight ?? 0, UI_MainWindow.Self?.ActualWidth ?? 0);
+                    obj.resize(MainWindow.Self?.ActualHeight ?? 0, MainWindow.Self?.ActualWidth ?? 0);
                 
 
                 objectAnimations.makeAppear(ref mainFrm, window, false, mainFrm, popUpBgFade2_Complete);
@@ -435,7 +434,7 @@ public class popUps
         return false;
     }
 
-    public static void loadPopUp(UI_MainWindow? mainFrm, string header, string icon, ref dynamic popUpWindow, bool themedIcon = false, bool maxSize = false)
+    public static void loadPopUp(MainWindow? mainFrm, string header, string icon, ref dynamic popUpWindow, bool themedIcon = false, bool maxSize = false)
     {
         if (mainFrm == null)
             throw new Exception("Main window cannot be null when loading a pop up");

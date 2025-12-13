@@ -28,14 +28,14 @@ namespace Fontendo.Extensions.BinaryTools
             {
                 bw.SetPosition(patch.Value);
                 UInt32 val = (UInt32)GetLookupValue(patch.Key);
-                UI_MainWindow.Log($"-> Patching uint {patch.Key} at 0x{bw.BaseStream.Position.ToString("X8")} with {val}");
+                MainWindow.Log($"-> Patching uint {patch.Key} at 0x{bw.BaseStream.Position.ToString("X8")} with {val}");
                 bw.WriteUInt32(val);
             }
             foreach (var patch in patchByNameLookupTable)
             {
                 bw.SetPosition(patch.Value);
                 UInt32 val = (UInt32)GetLookupValueByName(patch.Key);
-                UI_MainWindow.Log($"-> Patching uint {patch.Key} at 0x{bw.BaseStream.Position.ToString("X8")} with {val}");
+                MainWindow.Log($"-> Patching uint {patch.Key} at 0x{bw.BaseStream.Position.ToString("X8")} with {val}");
                 bw.WriteUInt32(val);
             }
 
@@ -43,7 +43,7 @@ namespace Fontendo.Extensions.BinaryTools
             {
                 bw.SetPosition(patch.Value);
                 var val = GetLookupValue(patch.Key);
-                UI_MainWindow.Log($"-> Patching ushort {patch.Key} at 0x{bw.BaseStream.Position.ToString("X8")} with {val}");
+                MainWindow.Log($"-> Patching ushort {patch.Key} at 0x{bw.BaseStream.Position.ToString("X8")} with {val}");
                 bw.WriteUInt16((ushort)val);
             }
         }
@@ -127,7 +127,7 @@ namespace Fontendo.Extensions.BinaryTools
         /// </summary>
         public void AddPatchAddr(long address, FontPointerType lookup)
         {
-            UI_MainWindow.Log($"-> Adding patch address for {nameof(lookup)} at 0x{address.ToString("X8")}");
+            MainWindow.Log($"-> Adding patch address for {nameof(lookup)} at 0x{address.ToString("X8")}");
             patchLookupTable.Add(lookup, address);
         }
 
@@ -136,7 +136,7 @@ namespace Fontendo.Extensions.BinaryTools
         /// </summary>
         public void AddPatchAddrByName(long address, string name)
         {
-            UI_MainWindow.Log($"-> Adding patch address for {name} at 0x{address.ToString("X8")}");
+            MainWindow.Log($"-> Adding patch address for {name} at 0x{address.ToString("X8")}");
             patchByNameLookupTable.Add(name, address);
         }
 
@@ -145,7 +145,7 @@ namespace Fontendo.Extensions.BinaryTools
         /// </summary>
         public void AddShortPatchAddr(long address, FontPointerType lookup)
         {
-            UI_MainWindow.Log($"-> Adding short patch address for {nameof(lookup)} at 0x{address.ToString("X8")}");
+            MainWindow.Log($"-> Adding short patch address for {nameof(lookup)} at 0x{address.ToString("X8")}");
             shortPatchLookupTable.Add(lookup, address);
         }
     }

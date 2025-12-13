@@ -76,8 +76,8 @@ namespace Fontendo.Controls
             {
                 VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
                 HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
-                Background = (Brush)UI_MainWindowContent.Self.FindResource("WindowBackgroundBrushDark"),
-                Style = (Style)UI_MainWindowContent.Self.FindResource("GalleryScrollViewerStyle")
+                Background = (Brush)UI_MainWindow.Self.FindResource("WindowBackgroundBrushDark"),
+                Style = (Style)UI_MainWindow.Self.FindResource("GalleryScrollViewerStyle")
             };
             sv.Content = content;
             contentArea.Child = sv;
@@ -195,7 +195,7 @@ namespace Fontendo.Controls
                 var pl = DockHandler.GetUnderlyingPlaceholder(this, attachedControl);
                 if (pl != null)
                 {
-                    pl.Placeholder.Background = (Brush)UI_MainWindow.Self.FindResource("WindowBackgroundBrushMedium");
+                    pl.Placeholder.Background = (Brush)MainWindow.Self.FindResource("WindowBackgroundBrushMedium");
 
                     DockHandler.SetRedockPlaceholder(attachedControl, pl);
                     Close(); // redocks
@@ -206,8 +206,8 @@ namespace Fontendo.Controls
 
         public void AdjustBordersForWindowSize(WindowTypes windowType)
         {
-            mainBorder.Background = (Brush)UI_MainWindow.Self.FindResource("WindowBackgroundBrushDark");
-            mainBorder.BorderBrush = (Brush)UI_MainWindow.Self.FindResource("ControlBorder");
+            mainBorder.Background = (Brush)MainWindow.Self.FindResource("WindowBackgroundBrushDark");
+            mainBorder.BorderBrush = (Brush)MainWindow.Self.FindResource("ControlBorder");
             mainBorder.BorderThickness = new Thickness(1);
             if (windowType == WindowTypes.Fullscreen)
             {
@@ -218,7 +218,7 @@ namespace Fontendo.Controls
                 MaxWidth = workingArea.Width + 10;
                 MaxHeight = workingArea.Height + 10;
 
-                customTitleBar.btnClose.Style = UI_MainWindow.Self.FindResource("TitleBarCloseButtonStyleFullScreen") as Style;
+                customTitleBar.btnClose.Style = MainWindow.Self.FindResource("TitleBarCloseButtonStyleFullScreen") as Style;
                 if (cornerGrab != null)
                     cornerGrab.Visibility = Visibility.Collapsed;
             }
@@ -229,7 +229,7 @@ namespace Fontendo.Controls
                 mainBorder.CornerRadius = new CornerRadius(0);
                 var workingArea = WindowHelper.GetWorkingArea(this);
 
-                customTitleBar.btnClose.Style = UI_MainWindow.Self.FindResource("TitleBarCloseButtonStyleFullScreen") as Style;
+                customTitleBar.btnClose.Style = MainWindow.Self.FindResource("TitleBarCloseButtonStyleFullScreen") as Style;
                 if (cornerGrab != null)
                     cornerGrab.Visibility = Visibility.Collapsed;
             }
@@ -240,7 +240,7 @@ namespace Fontendo.Controls
                 mainBorder.CornerRadius = new CornerRadius(0);
                 var workingArea = WindowHelper.GetWorkingArea(this);
 
-                customTitleBar.btnClose.Style = UI_MainWindow.Self.FindResource("TitleBarCloseButtonStyleFullScreen") as Style;
+                customTitleBar.btnClose.Style = MainWindow.Self.FindResource("TitleBarCloseButtonStyleFullScreen") as Style;
                 if (cornerGrab != null)
                     cornerGrab.Visibility = Visibility.Collapsed;
             }
@@ -255,7 +255,7 @@ namespace Fontendo.Controls
                     ShadowDepth = 0,
                     Opacity = 0.7
                 };
-                customTitleBar.btnClose.Style = UI_MainWindow.Self.FindResource("TitleBarCloseButtonStyle") as Style;
+                customTitleBar.btnClose.Style = MainWindow.Self.FindResource("TitleBarCloseButtonStyle") as Style;
             }
             if (windowType == WindowTypes.Resizable && Options.ShowGripperWhenResizable)
             {
@@ -302,7 +302,7 @@ namespace Fontendo.Controls
         private void Window_Deactivated(object sender, EventArgs e)
         {
             activeTextBrush = customTitleBar.Foreground;
-            customTitleBar.Foreground = (Brush)UI_MainWindow.Self.FindResource("ControlTextInactive");
+            customTitleBar.Foreground = (Brush)MainWindow.Self.FindResource("ControlTextInactive");
         }
         private void Window_Activated(object sender, EventArgs e)
         {

@@ -11,7 +11,6 @@ using System.Data;
 using System.Windows.Shapes;
 using System.Windows.Media;
 using Fontendo;
-using Fontendo.UI;
 
 public class GridViewColumnData
 {
@@ -322,7 +321,7 @@ public class gridViewHelper
             gridViewHelper.grid_Sorting(listView, listViewData, listViewData._lastSortDirection, null, listViewData._lastColumnHeaderClicked);
     }
 
-    public static void updateGridViewColumnHeaderStyle(UI_MainWindow? MainWindow, listViewDataType? listViewData, ListSortDirection direction, GridViewColumn? column)
+    public static void updateGridViewColumnHeaderStyle(MainWindow? MainWindow, listViewDataType? listViewData, ListSortDirection direction, GridViewColumn? column)
     {
         if (MainWindow == null || listViewData == null)
             throw new Exception("Failed to find main form");
@@ -405,7 +404,7 @@ public class gridViewHelper
             header.Column.Width = 70;
     }
 
-    public static void GridViewColumnHeaderClicked(UI_MainWindow? MainWindow, ListView listView, listViewDataType listViewData, object sender, RoutedEventArgs e)
+    public static void GridViewColumnHeaderClicked(MainWindow? MainWindow, ListView listView, listViewDataType listViewData, object sender, RoutedEventArgs e)
     {
         if ((e.OriginalSource as GridViewColumnHeader == null))
             return;

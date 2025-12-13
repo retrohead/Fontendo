@@ -145,9 +145,9 @@ namespace Fontendo.DockManager
 
             info.PlaceHolderInfo.Placeholder = new Border
             {
-                Background = (Brush)UI_MainWindow.Self.FindResource("WindowBackgroundBrushMedium"),
+                Background = (Brush)MainWindow.Self.FindResource("WindowBackgroundBrushMedium"),
                 BorderThickness = new Thickness(1),
-                BorderBrush = (Brush)UI_MainWindow.Self.FindResource("ControlBorder")
+                BorderBrush = (Brush)MainWindow.Self.FindResource("ControlBorder")
             }; 
 
             if (info.PlaceHolderInfo.OwnerGrid != null)
@@ -328,14 +328,14 @@ namespace Fontendo.DockManager
 
                 if (kvp == pl || kvp.Placeholder.ActualWidth < 2)
                 {
-                    kvp.Placeholder.Background = (Brush)UI_MainWindowContent.Self.FindResource("ButtonMouseOverBrush");
-                    kvp.Placeholder.BorderBrush = (Brush)UI_MainWindowContent.Self.FindResource("ButtonSelectedBrush");
+                    kvp.Placeholder.Background = (Brush)UI_MainWindow.Self.FindResource("ButtonMouseOverBrush");
+                    kvp.Placeholder.BorderBrush = (Brush)UI_MainWindow.Self.FindResource("ButtonSelectedBrush");
                     AnimateBorderOpen(kvp.Placeholder, kvp.OrigMinWidth);
                 }
                 else
                 {
-                    kvp.Placeholder.Background = (Brush)UI_MainWindowContent.Self.FindResource("WindowBackgroundBrushMedium");
-                    kvp.Placeholder.BorderBrush = (Brush)UI_MainWindowContent.Self.FindResource("ButtonMouseOverBrush");
+                    kvp.Placeholder.Background = (Brush)UI_MainWindow.Self.FindResource("WindowBackgroundBrushMedium");
+                    kvp.Placeholder.BorderBrush = (Brush)UI_MainWindow.Self.FindResource("ButtonMouseOverBrush");
                     AnimateBorderClose(kvp.Placeholder);
                 }
             }
@@ -458,9 +458,9 @@ namespace Fontendo.DockManager
 
         internal static void BringAllToFront()
         {
-            if (UI_MainWindow.Self.Window == null)
+            if (MainWindow.Self.Window == null)
                 return;
-            var mainHandle = new WindowInteropHelper(UI_MainWindow.Self.Window).Handle;
+            var mainHandle = new WindowInteropHelper(MainWindow.Self.Window).Handle;
 
             WindowHelper.BringToFront(mainHandle);
             int index = 0;

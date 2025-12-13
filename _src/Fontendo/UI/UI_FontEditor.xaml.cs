@@ -38,7 +38,7 @@ namespace Fontendo.UI
         {
             DataContext = this;
             InitializeComponent();
-            SelectedColor = ColorHelper.ToMediaColor(Properties.Settings.Default.FontBackgroundColor);
+            SelectedColor = ColorHelper.ToMediaColor(SettingsManager.Settings.FontBackgroundColor);
         }
 
 
@@ -50,13 +50,13 @@ namespace Fontendo.UI
                 // Register legacy encodings (including Shift-JIS)
                 Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
                 btnExportSheet.SetBinding(Button.IsEnabledProperty,
-                    new Binding(nameof(UI_MainWindowContent.Self.ButtonEnabler.IsSheetSelected)) { Source = UI_MainWindowContent.Self.ButtonEnabler });
+                    new Binding(nameof(UI_MainWindow.Self.ButtonEnabler.IsSheetSelected)) { Source = UI_MainWindow.Self.ButtonEnabler });
 
                 btnReplaceSheet.SetBinding(Button.IsEnabledProperty,
-                    new Binding(nameof(UI_MainWindowContent.Self.ButtonEnabler.IsSheetSelected)) { Source = UI_MainWindowContent.Self.ButtonEnabler });
+                    new Binding(nameof(UI_MainWindow.Self.ButtonEnabler.IsSheetSelected)) { Source = UI_MainWindow.Self.ButtonEnabler });
                 initialized = true;
             }
-            if (UI_MainWindowContent.Self == null) return;
+            if (UI_MainWindow.Self == null) return;
             LoadedFont = font;
             if (font == null)
             {
@@ -77,7 +77,7 @@ namespace Fontendo.UI
 
         public void ExportSheet()
         {
-            int index = UI_MainWindowContent.Self.SelectedSheet;
+            int index = UI_MainWindow.Self.SelectedSheet;
             if (index < 0 || LoadedFont == null || LoadedFont.Settings.Sheets == null)
                 return;
             string fileName = FileSystemHelper.BrowseForSaveFile(FileSystemHelper.FileType.Png, "Export Sheet Image", $"Sheet {index + 1}.png");
@@ -89,7 +89,7 @@ namespace Fontendo.UI
 
         public void ReplaceSheet()
         {
-            int index = UI_MainWindowContent.Self.SelectedSheet;
+            int index = UI_MainWindow.Self.SelectedSheet;
             if (index < 0 || LoadedFont == null || LoadedFont.Settings.Sheets == null) return;
 
             string fileName = FileSystemHelper.BrowseForFile(FileSystemHelper.FileType.Png, "Import Sheet Image");
@@ -104,9 +104,9 @@ namespace Fontendo.UI
             if (LoadedFont.Settings.Sheets.Images[index] != null)
                 LoadedFont.Settings.Sheets.Images[index].Dispose();
             LoadedFont.Settings.Sheets.Images[index] = (Bitmap)bmp.Clone();
-            UI_MainWindowContent.SheetItem? item = UI_MainWindowContent.Self.GetSelectedSheetItem();
+            UI_MainWindow.SheetItem? item = UI_MainWindow.Self.GetSelectedSheetItem();
             if (item == null) throw new Exception("Failed to get the selected sheet item");
-            item.Image = UI_MainWindowContent.ConvertBitmap(LoadedFont.Settings.Sheets.Images[index]);
+            item.Image = UI_MainWindow.ConvertBitmap(LoadedFont.Settings.Sheets.Images[index]);
             item.Tag = LoadedFont.Settings.Sheets.Images[index];
             bmp.Dispose();
             MessageBox.Show("Sheet image imported successfully.", "Import Successful", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -146,7 +146,7 @@ namespace Fontendo.UI
                         Margin = new Thickness(3, 0, 0, 0),
                         VerticalAlignment = VerticalAlignment.Center,
                         FontSize = 12, // adjust as needed
-                        Foreground = (System.Windows.Media.Brush)UI_MainWindow.Self.FindResource("LabelTextBrush")
+                        Foreground = (System.Windows.Media.Brush)MainWindow.Self.FindResource("LabelTextBrush")
                     };
 
                     Grid.SetRow(label, rowIndex);
@@ -184,14 +184,14 @@ namespace Fontendo.UI
         private void ColorPickerButton_SelectedColorChanged(object sender, ColorPicker.ColorChangedEventArgs e)
         {
             SelectedColor = e.SelectedColor;
-            if (UI_MainWindowContent.Self == null)
+            if (UI_MainWindow.Self == null)
                 return;
-            UI_MainWindowContent.Self.SetBackgroundColour(ColorHelper.ToDrawingColor(e.SelectedColor), true);
+            UI_MainWindow.Self.SetBackgroundColour(ColorHelper.ToDrawingColor(e.SelectedColor), true);
         }
 
         private void colorPicker_PreviewSelectedColorChanged(object sender, ColorPicker.ColorChangedEventArgs e)
         {
-            UI_MainWindowContent.Self.SetBackgroundColour(ColorHelper.ToDrawingColor(e.SelectedColor), false);
+            UI_MainWindow.Self.SetBackgroundColour(ColorHelper.ToDrawingColor(e.SelectedColor), false);
         }
     }
 }

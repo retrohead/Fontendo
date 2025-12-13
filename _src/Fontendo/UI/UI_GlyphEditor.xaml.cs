@@ -50,7 +50,7 @@ namespace Fontendo.UI
                 if (LoadedGlyph?.Settings.Image != null)
                     borderGlyphImage.Background = new SolidColorBrush(ColorHelper.ToMediaColor(GlyphBackground));
                 else
-                    borderGlyphImage.Background = (System.Windows.Media.Brush)UI_MainWindow.Self.FindResource("WindowBackgroundBrushMedium");
+                    borderGlyphImage.Background = (System.Windows.Media.Brush)MainWindow.Self.FindResource("WindowBackgroundBrushMedium");
             }
             catch
             {
@@ -79,7 +79,7 @@ namespace Fontendo.UI
             suppressZoomEvent = true;
             InitializeComponent();
             suppressZoomEvent = false;
-            GlyphBackground = Properties.Settings.Default.FontBackgroundColor;
+            GlyphBackground = ColorHelper.HexToColor(SettingsManager.Settings.FontBackgroundColor);
         }
 
 
@@ -91,17 +91,17 @@ namespace Fontendo.UI
                 // Register legacy encodings (including Shift-JIS)
                 Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
                 btnExportGlyph.SetBinding(Button.IsEnabledProperty,
-                    new Binding(nameof(UI_MainWindowContent.Self.ButtonEnabler.IsGlyphSelected)) { Source = UI_MainWindowContent.Self.ButtonEnabler });
+                    new Binding(nameof(UI_MainWindow.Self.ButtonEnabler.IsGlyphSelected)) { Source = UI_MainWindow.Self.ButtonEnabler });
 
                 btnReplaceGlyph.SetBinding(Button.IsEnabledProperty,
-                    new Binding(nameof(UI_MainWindowContent.Self.ButtonEnabler.IsGlyphSelected)) { Source = UI_MainWindowContent.Self.ButtonEnabler });
+                    new Binding(nameof(UI_MainWindow.Self.ButtonEnabler.IsGlyphSelected)) { Source = UI_MainWindow.Self.ButtonEnabler });
 
                 sliderZoom.SetBinding(Slider.IsEnabledProperty,
-                    new Binding(nameof(UI_MainWindowContent.Self.ButtonEnabler.IsGlyphSelected)) { Source = UI_MainWindowContent.Self.ButtonEnabler });
+                    new Binding(nameof(UI_MainWindow.Self.ButtonEnabler.IsGlyphSelected)) { Source = UI_MainWindow.Self.ButtonEnabler });
 
                 initialized = true;
             }
-            if (UI_MainWindowContent.Self == null) return;
+            if (UI_MainWindow.Self == null) return;
             if (glyph == null)
             {
                 ClearGlyphDetails();
@@ -122,7 +122,7 @@ namespace Fontendo.UI
                 lblGlyphName.Text = "";
                 return;
             }
-            CharEncodings enc = UI_MainWindowContent.Self.FontendoFont.Settings.CharEncoding;
+            CharEncodings enc = UI_MainWindow.Self.FontendoFont.Settings.CharEncoding;
 
             UInt16 code = LoadedGlyph.Settings.CodePoint;
             string dchar = "";
@@ -154,7 +154,7 @@ namespace Fontendo.UI
             Buffer.BlockCopy(chr, 0, bytes, 0, bytes.Length);
             string unicodechar = Encoding.Unicode.GetString(bytes);
             textGlyphSymbol.Text = unicodechar;
-            lblGlyphName.Text = UI_MainWindowContent.Self.UnicodeNames.GetCharNameFromUnicodeCodepoint(code);
+            lblGlyphName.Text = UI_MainWindow.Self.UnicodeNames.GetCharNameFromUnicodeCodepoint(code);
         }
 
         public static BitmapSource ConvertBitmapToBitmapSource(Bitmap bitmap)
@@ -258,7 +258,7 @@ namespace Fontendo.UI
         {
             if (LoadedGlyph == null || LoadedGlyph.Settings.Image == null) return;
 
-            UI_MainWindowContent.GlyphItem? item = UI_MainWindowContent.Self.GetSelectedCharacterItem();
+            UI_MainWindow.GlyphItem? item = UI_MainWindow.Self.GetSelectedCharacterItem();
             if (item == null) return;
 
             string fileName = FileSystemHelper.BrowseForFile(FileSystemHelper.FileType.Png, "Import Glyph Image");
@@ -275,7 +275,7 @@ namespace Fontendo.UI
                 LoadedGlyph.Settings.Image.Dispose();
             LoadedGlyph.Settings.Image = (Bitmap)bmp.Clone();
             item.Tag = LoadedGlyph;
-            item.Image = UI_MainWindowContent.ConvertBitmap(LoadedGlyph.Settings.Image);
+            item.Image = UI_MainWindow.ConvertBitmap(LoadedGlyph.Settings.Image);
 
             bmp.Dispose();
             ShowGlyphDetails(LoadedGlyph);
@@ -320,7 +320,7 @@ namespace Fontendo.UI
                         Margin = new Thickness(3, 0, 0, 0),
                         VerticalAlignment = VerticalAlignment.Center,
                         FontSize = 12, // adjust as needed
-                        Foreground = (System.Windows.Media.Brush)UI_MainWindow.Self.FindResource("LabelTextBrush")
+                        Foreground = (System.Windows.Media.Brush)MainWindow.Self.FindResource("LabelTextBrush")
                     };
 
                     Grid.SetRow(label, rowIndex);

@@ -4,7 +4,7 @@
              xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
              xmlns:local="clr-namespace:Fontendo"
              xmlns:Themes="clr-namespace:Xceed.Wpf.Toolkit.Themes;assembly=Xceed.Wpf.Toolkit"
-             Startup="Application_Startup">
+             StartupUri="HiddenWindow.xaml">
     <Application.Resources>
         <local:HexValueConverter x:Key="HexConverter"/>
         <local:ListToStringConverter x:Key="ListConverter" />

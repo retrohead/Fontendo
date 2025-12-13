@@ -13,6 +13,11 @@ namespace Fontendo.Extensions
         {
             return System.Windows.Media.Color.FromArgb(c.A, c.R, c.G, c.B);
         }
+        public static System.Windows.Media.Color ToMediaColor(string hex)
+        {
+            Color c = HexToColor(hex);
+            return System.Windows.Media.Color.FromArgb(c.A, c.R, c.G, c.B);
+        }
         public static System.Drawing.Color ToDrawingColor(System.Windows.Media.Color mediaColor)
         {
             return System.Drawing.Color.FromArgb(mediaColor.A, mediaColor.R, mediaColor.G, mediaColor.B);
@@ -135,6 +140,35 @@ namespace Fontendo.Extensions
             b = (b <= 0.03928) ? b / 12.92 : Math.Pow((b + 0.055) / 1.055, 2.4);
 
             return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+        }
+
+        internal static Color HexToColor(string fontBackgroundColor)
+        {
+            if (fontBackgroundColor.StartsWith("#"))
+            {
+                fontBackgroundColor = fontBackgroundColor.Substring(1);
+            }
+            if (fontBackgroundColor.Length == 6)
+            {
+                // RRGGBB format
+                byte r = Convert.ToByte(fontBackgroundColor.Substring(0, 2), 16);
+                byte g = Convert.ToByte(fontBackgroundColor.Substring(2, 2), 16);
+                byte b = Convert.ToByte(fontBackgroundColor.Substring(4, 2), 16);
+                return Color.FromArgb(255, r, g, b); // Full opacity
+            }
+            else if (fontBackgroundColor.Length == 8)
+            {
+                // AARRGGBB format
+                byte a = Convert.ToByte(fontBackgroundColor.Substring(0, 2), 16);
+                byte r = Convert.ToByte(fontBackgroundColor.Substring(2, 2), 16);
+                byte g = Convert.ToByte(fontBackgroundColor.Substring(4, 2), 16);
+                byte b = Convert.ToByte(fontBackgroundColor.Substring(6, 2), 16);
+                return Color.FromArgb(a, r, g, b);
+            }
+            else
+            {
+                return Color.Magenta;
+            }
         }
     }
 }

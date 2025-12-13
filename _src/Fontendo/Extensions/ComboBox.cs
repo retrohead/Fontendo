@@ -9,7 +9,6 @@ using System.Windows.Media;
 using System.Windows;
 using System.Windows.Data;
 using Fontendo;
-using Fontendo.UI;
 
 public class comboData
 {
@@ -91,7 +90,7 @@ public class comboData
             c.SelectedIndex = -1;
     }
 
-    public static void populateCombo(ref ComboBox c, ref comboBoxData cd, WPFDataSet.WPFDataSet comboBoxFillData, bool allowAdditions, comboData selectAllItemsObj, WPFDataSet.WPFDataSet ? formDataToMatch = null, int dataSetColumnIDForValue = -1, comboBoxData ? populatedData = null, UI_MainWindow ? statusIconForm = null, UI_MainWindow ? statIconForm = null, UI_MainWindow ? flagIconForm = null)
+    public static void populateCombo(ref ComboBox c, ref comboBoxData cd, WPFDataSet.WPFDataSet comboBoxFillData, bool allowAdditions, comboData selectAllItemsObj, WPFDataSet.WPFDataSet ? formDataToMatch = null, int dataSetColumnIDForValue = -1, comboBoxData ? populatedData = null, MainWindow ? statusIconForm = null, MainWindow ? statIconForm = null, MainWindow ? flagIconForm = null)
     {
         int i;
         int selectedIndex = 0;

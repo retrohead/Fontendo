@@ -1,14 +1,11 @@
 ﻿using Fontendo.FontProperties;
 using Fontendo.Formats.CTR;
 using Fontendo.Interfaces;
-using Fontendo.Properties;
 using System.ComponentModel;
 using System.Windows.Data;
 using System.Drawing;
 using static Fontendo.FontProperties.FontPropertyList;
-using static Fontendo.FontProperties.GlyphProperties;
 using static Fontendo.FontProperties.PropertyList;
-using System.Windows.Media.Imaging;
 
 namespace Fontendo.Extensions
 {

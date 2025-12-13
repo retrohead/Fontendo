@@ -110,7 +110,7 @@ namespace Fontendo.FontProperties
                         Maximum = descriptor.ValueRange.Item2,
                         HorizontalContentAlignment = HorizontalAlignment.Stretch,
                         DisplayAsHex = true,
-                        Background = (Brush)UI_MainWindow.Self.FindResource("WindowBackgroundBrushMedium")
+                        Background = (Brush)MainWindow.Self.FindResource("WindowBackgroundBrushMedium")
                     };
                     break;
 
@@ -129,8 +129,8 @@ namespace Fontendo.FontProperties
                         Minimum = (int)descriptor.ValueRange.Item1,
                         Maximum = (int)descriptor.ValueRange.Item2,
                         HorizontalAlignment = HorizontalAlignment.Stretch,
-                        Foreground = (Brush)UI_MainWindow.Self.FindResource("ControlTextActive"),
-                        Background = (Brush)UI_MainWindow.Self.FindResource("WindowBackgroundBrushMedium")
+                        Foreground = (Brush)MainWindow.Self.FindResource("ControlTextActive"),
+                        Background = (Brush)MainWindow.Self.FindResource("WindowBackgroundBrushMedium")
                     };
                     editor = numBox;
                     break;
@@ -151,7 +151,7 @@ namespace Fontendo.FontProperties
                         Minimum = (int)(descriptor.ValueRange?.Min ?? 0),
                         Maximum = (int)(descriptor.ValueRange?.Max ?? 100),
                         HorizontalAlignment = HorizontalAlignment.Stretch,
-                        Style = (Style)UI_MainWindow.Self.FindResource("SliderStyle")
+                        Style = (Style)MainWindow.Self.FindResource("SliderStyle")
                     };
                     break;
 
@@ -175,7 +175,7 @@ namespace Fontendo.FontProperties
                     {
                         Margin = new Thickness(0, 0, 0, 0),
                         HorizontalAlignment = HorizontalAlignment.Left,
-                        Foreground = (Brush)UI_MainWindow.Self.FindResource("ControlTextInactive")
+                        Foreground = (Brush)MainWindow.Self.FindResource("ControlTextInactive")
                     };
                     break;
 

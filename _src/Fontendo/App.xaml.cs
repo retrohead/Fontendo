@@ -13,6 +13,7 @@ using System.Windows.Media;
 using Fontendo.Controls;
 using Fontendo.DockManager;
 using Fontendo.UI;
+using System.Drawing.Drawing2D;
 
 namespace Fontendo
 {
@@ -26,15 +27,27 @@ namespace Fontendo
         public static string dateFormat = System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.ShortDatePattern;
         public static string fileToOpen = "";
         public App()
-        {            // Handle UI thread exceptions
+        {
+            // Handle UI thread exceptions
             this.DispatcherUnhandledException += GlobalDispatcherExceptionHandler;
 
             // Handle non-UI thread exceptions
             AppDomain.CurrentDomain.UnhandledException += GlobalUnhandledExceptionHandler;
             // Handle missing drivers
             AppDomain.CurrentDomain.AssemblyResolve += OnResolveAssembly;
-
         }
+
+        protected override void OnStartup(StartupEventArgs e)
+        {
+            base.OnStartup(e);
+            if (e.Args.Length > 0)
+            {
+                string filePath = e.Args[0];
+                if (File.Exists(filePath))
+                    fileToOpen = filePath;
+            }
+        }
+
 
         private static Assembly OnResolveAssembly(object sender, ResolveEventArgs args)
         {
@@ -77,7 +90,8 @@ namespace Fontendo
                 "System.Net.Security.resources.dll",
                 "System.Net.Http.resources.dll",
                 "System.Formats.Nrbf.dll",
-                "System.Reflection.Metadata.dll"
+                "System.Reflection.Metadata.dll",
+                "System.Configuration.ConfigurationManager.resources.dll"
             };
 
             string finalname = args.Name.Substring(0, args.Name.IndexOf(',')) + ".dll";
@@ -128,18 +142,6 @@ namespace Fontendo
                 return null;
             }
         }
-
-        protected override void OnStartup(StartupEventArgs e)
-        {
-            base.OnStartup(e);
-            if (e.Args.Length > 0)
-            {
-                string filePath = e.Args[0];
-                if (File.Exists(filePath))
-                    fileToOpen = filePath;
-            }
-        }
-
         private void GlobalDispatcherExceptionHandler(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
         {
             ShowFatalErrorMessage(e.Exception);
@@ -213,32 +215,6 @@ namespace Fontendo
             return JsonSerializer.Deserialize<T>(json);
         }
 
-        CustomWindow customWindow;
-        UI_MainWindow mainWindow;
-        private void Application_Startup(object sender, StartupEventArgs e)
-        {
-
-            CustomWindow.WindowTypes winType = CustomWindow.WindowTypes.Resizable;
-            if (Fontendo.Properties.Settings.Default.FullSize)
-                winType = CustomWindow.WindowTypes.Fullscreen;
-            customWindow = DockHandler.CreateCustomWindow(null, new CustomWindowOptions() { WindowType = winType, ShowGripperWhenResizable = false });
-            customWindow.Loaded += CustomWindow_Loaded;
-            //InitializeComponent();
-            DockHandler.Initialize(customWindow);
-            mainWindow = new UI_MainWindow();
-
-            customWindow.ApplyContent(mainWindow);
-            customWindow.WindowStartupLocation = WindowStartupLocation.CenterScreen;
-            customWindow.Show();
-        }
-
-        private void CustomWindow_Loaded(object sender, RoutedEventArgs e)
-        {
-            Theme.initTheme(customWindow);
-            Theme.applyCustomTheme(Fontendo.Properties.Settings.Default.SelectedTheme, Fontendo.Properties.Settings.Default.ThemeColours);
-            Theme.applyTheme(mainWindow);
-            DockHandler.ApplyThemeColorsToOpenWindows(Theme.getThemeColorsFromWindowResources(mainWindow));
-        }
     }
     
     #region Convertors

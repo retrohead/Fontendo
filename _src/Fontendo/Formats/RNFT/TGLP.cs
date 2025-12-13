@@ -1,6 +1,5 @@
 ﻿using Fontendo;
 using Fontendo.Extensions.BinaryTools;
-using Fontendo.UI;
 using System;
 using System.Runtime.CompilerServices;
 using static Fontendo.Extensions.FontBase;
@@ -120,7 +119,7 @@ public class TGLP
         // Patch sheet pointer
         linker.AddPatchAddr(bw.BaseStream.Position, FontPointerType.sheetPtr);
         bw.WriteUInt32(SheetPtr);
-        UI_MainWindow.Log($"0x{bw.BaseStream.Position.ToString("X8")} TGLP End");
+        MainWindow.Log($"0x{bw.BaseStream.Position.ToString("X8")} TGLP End");
 
         // Pad to next align boundary (e.g. 0x10)
         long padBytes = align - (bw.BaseStream.Position % align);
@@ -130,7 +129,7 @@ public class TGLP
                 bw.WriteByte((byte)0x0);
         }
 
-        UI_MainWindow.Log($"0x{bw.BaseStream.Position.ToString("X8")} Sheets Start");
+        MainWindow.Log($"0x{bw.BaseStream.Position.ToString("X8")} Sheets Start");
         // Image data
         linker.AddLookupValue(FontPointerType.sheetPtr, bw.BaseStream.Position);
         foreach (var sheet in sheets)
@@ -145,7 +144,7 @@ public class TGLP
             for (uint i = 0; i < padBytes; i++)
                 bw.WriteByte((byte)0x0);
         }
-        UI_MainWindow.Log($"0x{bw.BaseStream.Position.ToString("X8")} Sheets End");
+        MainWindow.Log($"0x{bw.BaseStream.Position.ToString("X8")} Sheets End");
 
         // Update glyph length
         linker.AddLookupValue(FontPointerType.glyphLength, bw.BaseStream.Position - ptr + 0x8U);

@@ -87,7 +87,7 @@ namespace Fontendo.Controls
                 Maximum = 100,
                 TickPlacement = System.Windows.Controls.Primitives.TickPlacement.None,
                 VerticalAlignment = VerticalAlignment.Stretch,
-                Style = (Style)UI_MainWindow.Self.FindResource("SliderStylePointer")
+                Style = (Style)MainWindow.Self.FindResource("SliderStylePointer")
             };
             slider.ValueChanged += (s, e) => { Saturation = (int)slider.Value; SaturationChanged?.Invoke(this, EventArgs.Empty); };
 
