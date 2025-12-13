@@ -228,9 +228,6 @@ namespace Fontendo.UI
             mainProgress.DataContext = formFields;
             queueProgress.DataContext = formFields;
 
-            if (Properties.Settings.Default.FullSize)
-                WindowState = WindowState.Maximized;
-
             updateProgressQueue(0, 0);
             updateProgress(0, 0);
 

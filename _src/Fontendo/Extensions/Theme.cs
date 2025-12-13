@@ -65,7 +65,7 @@ public class Theme
         return themeColours;
     }
 
-    public static void initTheme(MainWindow mainFrm)
+    public static void initTheme(Window mainFrm)
     {
         // standard theme
         defaultThemeColours.Add(getThemeColorsFromWindowResources(mainFrm));
@@ -76,8 +76,8 @@ public class Theme
         themeColour1.ColorMedium = "#FF2D2C2C";
         themeColour1.ColorLight = "#FF383838";
         themeColour1.ColorPanelAlpha = "#44000000";
-        themeColour1.ColorSelected = "#FF12356A";
-        themeColour1.ColorHighlight = "#830F3C80";
+        themeColour1.ColorSelected = "#FF568C37";
+        themeColour1.ColorHighlight = "#9F568C37";
         themeColour1.ColorHeaderText = "#E6E6E6";
         themeColour1.ColorLabelText = "#C4C4C4";
         themeColour1.ColorActiveText = "#E6E6E6";
@@ -149,6 +149,8 @@ public class Theme
 
     public static void overwriteResource(Control control, string name, string? value)
     {
+        if (value == "")
+            return;
         ResourceDictionary res = control.Resources;
         res[name] = ColorConverter.ConvertFromString(value);
     }

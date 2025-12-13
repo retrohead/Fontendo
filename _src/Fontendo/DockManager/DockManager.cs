@@ -237,7 +237,7 @@ namespace Fontendo.DockManager
             return new Rect(topLeft, bottomRight);
         }
 
-        public static CustomWindow CreateCustomWindow(Window OwningWindow, CustomWindowOptions options)
+        public static CustomWindow CreateCustomWindow(Window? OwningWindow, CustomWindowOptions options)
         {
             CustomWindow customWindow = new CustomWindow(OwningWindow, options);
             customWindow.Closing += (s, e) =>

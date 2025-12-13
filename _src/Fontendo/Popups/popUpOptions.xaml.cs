@@ -241,7 +241,7 @@ namespace Fontendo
 
         private void fieldWasChanged(object o)
         {
-            if ((popUpObj.IsOpen & popUpObj.panelPopupContentPanel.Opacity == 1))
+            if ((popUpObj.IsOpen & popUpObj.window.panelPopupContentPanel.Opacity == 1))
                 changesMade = true;
         }
 
@@ -528,12 +528,12 @@ namespace Fontendo
         {
             Properties.Settings.Default.AnimationSpeed = int.Parse(comboAnimationSpeedData.SelectedComboItem.Value);
             mainWindow.enablePopUp(false);
-            objectAnimations.makeDisappear(mainWindow, popUpObj.panelPopupContentPanel, false, this, testAnim_FadeOut_Completed);
+            objectAnimations.makeDisappear(mainWindow, popUpObj.window, false, this, testAnim_FadeOut_Completed);
         }
 
         private void testAnim_FadeOut_Completed()
         {
-            objectAnimations.makeAppear(ref mainWindow, popUpObj.panelPopupContentPanel, false, this, testAnim_Completed);
+            objectAnimations.makeAppear(ref mainWindow, popUpObj.window, false, this, testAnim_Completed);
         }
 
         private void testAnim_Completed()

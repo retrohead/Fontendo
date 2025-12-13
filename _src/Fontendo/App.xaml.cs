@@ -1,6 +1,4 @@
-﻿using System.Configuration;
-using System.Data;
-using System.Globalization;
+﻿using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -12,6 +10,9 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Media.Imaging;
 using System.Windows.Media;
+using Fontendo.Controls;
+using Fontendo.DockManager;
+using Fontendo.UI;
 
 namespace Fontendo
 {
@@ -211,7 +212,35 @@ namespace Fontendo
             string json = JsonSerializer.Serialize(obj);
             return JsonSerializer.Deserialize<T>(json);
         }
+
+        CustomWindow customWindow;
+        UI_MainWindow mainWindow;
+        private void Application_Startup(object sender, StartupEventArgs e)
+        {
+
+            CustomWindow.WindowTypes winType = CustomWindow.WindowTypes.Resizable;
+            if (Fontendo.Properties.Settings.Default.FullSize)
+                winType = CustomWindow.WindowTypes.Fullscreen;
+            customWindow = DockHandler.CreateCustomWindow(null, new CustomWindowOptions() { WindowType = winType, ShowGripperWhenResizable = false });
+            customWindow.Loaded += CustomWindow_Loaded;
+            //InitializeComponent();
+            DockHandler.Initialize(customWindow);
+            mainWindow = new UI_MainWindow();
+
+            customWindow.ApplyContent(mainWindow);
+            customWindow.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+            customWindow.Show();
+        }
+
+        private void CustomWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            Theme.initTheme(customWindow);
+            Theme.applyCustomTheme(Fontendo.Properties.Settings.Default.SelectedTheme, Fontendo.Properties.Settings.Default.ThemeColours);
+            Theme.applyTheme(mainWindow);
+            DockHandler.ApplyThemeColorsToOpenWindows(Theme.getThemeColorsFromWindowResources(mainWindow));
+        }
     }
+    
     #region Convertors
     public class HasChildrenToVisibilityConverter : IValueConverter
     {

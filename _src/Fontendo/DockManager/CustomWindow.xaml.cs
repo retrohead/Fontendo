@@ -1,6 +1,7 @@
 ﻿using Fontendo.DockManager;
 using Fontendo.Extensions;
 using Fontendo.UI;
+using System.Drawing.Printing;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -17,101 +18,38 @@ namespace Fontendo.Controls
     /// </summary>
     public partial class CustomWindow : Window
     {
-        private CustomWindow? _fullScreenWin;
-        private UIElement? _movedContent;
-        public static int WindowMarginOffsetBorder = 50;     // your outer margin
-        private int WindowMarginOffset = WindowMarginOffsetBorder;
-        public bool CloseRequested = false;
+        public static int WindowMarginOffsetBorder = 50;     // outer margin
         WindowHelper windowHelper;
         public bool IsMouseHeld = false;
         public bool IsDragging = false;
         private bool IsDockable = false;
-        private Rect NormalWindowSize;
         public Control? AttachedControl = null;
-
+        private CornerGrabber? cornerGrab = null;
         public event EventHandler? CustomWindowReady = null;
+        private bool IsScreenDocked = false;
 
         public enum WindowTypes
         {
             Fixed,
             Resizable,
-            Fullscreen
+            Fullscreen,
+            DockLeft, 
+            DockRight
         }
 
 
         public CustomWindowOptions Options;
 
-        // DependencyProperty for fullscreen host flag
-        internal static readonly DependencyProperty IsFullscreenHostProperty =
-            DependencyProperty.Register(
-                nameof(IsFullscreenHost),
-                typeof(bool),
-                typeof(CustomWindow),
-                new PropertyMetadata(false));
-
-        internal bool IsFullscreenHost
-        {
-            get => (bool)GetValue(IsFullscreenHostProperty);
-            set => SetValue(IsFullscreenHostProperty, value);
-        }
-
-
-        internal CustomWindow CustomWindowFullScreen(CustomWindow parent)
-        {
-            if (parent.Owner == null) throw new Exception("OwningWindow is null on window, cannot create a full screen instance");
-            CustomWindow win = DockHandler.CreateCustomWindow(parent, new CustomWindowOptions() { WindowType = WindowTypes.Fullscreen, ShowGripperWhenResizable = parent.Options.ShowGripperWhenResizable });
-            win.IsFullscreenHost = true;
-            win.WindowMarginOffset = WindowMarginOffsetBorder;
-            win.NormalWindowSize = new Rect(parent.Left, parent.Top, parent.ActualWidth, parent.ActualHeight);
-            win.WindowStartupLocation = System.Windows.WindowStartupLocation.CenterOwner;
-            win.ResizeMode = ResizeMode.NoResize;
-            win.ShowInTaskbar = parent.ShowInTaskbar;
-            win.Title = parent.Title;
-            win.WindowState = WindowState.Maximized;
-            win.IsDockable = parent.IsDockable;
-            return win;
-        }
-        public CustomWindow(Window OwningWindow, CustomWindowOptions options)
+        public CustomWindow(Window? OwningWindow, CustomWindowOptions options)
         {
             InitializeComponent();
             Owner = OwningWindow;
             Options = options;
             Loaded += OnLoaded;
-            WindowMarginOffset = Options.WindowType == WindowTypes.Fullscreen ? 0 : WindowMarginOffsetBorder;
-            CreateShadow(Options.WindowType == WindowTypes.Fullscreen);
 
-            if (Options.WindowType == WindowTypes.Fullscreen)
-            {
-                var workingArea = WindowHelper.GetWorkingArea(this);
-                MaxWidth = workingArea.Width;
-                MaxHeight = workingArea.Height;
-
-                Left = workingArea.Left;
-                Top = workingArea.Top;
-
-                customTitleBar.ChangeToFullscreenCloseButton();
-            }
             PreviewMouseDown += OnPreviewMouseDown;
             PreviewMouseUp += OnPreviewMouseUp;
             windowHelper = new WindowHelper(this); // window help for resizing, shadow click, etc.
-            if (Options.WindowType == WindowTypes.Resizable && Options.ShowGripperWhenResizable)
-            {
-                // add a corner grabber
-                CornerGrabber c = new CornerGrabber()
-                {
-                    HorizontalAlignment = HorizontalAlignment.Right,
-                    VerticalAlignment = VerticalAlignment.Bottom,
-                    Margin = new Thickness(0, 0, 1, 1),
-                    Height = 17
-                };
-                Grid.SetRow(c, 2);
-                mainGrid.Children.Add(c);
-            }
-            else if (Options.WindowType == WindowTypes.Fixed)
-            {
-                // do not show resize buttons for fixed window
-                customTitleBar.ShowResizeButtons = false;
-            }
         }
 
         private void VerifyContent(Control content)
@@ -154,6 +92,8 @@ namespace Fontendo.Controls
         }
         internal void ApplyContent(Control content)
         {
+            if (content == null)
+                return;
             AttachedControl = content;
             contentArea.Child = content;
 
@@ -176,6 +116,11 @@ namespace Fontendo.Controls
         {
             if (AttachedControl == null) return;
             // set width to the content
+            int WindowMarginOffset = WindowMarginOffsetBorder;
+            if (WindowState == WindowState.Maximized)
+                WindowMarginOffset = 0;
+
+
             Width = AttachedControl.Width + (WindowMarginOffset * 2) + 2;
             Height = AttachedControl.Height + (WindowMarginOffset * 2) + customTitleBar.Height + 2;
             if (Options.WindowType == WindowTypes.Fixed)
@@ -194,7 +139,6 @@ namespace Fontendo.Controls
             }
         }
 
-
         private void Window_SourceInitialized(object sender, EventArgs e)
         {
             Theme.loadTheme(this, "Theme_00.xaml");
@@ -203,6 +147,9 @@ namespace Fontendo.Controls
             DarkTitleBar.Apply(this);
             Theme.applyThemeColors(this, Theme.getThemeColorsFromWindowResources(Owner));
             CustomWindowReady?.Invoke(this, EventArgs.Empty);
+            AdjustBordersForWindowSize(Options.WindowType);
+            if(Options.WindowType == WindowTypes.Fullscreen)
+                WindowState = WindowState.Maximized;
         }
 
         public void SetThemeColors(Theme.ThemeColorsType colors)
@@ -216,18 +163,21 @@ namespace Fontendo.Controls
                 return;
             IsMouseHeld = true;
 
+            if (WindowState == WindowState.Maximized)
+                return;
+
             Point p = e.GetPosition(this);
             double width = ActualWidth;
             double height = ActualHeight;
 
             // shadow band check
             bool inShadowBand =
-                p.X < WindowMarginOffset ||
-                p.X > width - WindowMarginOffset ||
-                p.Y < WindowMarginOffset ||
-                p.Y > height - WindowMarginOffset;
+                p.X < WindowMarginOffsetBorder ||
+                p.X > width - WindowMarginOffsetBorder ||
+                p.Y < WindowMarginOffsetBorder ||
+                p.Y > height - WindowMarginOffsetBorder;
 
-            if (inShadowBand && Options.WindowType != WindowTypes.Fullscreen)
+            if (inShadowBand)
             {
                 // convert to screen coords
                 Point screen = PointToScreen(p);
@@ -254,117 +204,92 @@ namespace Fontendo.Controls
             }
         }
 
-        private void CreateShadow(bool fullScreen)
+        public void AdjustBordersForWindowSize(WindowTypes windowType)
         {
-            mainBorder.Margin = fullScreen ? new Thickness(-1) : new Thickness(WindowMarginOffset);
             mainBorder.Background = (Brush)UI_MainWindow.Self.FindResource("WindowBackgroundBrushDark");
             mainBorder.BorderBrush = (Brush)UI_MainWindow.Self.FindResource("ControlBorder");
-            mainBorder.CornerRadius = new CornerRadius(fullScreen ? 0 : 10);
             mainBorder.BorderThickness = new Thickness(1);
-            if (!fullScreen)
+            if (windowType == WindowTypes.Fullscreen)
             {
+                mainBorder.Margin = new Thickness(5, 5, 0, 0);
+                mainBorder.Effect = null;
+                mainBorder.CornerRadius = new CornerRadius(0);
+                var workingArea = WindowHelper.GetWorkingArea(this);
+                MaxWidth = workingArea.Width + 10;
+                MaxHeight = workingArea.Height + 10;
+
+                customTitleBar.btnClose.Style = UI_MainWindow.Self.FindResource("TitleBarCloseButtonStyleFullScreen") as Style;
+                if (cornerGrab != null)
+                    cornerGrab.Visibility = Visibility.Collapsed;
+            }
+            else if (windowType == WindowTypes.DockRight)
+            {
+                mainBorder.Margin = new Thickness(0, -1, -1, -1);
+                mainBorder.Effect = null;
+                mainBorder.CornerRadius = new CornerRadius(0);
+                var workingArea = WindowHelper.GetWorkingArea(this);
+
+                customTitleBar.btnClose.Style = UI_MainWindow.Self.FindResource("TitleBarCloseButtonStyleFullScreen") as Style;
+                if (cornerGrab != null)
+                    cornerGrab.Visibility = Visibility.Collapsed;
+            }
+            else if (windowType == WindowTypes.DockLeft)
+            {
+                mainBorder.Margin = new Thickness(-1, -1, 0, -2);
+                mainBorder.Effect = null;
+                mainBorder.CornerRadius = new CornerRadius(0);
+                var workingArea = WindowHelper.GetWorkingArea(this);
+
+                customTitleBar.btnClose.Style = UI_MainWindow.Self.FindResource("TitleBarCloseButtonStyleFullScreen") as Style;
+                if (cornerGrab != null)
+                    cornerGrab.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                mainBorder.Margin = new Thickness(WindowMarginOffsetBorder);
+                mainBorder.CornerRadius = new CornerRadius(10);
                 mainBorder.Effect = new DropShadowEffect
                 {
                     Color = Colors.Black,
-                    BlurRadius = WindowMarginOffset,
+                    BlurRadius = WindowMarginOffsetBorder,
                     ShadowDepth = 0,
                     Opacity = 0.7
                 };
+                customTitleBar.btnClose.Style = UI_MainWindow.Self.FindResource("TitleBarCloseButtonStyle") as Style;
             }
-            Content = mainBorder;
-            mainBorder.Child = mainGrid;
-        }
-
-        public void GoFullScreenSwap()
-        {
-            // Already in fullscreen? Do nothing.
-            if (_fullScreenWin != null) return;
-
-            // Nothing to move? Do nothing.
-            _movedContent = contentArea.Child;
-            if (_movedContent == null) return;
-
-            // Detach from this window.
-            contentArea.Child = null;
-            // Create a new host window
-            var fs = CustomWindowFullScreen(this);
-            // Hide original and show fullscreen
-            this.Hide();
-            fs.Show();
-            fs.Activate();
-
-            // Keep DataContext if you rely on it
-            fs.DataContext = this.DataContext;
-
-            // Move the UI into the fullscreen window
-            fs.contentArea.Child = _movedContent;
-
-            // add state changed event so we know if size is set back to normal size
-
-            fs.StateChanged += (s, e) =>
+            if (windowType == WindowTypes.Resizable && Options.ShowGripperWhenResizable)
             {
-                if(fs.WindowState == System.Windows.WindowState.Normal)
+                // add a corner grabber
+                if (cornerGrab == null)
                 {
-                    ReturnFromFullScreenSwap();
+                    cornerGrab = new CornerGrabber()
+                    {
+                        HorizontalAlignment = HorizontalAlignment.Right,
+                        VerticalAlignment = VerticalAlignment.Bottom,
+                        Margin = new Thickness(0, 0, 1, 1),
+                        Height = 17
+                    };
+                    Grid.SetRow(cornerGrab, 2);
+                    mainGrid.Children.Add(cornerGrab);
                 }
-            };
-
-            _fullScreenWin = fs;
-
+                cornerGrab.Visibility = Visibility.Visible;
+            }
+            else if (windowType == WindowTypes.Fixed)
+            {
+                // do not show resize buttons for fixed window
+                customTitleBar.ShowResizeButtons = false;
+            }
+            Options.WindowType = windowType;
         }
 
         public void CloseRequest()
         {
-            CloseRequested = true;
-            ReturnFromFullScreenSwap(CloseRequested);
-        }
-
-        public void ReturnFromFullScreenSwap(bool closing = false)
-        {
-            if (_fullScreenWin == null)
+            this.Close();
+            if (IsDockable)
             {
-                if (closing)
-                {
-                    this.Close();
-                    if (IsDockable)
-                    {
-                        ScrollViewer sv = (ScrollViewer)contentArea.Child;
-                        DockHandler.Redock((UserControl)sv.Content);
-                    }
-                    if(IsFullscreenHost)
-                        Owner.Close();
-                }
-                return;
+                ScrollViewer sv = (ScrollViewer)contentArea.Child;
+                DockHandler.Redock((UserControl)sv.Content);
             }
-            if (_fullScreenWin.contentArea.Child == null) return; // already redocked
-
-            // Extract content from fullscreen window
-            var content = _fullScreenWin.contentArea.Child;
-            _fullScreenWin.contentArea.Child = null;
-
-            // Unhook events
-            _fullScreenWin.StateChanged -= (s, e) => { };
-
-            // Move content back
-            contentArea.Child = content;
-
-            // Restore original window visuals
-            WindowState = System.Windows.WindowState.Normal;
-            ResizeMode = ResizeMode.CanResize;
-
-            // Show original window again
-            Width = _fullScreenWin.NormalWindowSize.Width;
-            Height = _fullScreenWin.NormalWindowSize.Height;
-            Left = _fullScreenWin.NormalWindowSize.X;
-            Top = _fullScreenWin.NormalWindowSize.Y;
-            // Close fullscreen window if still alive
-            if (_fullScreenWin != null && _fullScreenWin.IsVisible)
-            {
-                _fullScreenWin.Close();
-            }
-            _fullScreenWin = null;
-            this.Show();
-            this.Activate();
         }
 
         private void OnLoaded(object sender, RoutedEventArgs e)
@@ -387,9 +312,56 @@ namespace Fontendo.Controls
         }
         public IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
         {
-            if (Options.WindowType != WindowTypes.Resizable) // dont fire on full screen
+            if (WindowState == WindowState.Maximized || Options.WindowType == WindowTypes.DockLeft || Options.WindowType == WindowTypes.DockRight) // dont fire on full screen
                 return IntPtr.Zero;
             return windowHelper.WndProc(hwnd, msg, wParam, lParam, ref handled);
+        }
+
+        Point? locationBeforeFullScreen = null;
+        private void Window_StateChanged(object sender, EventArgs e)
+        {
+            if (WindowState == WindowState.Maximized)
+            {
+                locationBeforeFullScreen = new Point(Left, Top);
+                AdjustBordersForWindowSize(CustomWindow.WindowTypes.Fullscreen);
+            }
+            else
+            {
+                AdjustBordersForWindowSize(CustomWindow.WindowTypes.Resizable);
+                if(locationBeforeFullScreen != null)
+                {
+                    Left = locationBeforeFullScreen.Value.X;
+                    Top = locationBeforeFullScreen.Value.Y;
+                }
+            }
+        }
+
+        private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            var screen = WindowHelper.GetWorkingArea(this);
+            if(e.NewSize.Height == screen.Height && e.NewSize.Width == screen.Width / 2)
+            {
+                // handling dock request
+                if (Left == 0 || Left == -screen.Width)
+                {
+                    AdjustBordersForWindowSize(WindowTypes.DockLeft);
+                    IsScreenDocked = true;
+                }
+                else if( (Left == screen.Width / 2) || (Left == -(screen.Width / 2)))
+                {
+                    AdjustBordersForWindowSize(WindowTypes.DockRight);
+                    IsScreenDocked = true;
+                }
+            }
+            if(IsScreenDocked)
+            {
+                if (e.NewSize.Height != screen.Height && e.NewSize.Width != screen.Width / 2)
+                {
+                    // undock
+                    AdjustBordersForWindowSize(WindowTypes.Resizable);
+                    IsScreenDocked = false;
+                }
+            }
         }
     }
 }

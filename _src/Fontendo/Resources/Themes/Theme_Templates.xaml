@@ -56,10 +56,11 @@
             </DrawingGroup>
         </DrawingBrush.Drawing>
     </DrawingBrush>
-
     <Style TargetType="{x:Type TextBox}">
-        <Setter Property="SelectionBrush" Value="{DynamicResource ButtonMouseOverBrush}" />
-        <Setter Property="SelectionTextBrush" Value="{DynamicResource ControlTextActive}" />
+        <Setter Property="UseLayoutRounding" Value="True"/>
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
+        <Setter Property="TextOptions.TextFormattingMode" Value="Display"/>
+        <Setter Property="SelectionBrush" Value="{DynamicResource WindowBackgroundAlpha}" />
         <Setter Property="SelectionOpacity" Value="1" />
     </Style>
 
@@ -2482,7 +2483,6 @@
         <Setter Property="BorderBrush" Value="{DynamicResource TextBox.Static.Border}"/>
         <Setter Property="Foreground" Value="{DynamicResource TextBox.Static.Foregound}"/>
         <Setter Property="CaretBrush" Value="{DynamicResource TextBox.Focus.Foregound}"/>
-        <Setter Property="SelectionBrush" Value="{DynamicResource WindowBackgroundBrushMedium}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="KeyboardNavigation.TabNavigation" Value="None"/>
         <Setter Property="HorizontalContentAlignment" Value="Left"/>
@@ -2675,7 +2675,6 @@
         <Setter Property="BorderBrush" Value="{DynamicResource TextBox.Static.Border}"/>
         <Setter Property="Foreground" Value="{DynamicResource TextBox.Static.Foregound}"/>
         <Setter Property="CaretBrush" Value="{DynamicResource TextBox.Focus.Foregound}"/>
-        <Setter Property="SelectionBrush" Value="{DynamicResource WindowBackgroundBrushMedium}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="KeyboardNavigation.TabNavigation" Value="None"/>
         <Setter Property="HorizontalContentAlignment" Value="Left"/>
@@ -3034,7 +3033,7 @@
         <Setter Property="Background" Value="{DynamicResource TabItem.Static.Background}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource TabItem.Static.Border}"/>
         <Setter Property="Margin" Value="0"/>
-        <Setter Property="Padding" Value="10"/>
+        <Setter Property="Padding" Value="10,5"/>
         <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
         <Setter Property="VerticalContentAlignment" Value="Stretch"/>
         <Setter Property="Template">
@@ -5867,6 +5866,41 @@
         <Setter Property="BorderBrush" Value="{DynamicResource ControlBorder}"/>
         <Setter Property="Background" Value="{StaticResource CheckerBrush}"/>
         <Setter Property="SnapsToDevicePixels" Value="True"/>
+    </Style>
+
+    <Style x:Key="PopUpAcceptButtonStyle" TargetType="Button">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Foreground" Value="{DynamicResource ControlTextInactive}"/>
+        <Setter Property="Height" Value="32"/>
+        <Setter Property="Width" Value="150"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="HorizontalAlignment" Value="Right"/>
+        <Setter Property="Margin" Value="0,0,-15,-32"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="0,0,10,0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                        <StackPanel Orientation="Horizontal" Margin="0" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <TextBlock x:Name="text" Text="Accept" FontSize="11" TextDecorations="Underline" VerticalAlignment="Center" Margin="5,0,5,0" FontFamily="{DynamicResource FontendoFont}" />
+                            <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE10B;" FontSize="12" VerticalAlignment="Center" Margin="0,-3,0,0"/>
+                        </StackPanel>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" Value="{DynamicResource ControlTextPositive}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource ControlTextActive}"/>
+                            <Setter Property="TextDecorations" TargetName="text" Value="None"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter Property="Background" Value="{DynamicResource ControlTextPositive}"/>
+                            <Setter Property="Foreground" Value="{DynamicResource ControlTextActive}"/>
+                            <Setter Property="TextDecorations" TargetName="text" Value="None"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
 
 </ResourceDictionary>

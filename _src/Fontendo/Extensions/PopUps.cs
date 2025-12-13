@@ -11,6 +11,7 @@ using System.Windows.Shapes;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
 using Fontendo.UI;
+using Fontendo.Popups;
 
 public class popUps
 {
@@ -60,14 +61,14 @@ public class popUps
             {
                 Grid.SetRow((System.Windows.UIElement)obj, 1);
                 dynamic elm = (System.Windows.UIElement)obj;
-                panelPopupContent?.Children.Add((System.Windows.UIElement)obj);
+                window.panelPopupContent?.Children.Add((System.Windows.UIElement)obj);
                 if(maxSize)
                 {
                     elm.Width = Double.NaN;
                     elm.Height = Double.NaN;
-                    elm.MaxHeight = panelPopupContent?.ActualHeight ?? 0;
+                    elm.MaxHeight = window.panelPopupContent?.ActualHeight ?? 0;
                 }
-                btnCancelPopUp?.Focus();
+                window.btnCancelPopUp?.Focus();
                 obj.load();
             }
             catch (Exception ex)
@@ -87,7 +88,7 @@ public class popUps
 
         public void popUpBgFade2_Complete()
         {
-            btnCancelPopUp?.Focus();
+            window.btnCancelPopUp?.Focus();
         }
 
         private BackgroundWorker? _bgWorkDelay;
@@ -132,17 +133,17 @@ public class popUps
             {
                 if (!maxSize)
                 {
-                    if (panelPopupBoxGridWrapper != null && panelPopupBoxGrid != null)
+                    if (window != null && window.panelPopupBoxGrid != null)
                     {
-                        panelPopupBoxGridWrapper.Width = panelPopupBoxGrid.ActualWidth;
-                        panelPopupBoxGridWrapper.Height = panelPopupBoxGrid.ActualHeight;
+                        window.panelPopupBoxGridWrapper.Width = ((Control)window.panelPopupContent.Children[0]).MinWidth + 20;
+                        window.panelPopupBoxGridWrapper.Height = ((Control)window.panelPopupContent.Children[0]).MinHeight + 10 + window.panelPopupBoxGrid.RowDefinitions[0].Height.Value;
                     }
                 }
-                Border bd = (Border)VisualTreeHelper.GetChild(panelPopupBoxGridWrapper, 0);
-                if (panelPopupBoxGrid != null && bd != null)
+                Border bd = (Border)VisualTreeHelper.GetChild(window.panelPopupBoxGridWrapper, 0);
+                if (window.panelPopupBoxGrid != null && bd != null)
                 {
-                    bd.Width = panelPopupBoxGrid.ActualWidth;
-                    bd.Height = panelPopupBoxGrid.ActualHeight;
+                    bd.Width = Double.NaN;
+                    bd.Height = Double.NaN;
                     bd.Margin = new Thickness(0, 0, 0, 0);
                 }
                 IsOpen = true;
@@ -161,7 +162,7 @@ public class popUps
                     obj.resize(UI_MainWindow.Self?.ActualHeight ?? 0, UI_MainWindow.Self?.ActualWidth ?? 0);
                 
 
-                objectAnimations.makeAppear(ref mainFrm, panelPopupContentPanel, false, mainFrm, popUpBgFade2_Complete);
+                objectAnimations.makeAppear(ref mainFrm, window, false, mainFrm, popUpBgFade2_Complete);
             }
             catch (Exception ex)
             {
@@ -173,13 +174,13 @@ public class popUps
         {
             appearDelayCompleteFunctionParams = completeFunctionParams;
             appearDelayCompleteFunctionDelegate = completeFunctionDelegate;
-            objectAnimations.makeDisappear(mainFrm, panelPopupContentPanel, false, mainFrm, popUpBgFadeOut_Complete);
+            objectAnimations.makeDisappear(mainFrm, window, false, mainFrm, popUpBgFadeOut_Complete);
         }
 
         public void popUpBgFadeOut_Complete()
         {
-            panelPopupContent?.Children.RemoveRange(0, panelPopupContent.Children.Count);
-            objectAnimations.makeDisappear(mainFrm, panelPopup, false, mainFrm, popUpBgFadeOut2_Complete);
+            window.panelPopupContent?.Children.RemoveRange(0, window.panelPopupContent.Children.Count);
+            objectAnimations.makeDisappear(mainFrm, panelPopupBackground, false, mainFrm, popUpBgFadeOut2_Complete);
         }
 
         public void popUpBgFadeOut2_Complete()
@@ -218,32 +219,26 @@ public class popUps
             }
         }
 
-        public DockPanel? panelPopup;
-        public DockPanel? panelPopupContentPanel;
-        public Rectangle? imgPopUpIcon;
-        public Label? lblPopUpHeader;
-        public Grid? panelPopupBoxGridWrapper;
-        public Grid? panelPopupBoxGrid;
-        public Button? btnCancelPopUp;
-        public StackPanel? panelPopupContent;
+        public DockPanel? panelPopupBackground;
+        public PopupWindow? window;
 
         private int defaultZindex = 2000;
 
         private void createPopUpBackgroundFader()
         {
-            panelPopup = new DockPanel();
-            panelPopup.Name = "panelPopUp_" + Objects.Count;
-            panelPopup.Background = new SolidColorBrush(Color.FromArgb(50, 0, 0, 0));
-            panelPopup.Opacity = 0;
-            panelPopup.Visibility = Visibility.Hidden;
+            panelPopupBackground = new DockPanel();
+            panelPopupBackground.Name = "panelPopUpFader_" + Objects.Count;
+            panelPopupBackground.Background = new SolidColorBrush(Color.FromArgb(50, 0, 0, 0));
+            panelPopupBackground.Opacity = 0;
+            panelPopupBackground.Visibility = Visibility.Hidden;
             var zindex = defaultZindex + Objects.Count;
-            Panel.SetZIndex(panelPopup, zindex);
-            Grid.SetColumn(panelPopup, 0);
-            Grid.SetColumnSpan(panelPopup, 2);
-            Grid.SetRow(panelPopup, 1);
-            KeyboardNavigation.SetTabNavigation(panelPopup, KeyboardNavigationMode.Cycle);
-            KeyboardNavigation.SetControlTabNavigation(panelPopup, KeyboardNavigationMode.Cycle);
-            KeyboardNavigation.SetDirectionalNavigation(panelPopup, KeyboardNavigationMode.Cycle);
+            Panel.SetZIndex(panelPopupBackground, zindex);
+            Grid.SetColumn(panelPopupBackground, 0);
+            Grid.SetColumnSpan(panelPopupBackground, 2);
+            Grid.SetRow(panelPopupBackground, 1);
+            KeyboardNavigation.SetTabNavigation(panelPopupBackground, KeyboardNavigationMode.Cycle);
+            KeyboardNavigation.SetControlTabNavigation(panelPopupBackground, KeyboardNavigationMode.Cycle);
+            KeyboardNavigation.SetDirectionalNavigation(panelPopupBackground, KeyboardNavigationMode.Cycle);
 
             StackPanel stackPanel = new StackPanel();
             stackPanel.VerticalAlignment = VerticalAlignment.Center;
@@ -251,141 +246,151 @@ public class popUps
             stackPanel.Height = double.NaN;
             stackPanel.Width = double.NaN;
 
-            panelPopup.Children.Add(stackPanel);
-            mainFrm.gridMain.Children.Add(panelPopup);
+            panelPopupBackground.Children.Add(stackPanel);
+            mainFrm.gridMain.Children.Add(panelPopupBackground);
         }
 
         private void createPopUpBox(bool maxSize)
         {
-            panelPopupContentPanel = new DockPanel();
-            panelPopupContentPanel.Name = "panelPopupContentPanel_" + Objects.Count;
-            panelPopupContentPanel.Background = new SolidColorBrush(Color.FromArgb(50, 0, 0, 0));
-            panelPopupContentPanel.Opacity = 1;
-            panelPopupContentPanel.Visibility = Visibility.Hidden;
-            panelPopupContentPanel.VerticalAlignment = VerticalAlignment.Stretch;
+            window = new PopupWindow();
 
             var zindex = defaultZindex + Objects.Count + 1;
-            Panel.SetZIndex(panelPopupContentPanel, zindex);
-            Grid.SetColumn(panelPopupContentPanel, 0);
-            Grid.SetRow(panelPopupContentPanel, 1);
-            Grid.SetColumnSpan(panelPopupContentPanel, 2);
-            KeyboardNavigation.SetTabNavigation(panelPopupContentPanel, KeyboardNavigationMode.Cycle);
-            KeyboardNavigation.SetControlTabNavigation(panelPopupContentPanel, KeyboardNavigationMode.Cycle);
-            KeyboardNavigation.SetDirectionalNavigation(panelPopupContentPanel, KeyboardNavigationMode.Cycle);
-
-
-            panelPopupBoxGrid = new Grid();
-            panelPopupBoxGrid.Name = "panelPopupBoxGrid_" + Objects.Count;
-            panelPopupBoxGrid.Margin = new Thickness(0, 0, 0, 0);
-            panelPopupBoxGrid.Background = (Brush)mainFrm.FindResource("WindowBackgroundBrushMedium");
-            if (!maxSize)
-                panelPopupBoxGrid.VerticalAlignment = VerticalAlignment.Center;
-            panelPopupBoxGrid.HorizontalAlignment = HorizontalAlignment.Stretch;
-
-            RowDefinition rowDef = new RowDefinition();
-            rowDef.Height = new GridLength(35);
-            panelPopupBoxGrid.RowDefinitions.Add(rowDef);
-            RowDefinition rowDef2 = new RowDefinition();
-            panelPopupBoxGrid.RowDefinitions.Add(rowDef2);
-
-            imgPopUpIcon = new Rectangle();
-            imgPopUpIcon.Name = "imgPopUpIcon_" + Objects.Count;
-            imgPopUpIcon.HorizontalAlignment = HorizontalAlignment.Left;
-            imgPopUpIcon.VerticalAlignment = VerticalAlignment.Center;
-            imgPopUpIcon.Margin = new Thickness(10, 0, 10, 0);
-            imgPopUpIcon.Width = 22;
-            imgPopUpIcon.Height = 22;
-            imgPopUpIcon.Visibility = Visibility.Collapsed;
-
-            Grid.SetRow(imgPopUpIcon, 0);
-            panelPopupBoxGrid.Children.Add(imgPopUpIcon);
-
-            lblPopUpHeader = new Label();
-            lblPopUpHeader.Name = "lblPopUpHeader_" + Objects.Count;
-            lblPopUpHeader.Content = "[No Header Loaded]";
-            lblPopUpHeader.HorizontalAlignment = HorizontalAlignment.Left;
-            lblPopUpHeader.VerticalAlignment = VerticalAlignment.Center;
-            lblPopUpHeader.Width = 300;
-            lblPopUpHeader.Height = double.NaN;
-            lblPopUpHeader.Foreground = (Brush)mainFrm.FindResource("HeaderTextBrush");
-            lblPopUpHeader.FontFamily = (FontFamily) mainFrm.FindResource("FontendoFont");
-            lblPopUpHeader.FontSize = 14;
-            lblPopUpHeader.Margin = new Thickness(30, 3, 0, 0);
-            Grid.SetRow(lblPopUpHeader, 0);
-            panelPopupBoxGrid.Children.Add(lblPopUpHeader);
-
-            Grid gridItem = new Grid();
-            gridItem.HorizontalAlignment = HorizontalAlignment.Right;
-            gridItem.VerticalAlignment = VerticalAlignment.Center;
-            gridItem.Margin = new Thickness(0, 0, 5, 0);
-            Grid.SetRow(gridItem, 0);
-
-            btnCancelPopUp = new Button();
-            btnCancelPopUp.Name = "btnCancelPopUp_" + Objects.Count;
-            btnCancelPopUp.Width = 25;
-            btnCancelPopUp.Height = 25;
-            btnCancelPopUp.Cursor = Cursors.Hand;
-            btnCancelPopUp.Style = (Style)mainFrm.FindResource("ButtonStyleImage");
-            btnCancelPopUp.AddHandler(Button.ClickEvent, new RoutedEventHandler(cancel));
-
-            Image btnImg = new Image();
-            btnImg.VerticalAlignment = VerticalAlignment.Center;
-            btnImg.HorizontalAlignment = HorizontalAlignment.Left;
-            btnImg.Margin = new Thickness(0);
-            btnImg.Source = appImages.getImageFromResources("cancel_round.png");
-            btnImg.Width = 16;
-            btnImg.Height = 16;
-
-            btnCancelPopUp.Content = btnImg;
-            btnCancelPopUp.Focus();
-            gridItem.Children.Add(btnCancelPopUp);
-            panelPopupBoxGrid.Children.Add(gridItem);
-
-            panelPopupContent = new StackPanel();
-            panelPopupContent.Name = "panelPopupContent_" + Objects.Count;
-
-            if (!maxSize)
-                panelPopupContent.VerticalAlignment = VerticalAlignment.Center;
-            else
-                panelPopupContent.VerticalAlignment = VerticalAlignment.Stretch;
-            panelPopupContent.Width = double.NaN;
-            panelPopupContent.Height = double.NaN;
-            panelPopupContent.Margin = new Thickness(5, 0, 5, 5);
-            panelPopupContent.Background = (Brush)mainFrm.FindResource("WindowBackgroundBrushDark");
-            Panel.SetZIndex(panelPopupContent, 0);
-            Grid.SetRow(panelPopupContent, 1);
-
-            panelPopupBoxGrid.Children.Add(panelPopupContent);
-
-            // add a drop shadow the panelPopupBoxGrid
-            panelPopupBoxGridWrapper = new Grid();
-            if (!maxSize)
-            {
-                panelPopupBoxGridWrapper.VerticalAlignment = VerticalAlignment.Center;
-                panelPopupBoxGridWrapper.HorizontalAlignment = HorizontalAlignment.Center;
-            }
-            else
-            {
-                panelPopupBoxGridWrapper.Margin = new Thickness(50);
-            }
-
-            Border border = new Border();
-            border.BorderThickness = new Thickness(1);
-            border.BorderBrush = (Brush)mainFrm.FindResource("WindowBackgroundBrushDark");
-            border.VerticalAlignment = VerticalAlignment.Stretch;
-
-            System.Windows.Media.Effects.DropShadowEffect fx = new System.Windows.Media.Effects.DropShadowEffect();
-            fx.Opacity = 1;
-            fx.ShadowDepth = 1;
-            fx.BlurRadius = 5;
-            fx.Color = (Color)mainFrm.FindResource("ColorShadowAlpha");
-            border.Effect = fx;
-
-            panelPopupBoxGridWrapper.Children.Add(border);
-            panelPopupBoxGridWrapper.Children.Add(panelPopupBoxGrid);
-            panelPopupContentPanel.Children.Add(panelPopupBoxGridWrapper);
-            mainFrm.gridMain.Children.Add(panelPopupContentPanel);
+            Panel.SetZIndex(window, zindex);
+            window.btnCancelPopUp.AddHandler(Button.ClickEvent, new RoutedEventHandler(cancel));
+            mainFrm.gridMain.Children.Add(window);
         }
+
+        //private void createPopUpBox(bool maxSize)
+        //{
+        //    panelPopupContentPanel = new DockPanel();
+        //    panelPopupContentPanel.Name = "panelPopupContentPanel_" + Objects.Count;
+        //    panelPopupContentPanel.Background = new SolidColorBrush(Color.FromArgb(50, 0, 0, 0));
+        //    panelPopupContentPanel.Opacity = 1;
+        //    panelPopupContentPanel.Visibility = Visibility.Hidden;
+        //    panelPopupContentPanel.VerticalAlignment = VerticalAlignment.Stretch;
+
+        //    var zindex = defaultZindex + Objects.Count + 1;
+        //    Panel.SetZIndex(panelPopupContentPanel, zindex);
+        //    Grid.SetColumn(panelPopupContentPanel, 0);
+        //    Grid.SetRow(panelPopupContentPanel, 1);
+        //    Grid.SetColumnSpan(panelPopupContentPanel, 2);
+        //    KeyboardNavigation.SetTabNavigation(panelPopupContentPanel, KeyboardNavigationMode.Cycle);
+        //    KeyboardNavigation.SetControlTabNavigation(panelPopupContentPanel, KeyboardNavigationMode.Cycle);
+        //    KeyboardNavigation.SetDirectionalNavigation(panelPopupContentPanel, KeyboardNavigationMode.Cycle);
+
+
+        //    panelPopupBoxGrid = new Grid();
+        //    panelPopupBoxGrid.Name = "panelPopupBoxGrid_" + Objects.Count;
+        //    panelPopupBoxGrid.Margin = new Thickness(0, 0, 0, 0);
+        //    panelPopupBoxGrid.Background = (Brush)mainFrm.FindResource("WindowBackgroundBrushMedium");
+        //    if (!maxSize)
+        //        panelPopupBoxGrid.VerticalAlignment = VerticalAlignment.Center;
+        //    panelPopupBoxGrid.HorizontalAlignment = HorizontalAlignment.Stretch;
+
+        //    RowDefinition rowDef = new RowDefinition();
+        //    rowDef.Height = new GridLength(35);
+        //    panelPopupBoxGrid.RowDefinitions.Add(rowDef);
+        //    RowDefinition rowDef2 = new RowDefinition();
+        //    panelPopupBoxGrid.RowDefinitions.Add(rowDef2);
+
+        //    imgPopUpIcon = new Rectangle();
+        //    imgPopUpIcon.Name = "imgPopUpIcon_" + Objects.Count;
+        //    imgPopUpIcon.HorizontalAlignment = HorizontalAlignment.Left;
+        //    imgPopUpIcon.VerticalAlignment = VerticalAlignment.Center;
+        //    imgPopUpIcon.Margin = new Thickness(10, 0, 10, 0);
+        //    imgPopUpIcon.Width = 22;
+        //    imgPopUpIcon.Height = 22;
+        //    imgPopUpIcon.Visibility = Visibility.Collapsed;
+
+        //    Grid.SetRow(imgPopUpIcon, 0);
+        //    panelPopupBoxGrid.Children.Add(imgPopUpIcon);
+
+        //    lblPopUpHeader = new Label();
+        //    lblPopUpHeader.Name = "lblPopUpHeader_" + Objects.Count;
+        //    lblPopUpHeader.Content = "[No Header Loaded]";
+        //    lblPopUpHeader.HorizontalAlignment = HorizontalAlignment.Left;
+        //    lblPopUpHeader.VerticalAlignment = VerticalAlignment.Center;
+        //    lblPopUpHeader.Width = 300;
+        //    lblPopUpHeader.Height = double.NaN;
+        //    lblPopUpHeader.Foreground = (Brush)mainFrm.FindResource("HeaderTextBrush");
+        //    lblPopUpHeader.FontFamily = (FontFamily) mainFrm.FindResource("FontendoFont");
+        //    lblPopUpHeader.FontSize = 14;
+        //    lblPopUpHeader.Margin = new Thickness(30, 3, 0, 0);
+        //    Grid.SetRow(lblPopUpHeader, 0);
+        //    panelPopupBoxGrid.Children.Add(lblPopUpHeader);
+
+        //    Grid gridItem = new Grid();
+        //    gridItem.HorizontalAlignment = HorizontalAlignment.Right;
+        //    gridItem.VerticalAlignment = VerticalAlignment.Center;
+        //    gridItem.Margin = new Thickness(0, 0, 5, 0);
+        //    Grid.SetRow(gridItem, 0);
+
+        //    btnCancelPopUp = new Button();
+        //    btnCancelPopUp.Name = "btnCancelPopUp_" + Objects.Count;
+        //    btnCancelPopUp.Width = 25;
+        //    btnCancelPopUp.Height = 25;
+        //    btnCancelPopUp.Cursor = Cursors.Hand;
+        //    btnCancelPopUp.Style = (Style)mainFrm.FindResource("ButtonStyleImage");
+        //    btnCancelPopUp.AddHandler(Button.ClickEvent, new RoutedEventHandler(cancel));
+
+        //    Image btnImg = new Image();
+        //    btnImg.VerticalAlignment = VerticalAlignment.Center;
+        //    btnImg.HorizontalAlignment = HorizontalAlignment.Left;
+        //    btnImg.Margin = new Thickness(0);
+        //    btnImg.Source = appImages.getImageFromResources("cancel_round.png");
+        //    btnImg.Width = 16;
+        //    btnImg.Height = 16;
+
+        //    btnCancelPopUp.Content = btnImg;
+        //    btnCancelPopUp.Focus();
+        //    gridItem.Children.Add(btnCancelPopUp);
+        //    panelPopupBoxGrid.Children.Add(gridItem);
+
+        //    panelPopupContent = new StackPanel();
+        //    panelPopupContent.Name = "panelPopupContent_" + Objects.Count;
+
+        //    if (!maxSize)
+        //        panelPopupContent.VerticalAlignment = VerticalAlignment.Center;
+        //    else
+        //        panelPopupContent.VerticalAlignment = VerticalAlignment.Stretch;
+        //    panelPopupContent.Width = double.NaN;
+        //    panelPopupContent.Height = double.NaN;
+        //    panelPopupContent.Margin = new Thickness(5, 0, 5, 5);
+        //    panelPopupContent.Background = (Brush)mainFrm.FindResource("WindowBackgroundBrushDark");
+        //    Panel.SetZIndex(panelPopupContent, 0);
+        //    Grid.SetRow(panelPopupContent, 1);
+
+        //    panelPopupBoxGrid.Children.Add(panelPopupContent);
+
+        //    // add a drop shadow the panelPopupBoxGrid
+        //    panelPopupBoxGridWrapper = new Grid();
+        //    if (!maxSize)
+        //    {
+        //        panelPopupBoxGridWrapper.VerticalAlignment = VerticalAlignment.Center;
+        //        panelPopupBoxGridWrapper.HorizontalAlignment = HorizontalAlignment.Center;
+        //    }
+        //    else
+        //    {
+        //        panelPopupBoxGridWrapper.Margin = new Thickness(50);
+        //    }
+
+        //    Border border = new Border();
+        //    border.BorderThickness = new Thickness(1);
+        //    border.BorderBrush = (Brush)mainFrm.FindResource("WindowBackgroundBrushDark");
+        //    border.VerticalAlignment = VerticalAlignment.Stretch;
+
+        //    System.Windows.Media.Effects.DropShadowEffect fx = new System.Windows.Media.Effects.DropShadowEffect();
+        //    fx.Opacity = 1;
+        //    fx.ShadowDepth = 1;
+        //    fx.BlurRadius = 5;
+        //    fx.Color = (Color)mainFrm.FindResource("ColorShadowAlpha");
+        //    border.Effect = fx;
+
+        //    panelPopupBoxGridWrapper.Children.Add(border);
+        //    panelPopupBoxGridWrapper.Children.Add(panelPopupBoxGrid);
+        //    panelPopupContentPanel.Children.Add(panelPopupBoxGridWrapper);
+        //    mainFrm.gridMain.Children.Add(panelPopupContentPanel);
+        //}
         private void createPopUpElements(bool maxSize)
         {
             createPopUpBackgroundFader();
@@ -393,8 +398,8 @@ public class popUps
         }
         private void deletePopUpElements()
         {
-            mainFrm.gridMain.Children.Remove(panelPopup);
-            mainFrm.gridMain.Children.Remove(panelPopupContentPanel);
+            mainFrm.gridMain.Children.Remove(panelPopupBackground);
+            mainFrm.gridMain.Children.Remove(window.panelPopupContentPanel);
         }
     }
 
@@ -436,42 +441,42 @@ public class popUps
             throw new Exception("Main window cannot be null when loading a pop up");
         popUpType newObject = new popUpType(mainFrm, ref popUpWindow, maxSize);
         mainFrm.enableForm(false);
-        if(newObject.lblPopUpHeader != null)
-            newObject.lblPopUpHeader.Content = header;
+        if(newObject.window.lblPopUpHeader != null)
+            newObject.window.lblPopUpHeader.Content = header;
 
         if ((icon != ""))
         {
             ImageBrush imgBrush = new ImageBrush();
             imgBrush.ImageSource = appImages.getImageFromResources(icon);
             imgBrush.Stretch = Stretch.Uniform;
-            if (newObject.imgPopUpIcon != null)
+            if (newObject.window.imgPopUpIcon != null)
             {
-                newObject.imgPopUpIcon.Visibility = Visibility.Visible;
+                newObject.window.imgPopUpIcon.Visibility = Visibility.Visible;
                 if (themedIcon)
                 {
-                    newObject.imgPopUpIcon.OpacityMask = imgBrush;
-                    newObject.imgPopUpIcon.Fill = (Brush)mainFrm.FindResource("HeaderTextBrush");
+                    newObject.window.imgPopUpIcon.OpacityMask = imgBrush;
+                    newObject.window.imgPopUpIcon.Fill = (Brush)mainFrm.FindResource("HeaderTextBrush");
                 }
                 else
                 {
-                    newObject.imgPopUpIcon.Fill = imgBrush;
-                    newObject.imgPopUpIcon.Height = 16;
+                    newObject.window.imgPopUpIcon.Fill = imgBrush;
+                    newObject.window.imgPopUpIcon.Height = 16;
                 }
             }
         }
         else
         {
-            if(newObject.lblPopUpHeader != null)
-                newObject.lblPopUpHeader.Margin = new Thickness(10, 3, 0, 0);
+            if(newObject.window.lblPopUpHeader != null)
+                newObject.window.lblPopUpHeader.Margin = new Thickness(10, 3, 0, 0);
         }
 
-        newObject.panelPopupContent?.Children.RemoveRange(0, newObject.panelPopupContent.Children.Count);
-        if(newObject.panelPopupContentPanel != null)
-            newObject.panelPopupContentPanel.Opacity = 0;
-        if(newObject.panelPopupBoxGrid != null)
-            newObject.panelPopupBoxGrid.MinWidth = popUpWindow.MinWidth + 10;
-        if (newObject.panelPopupContent != null)
-            newObject.panelPopupContent.MinHeight = popUpWindow.MinHeight;
-        objectAnimations.makeAppear(ref mainFrm, newObject.panelPopup, false, mainFrm, newObject.popUpBgFade_Complete);
+        newObject.window.panelPopupContent?.Children.RemoveRange(0, newObject.window.panelPopupContent.Children.Count);
+        if(newObject.window != null)
+            newObject.window.Opacity = 0;
+        if(newObject.window.panelPopupBoxGrid != null)
+            newObject.window.panelPopupBoxGrid.MinWidth = popUpWindow.MinWidth + 10;
+        if (newObject.window.panelPopupContent != null)
+            newObject.window.panelPopupContent.MinHeight = popUpWindow.MinHeight;
+        objectAnimations.makeAppear(ref mainFrm, newObject.panelPopupBackground, false, mainFrm, newObject.popUpBgFade_Complete);
     }
 }

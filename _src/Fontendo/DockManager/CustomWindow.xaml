@@ -8,7 +8,7 @@
         WindowStyle="None"
         ResizeMode="CanResize"
         AllowsTransparency="True"
-        Background="Transparent" MinWidth="260" SourceInitialized="Window_SourceInitialized" Deactivated="Window_Deactivated" Activated="Window_Activated">
+        Background="Transparent" MinWidth="260" SourceInitialized="Window_SourceInitialized" Deactivated="Window_Deactivated" Activated="Window_Activated" StateChanged="Window_StateChanged" SizeChanged="Window_SizeChanged">
 
     <chrome:WindowChrome.WindowChrome>
         <chrome:WindowChrome

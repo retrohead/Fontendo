@@ -8,7 +8,7 @@
              xmlns:controls="clr-namespace:Fontendo.Controls"
              xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
              xmlns:Themes="clr-namespace:Xceed.Wpf.Toolkit.Themes;assembly=Xceed.Wpf.Toolkit"
-             mc:Ignorable="d" d:DesignWidth="800" Height="421.238" MinWidth="800" MinHeight="325">
+             mc:Ignorable="d" d:DesignWidth="800" Height="421.238" MinWidth="800" MinHeight="421">
     <UserControl.Resources>
     </UserControl.Resources>
     <DockPanel>
@@ -56,8 +56,8 @@
                                         </Grid.RowDefinitions>
 
                                         <Label Content="Speed" Grid.Row="0" Foreground="{DynamicResource LabelTextBrush}" Grid.Column="0" HorizontalAlignment="Right" VerticalAlignment="Center" FontSize="12" FontFamily="{DynamicResource FontendoFont}" />
-                                        <ComboBox x:Name="comboAnimationSpeed" Grid.Row="0" Grid.Column="1" DisplayMemberPath="Text" FontSize="12" Width="Auto" Height="25" ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedComboItem}" HorizontalAlignment="Stretch" VerticalAlignment="Center" Style="{DynamicResource ComboBoxStyle1}" FontFamily="{DynamicResource FontendoFont}" ItemContainerStyle="{DynamicResource ComboBoxItemStyle1}" />
-                                        <Button x:Name="btnTestAnimations" Height="25" HorizontalAlignment="Left" Cursor="Hand" Grid.Row="2" Grid.Column="1" Style="{DynamicResource ButtonStyleText}" Click="btnTestAnimations_Click" Content="Test Animations" FontSize="12" />
+                                        <ComboBox x:Name="comboAnimationSpeed" Grid.Row="0" Grid.Column="1" DisplayMemberPath="Text" FontSize="12" Width="Auto" Height="27" ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedComboItem}" HorizontalAlignment="Stretch" VerticalAlignment="Center" Style="{DynamicResource ComboBoxStyle1}" FontFamily="{DynamicResource FontendoFont}" ItemContainerStyle="{DynamicResource ComboBoxItemStyle1}" />
+                                        <Button x:Name="btnTestAnimations" Height="27" HorizontalAlignment="Left" Cursor="Hand" Grid.Row="2" Grid.Column="1" Style="{DynamicResource ButtonStyleText}" Click="btnTestAnimations_Click" Content="Test Animations" FontSize="12" />
                                     </Grid>
                                 </GroupBox>
                             </DockPanel>
@@ -188,7 +188,7 @@
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <Button x:Name="btnSaveTheme" Height="25" HorizontalAlignment="Left" Cursor="Hand" Grid.Row="0" Style="{DynamicResource ButtonStyleText}" Click="btnSaveTheme_Click" Content="Save Theme To Collection" FontSize="12" />
+                                <Button x:Name="btnSaveTheme" Height="27" HorizontalAlignment="Left" Cursor="Hand" Grid.Row="0" Style="{DynamicResource ButtonStyleText}" Click="btnSaveTheme_Click" Content="Save Theme To Collection" FontSize="12" />
                             </Grid>
                         </Grid>
 
@@ -199,12 +199,8 @@
 
             <StackPanel x:Name="buttons" Grid.Row="1" Grid.Column="1" VerticalAlignment="Center">
                 <Grid HorizontalAlignment="Right">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="27"/>
-                        <ColumnDefinition />
-                    </Grid.ColumnDefinitions>
-                    <Button x:Name="btnAccept" Width="25" Height="25" HorizontalAlignment="Right" Cursor="Hand" Grid.Column="0" Style="{DynamicResource ButtonStyleImage}" Click="btnAccept_Click">
-                        <Image HorizontalAlignment="Left" Margin="0" VerticalAlignment="Center" Source="/Resources/accept_green.png" Width="16" Height="16"/>
+                    <Button x:Name="btnAccept" Style="{DynamicResource PopUpAcceptButtonStyle}" Click="btnAccept_Click">
+                        
                     </Button>
                 </Grid>
             </StackPanel>

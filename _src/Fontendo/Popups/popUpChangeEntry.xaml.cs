@@ -132,7 +132,7 @@ namespace Fontendo
         {
             if ((popUpObj == null))
                 return;
-            if ((popUpObj.IsOpen & popUpObj.panelPopupContentPanel?.Opacity == 1))
+            if ((popUpObj.IsOpen & popUpObj.window.panelPopupContentPanel?.Opacity == 1))
                 changesMade = true;
         }
         private void btnAccept_Click(object sender, RoutedEventArgs e)

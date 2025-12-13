@@ -119,18 +119,12 @@ namespace Fontendo.Controls
 
             if (win.WindowState == WindowState.Maximized)
             {
-                Window.GetWindow(this).WindowState = WindowState.Normal;
+                win.WindowState = WindowState.Normal;
             }
             else
             {
-                // hide border before maximize
-                TargetWindow.GoFullScreenSwap();
+                win.WindowState = WindowState.Maximized;
             }
-        }
-
-        public void ChangeToFullscreenCloseButton()
-        {
-            btnClose.Style = UI_MainWindow.Self.FindResource("TitleBarCloseButtonStyleFullScreen") as Style;
         }
     }
 

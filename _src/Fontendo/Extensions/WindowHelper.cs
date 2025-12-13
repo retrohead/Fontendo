@@ -92,6 +92,13 @@ namespace Fontendo.Extensions
         private const uint SWP_NOMOVE = 0x0002;
         private const uint SWP_NOACTIVATE = 0x0010;
 
+        public const int GWL_STYLE = -16;
+        public const int GWL_EXSTYLE = -20;
+        public const int WS_DISABLED = 0x08000000;
+        public const int WS_VISIBLE = 0x10000000;
+        public const int WS_EX_TOOLWINDOW = 0x00000080;
+        public const int WS_EX_NOACTIVATE = 0x00000080;
+
         private const int ResizeBorderThickness = 8;   // active resize grip size
         private int WindowMarginOffset = 50;
 
@@ -174,6 +181,69 @@ namespace Fontendo.Extensions
 
             return IntPtr.Zero;
         }
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool IsWindowVisible(IntPtr hWnd);
+
+        [DllImport("user32.dll", EntryPoint = "GetWindowLongPtr", SetLastError = true)]
+        public static extern IntPtr GetWindowLongPtr64(IntPtr hWnd, int nIndex);
+
+        [DllImport("user32.dll", EntryPoint = "GetWindowLong", SetLastError = true)]
+        public static extern IntPtr GetWindowLongPtr32(IntPtr hWnd, int nIndex);
+
+        public static IntPtr GetWindowLongPtr(IntPtr hWnd, int nIndex)
+        {
+            if (IntPtr.Size == 8)
+                return GetWindowLongPtr64(hWnd, nIndex);
+            else
+                return GetWindowLongPtr32(hWnd, nIndex);
+        }
+        public static int GetWindowLong(IntPtr hWnd, int nIndex)
+        {
+            return (int)GetWindowLongPtr(hWnd, nIndex);
+        }
+
+        [DllImport("user32.dll", EntryPoint = "SetWindowLongPtr", SetLastError = true)]
+        public static extern IntPtr SetWindowLongPtr64(IntPtr hWnd, int nIndex, IntPtr dwNewLong);
+
+        [DllImport("user32.dll", EntryPoint = "SetWindowLong", SetLastError = true)]
+        public static extern IntPtr SetWindowLongPtr32(IntPtr hWnd, int nIndex, IntPtr dwNewLong);
+
+        public static IntPtr SetWindowLongPtr(IntPtr hWnd, int nIndex, IntPtr dwNewLong)
+        {
+            if (IntPtr.Size == 8)
+                return SetWindowLongPtr64(hWnd, nIndex, dwNewLong);
+            else
+                return SetWindowLongPtr32(hWnd, nIndex, dwNewLong);
+        }
+
+
+        public bool IsRealWindow(IntPtr hWnd)
+        {
+            // ✅ Skip invisible windows
+            if (!IsWindowVisible(hWnd))
+            {
+                return false;
+            }
+
+            // ✅ Skip tool windows (floating helpers, overlays, GPU windows, etc.)
+            int exStyle = GetWindowLong(hWnd, GWL_EXSTYLE);
+            if ((exStyle & WS_EX_TOOLWINDOW) != 0)
+                return false;
+
+            // ✅ Skip windows that cannot be activated
+            if ((exStyle & WS_EX_NOACTIVATE) != 0)
+                return false;
+
+            // ✅ Skip disabled windows
+            int style = GetWindowLong(hWnd, GWL_STYLE);
+            if ((style & WS_DISABLED) != 0)
+                return false;
+
+            return true;
+        }
+
         public void ActivateUnderlyingWindow(Window activeWindow, Point screen)
         {
             POINT pt;
@@ -188,11 +258,11 @@ namespace Fontendo.Extensions
             // Walk down the Z-order until we find a window under the point that isn't us
             while (hWnd != IntPtr.Zero)
             {
-                if (hWnd != myHandle)
+                if (hWnd != myHandle && IsRealWindow(hWnd))
                 {
+                    string title = GetWindowTitle(hWnd);
                     if (GetWindowRect(hWnd, out RECT rect))
                     {
-                        string title = GetWindowTitle(hWnd);
 
                         // ignore hidden helper windows
                         if (!string.Equals(title, "Hidden Window", StringComparison.OrdinalIgnoreCase))
@@ -200,7 +270,7 @@ namespace Fontendo.Extensions
                             if (pt.X >= rect.Left && pt.X <= rect.Right &&
                                 pt.Y >= rect.Top && pt.Y <= rect.Bottom)
                             {
-                                ShowWindow(hWnd, SW_RESTORE);
+                                //ShowWindow(hWnd, SW_RESTORE);
                                 BringWindowToTop(hWnd);
                                 SetForegroundWindow(hWnd);
                                 SetActiveWindow(hWnd);
@@ -256,11 +326,33 @@ namespace Fontendo.Extensions
             info.cbSize = Marshal.SizeOf(typeof(MONITORINFO));
             GetMonitorInfo(monitor, ref info);
 
+            // Convert Win32 pixel rect → WPF device-independent rect
+            var source = HwndSource.FromHwnd(hwnd);
+            if (source != null)
+            {
+                var transform = source.CompositionTarget.TransformFromDevice;
+
+                var topLeft = transform.Transform(new Point(info.rcWork.Left, info.rcWork.Top));
+                var bottomRight = transform.Transform(new Point(info.rcWork.Right, info.rcWork.Bottom));
+
+                return new Rect(topLeft, bottomRight);
+            }
+
+            // fallback (rare)
             return new Rect(
                 info.rcWork.Left,
                 info.rcWork.Top,
                 info.rcWork.Right - info.rcWork.Left,
                 info.rcWork.Bottom - info.rcWork.Top);
+        }
+
+        public static void HideWindow(Window window)
+        {
+            var hwnd = new WindowInteropHelper(window).Handle;
+            int exStyle = (int)GetWindowLongPtr(hwnd, GWL_EXSTYLE);
+
+            exStyle |= WS_EX_TOOLWINDOW; // hide from Z-order and Alt-Tab
+            SetWindowLongPtr(hwnd, GWL_EXSTYLE, (IntPtr)exStyle);
         }
     }
 }

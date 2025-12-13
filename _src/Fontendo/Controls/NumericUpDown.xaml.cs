@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using Fontendo.UI;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,8 +29,8 @@ namespace Fontendo.Controls
             InitializeComponent();
             PART_TextBox.Text = Value.ToString();
 
-            UpButton.Click += (s, e) => Value += Increment;
-            DownButton.Click += (s, e) => Value -= Increment;
+            UpButton.Click += (s, e) => { Value += Increment; PART_TextBox.Focus(); PART_TextBox.SelectAll(); };
+            DownButton.Click += (s, e) => { Value -= Increment; PART_TextBox.Focus(); PART_TextBox.SelectAll(); };
             PART_TextBox.LostFocus += (s, e) => ValidateText();
         }
 
@@ -39,8 +40,6 @@ namespace Fontendo.Controls
             PART_TextBox.Text = DisplayAsHex
                     ? Value.ToString("X" + HexLength)   // hex formatting
                     : Value.ToString();
-            if (!PART_TextBox.IsFocused)
-                PART_TextBox.Focus();
         }
 
         private void ValidateText()
@@ -164,6 +163,27 @@ namespace Fontendo.Controls
         }
 
         private void Overlay_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            PART_TextBox.Focus();
+            PART_TextBox.SelectAll();
+            e.Handled = true;
+        }
+
+        private void PART_TextBox_GotFocus(object sender, RoutedEventArgs e)
+        {
+            mainBorder.Background = (Brush)UI_MainWindow.Self.FindResource("ButtonSelectedBrush");
+            PART_TextBox.Foreground = (Brush)UI_MainWindow.Self.FindResource("ControlTextActive");
+            PART_Label.Foreground = (Brush)UI_MainWindow.Self.FindResource("ControlTextActive");
+        }
+
+        private void PART_TextBox_LostFocus(object sender, RoutedEventArgs e)
+        {
+            mainBorder.Background = (Brush)UI_MainWindow.Self.FindResource("WindowBackgroundBrushMedium");
+            PART_TextBox.Foreground = (Brush)UI_MainWindow.Self.FindResource("ControlTextInactive");
+            PART_Label.Foreground = (Brush)UI_MainWindow.Self.FindResource("ControlTextInactive");
+        }
+
+        private void Grid_GotFocus(object sender, RoutedEventArgs e)
         {
             PART_TextBox.Focus();
             PART_TextBox.SelectAll();
