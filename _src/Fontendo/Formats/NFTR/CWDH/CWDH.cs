@@ -62,6 +62,7 @@ namespace Fontendo.Formats.CTR
 
         private bool ValidateSignature()
         {
+            string mag = Magic.ToString("X8");
             if (Magic != 0x43574448U && Magic != 0x48445743U)
                 return false;
             return true;

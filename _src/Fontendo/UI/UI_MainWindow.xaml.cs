@@ -16,6 +16,7 @@ using Fontendo.DockManager;
 using System.Collections.ObjectModel;
 using System.Windows.Threading;
 using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
+using Fontendo.Interfaces;
 
 namespace Fontendo.UI
 {
@@ -72,7 +73,7 @@ namespace Fontendo.UI
             }
         }
 
-        public static UI_MainWindow Self;
+        public static UI_MainWindow? Self;
         public class MainFormButtonEnabler : INotifyPropertyChanged
         {
             private readonly FontBase _font;
@@ -309,9 +310,10 @@ namespace Fontendo.UI
             {
                 // At application startup, choose which file types to support
                 FileSystemHelper.Initialize(new List<FileType>
-            {
-                FileType.BinaryCrustFont
-            });
+                {
+                    FileType.BinaryCrustFont,
+                    FileType.NitroFontResource
+                });
                 UnicodeNames = new UnicodeNames();
                 // Get the version from the assembly
                 string? fileVersion = Assembly
@@ -319,7 +321,7 @@ namespace Fontendo.UI
                         .GetCustomAttribute<AssemblyFileVersionAttribute>()?
                         .Version;
 
-                FontendoFont = new FontBase(Platform.CTR);
+                FontendoFont = new FontBase(Platform.CTR); // create a default font base for now
                 ButtonEnabler = new MainFormButtonEnabler(FontendoFont, listViewSheets, listViewCharacters);
                 FontEditor.SelectedColor = ColorHelper.ToMediaColor(ColorHelper.HexToColor(SettingsManager.Settings.FontBackgroundColor));
                 UI_MainWindow.Self.SetBackgroundColour(ColorHelper.ToDrawingColor(FontEditor.SelectedColor), true);
@@ -563,9 +565,21 @@ namespace Fontendo.UI
 
         public void LoadFont(string filename)
         {
+            if (FontendoFont == null)
+                return;
             textFontFilePath.Text = "";
             FontEditor.ShowFontDetails(null);
             GlyphEditor.ShowGlyphDetails(null);
+
+            FontendoFont.Dispose();
+            FontendoFont = FontBase.CreateFontBase(filename);
+
+
+            if(FontendoFont == null)
+            {
+                MessageBox.Show($"Font type not supported.", "Font Error", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+                return;
+            }
             ActionResult result = FontendoFont.LoadFont(filename);
 
             if (!result.Success)
@@ -577,6 +591,9 @@ namespace Fontendo.UI
             {
                 MessageBox.Show($"Font loaded with warnings:\n\n{result.Message}", "Font Warnings Occurred", MessageBoxButton.OK, MessageBoxImage.Information);
             }
+            ButtonEnabler = new MainFormButtonEnabler(FontendoFont, listViewSheets, listViewCharacters);
+            FontEditor.UpdateButtonBindings();
+            GlyphEditor.UpdateButtonBindings();
             textFontFilePath.Text = filename;
             RecentFilesManager.AddRecentFile(textFontFilePath.Text, Path.GetFileName(textFontFilePath.Text));
             ListFontSheets();

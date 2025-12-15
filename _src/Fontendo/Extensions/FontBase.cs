@@ -1,18 +1,18 @@
-﻿using Fontendo.FontProperties;
-using Fontendo.Formats.CTR;
+﻿using Fontendo.Formats.CTR;
 using Fontendo.Interfaces;
 using System.ComponentModel;
 using System.Windows.Data;
 using System.Drawing;
 using static Fontendo.FontProperties.FontPropertyList;
 using static Fontendo.FontProperties.PropertyList;
-using System.Drawing.Imaging;
-using System.Windows.Media;
 using Color = System.Drawing.Color;
+using Fontendo.Formats;
+using System.Drawing.Imaging;
+using System.Diagnostics;
 
 namespace Fontendo.Extensions
 {
-    public class FontBase : INotifyPropertyChanged
+    public class FontBase : INotifyPropertyChanged, IDisposable
     {
         public enum FontPointerType
         {
@@ -353,8 +353,94 @@ namespace Fontendo.Extensions
 
             // NTR-specific
 
-            //NtrBpp,
-            //NtrVertical,
+            public byte NtrBpp
+            {
+                get
+                {
+                    return Properties.GetValue<byte>(FontProperty.NtrBpp);
+                }
+                set
+                {
+                    if (!CreatedProperties.Contains(FontProperty.NtrBpp))
+                    {
+                        Properties.SetValue(FontProperty.NtrBpp, value);
+                        CreatedProperties.Add(FontProperty.NtrBpp);
+                        return;
+                    }
+                    if (NtrBpp != value)
+                    {
+                        Properties.SetValue(FontProperty.NtrBpp, value);
+                        OnPropertyChanged(nameof(NtrBpp));
+                    }
+                }
+            }
+
+            public byte NtrVertical
+            {
+                get
+                {
+                    return Properties.GetValue<byte>(FontProperty.NtrVertical);
+                }
+                set
+                {
+                    if (!CreatedProperties.Contains(FontProperty.NtrVertical))
+                    {
+                        Properties.SetValue(FontProperty.NtrVertical, value);
+                        CreatedProperties.Add(FontProperty.NtrVertical);
+                        return;
+                    }
+                    if (NtrVertical != value)
+                    {
+                        Properties.SetValue(FontProperty.NtrVertical, value);
+                        OnPropertyChanged(nameof(NtrVertical));
+                    }
+                }
+            }
+
+            public byte NtrRotation
+            {
+                get
+                {
+                    return Properties.GetValue<byte>(FontProperty.NtrRotation);
+                }
+                set
+                {
+                    if (!CreatedProperties.Contains(FontProperty.NtrRotation))
+                    {
+                        Properties.SetValue(FontProperty.NtrRotation, value);
+                        CreatedProperties.Add(FontProperty.NtrRotation);
+                        return;
+                    }
+                    if (NtrRotation != value)
+                    {
+                        Properties.SetValue(FontProperty.NtrRotation, value);
+                        OnPropertyChanged(nameof(NtrRotation));
+                    }
+                }
+            }
+
+            public bool NtrGameFreak
+            {
+                get
+                {
+                    return Properties.GetValue<bool>(FontProperty.NtrGameFreak);
+                }
+                set
+                {
+                    if (!CreatedProperties.Contains(FontProperty.NtrGameFreak))
+                    {
+                        Properties.SetValue(FontProperty.NtrGameFreak, value);
+                        CreatedProperties.Add(FontProperty.NtrGameFreak);
+                        return;
+                    }
+                    if (NtrGameFreak != value)
+                    {
+                        Properties.SetValue(FontProperty.NtrGameFreak, value);
+                        OnPropertyChanged(nameof(NtrGameFreak));
+                    }
+                }
+            }
+
             //NtrRotation,
             //NtrGameFreak,
 
@@ -513,6 +599,33 @@ namespace Fontendo.Extensions
                         bindings.Add(vb);
                         return true;
 
+                    case FontProperty.NtrBpp:
+                        bindings.Add(new Binding(nameof(NtrBpp))
+                        {
+                            Source = this,
+                            Mode = BindingMode.TwoWay,
+                            UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
+                        });
+                        return true;
+
+                    case FontProperty.NtrRotation:
+                        bindings.Add(new Binding(nameof(NtrRotation))
+                        {
+                            Source = this,
+                            Mode = BindingMode.TwoWay,
+                            UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
+                        });
+                        return true;
+
+                    case FontProperty.NtrVertical:
+                        bindings.Add(new Binding(nameof(NtrVertical))
+                        {
+                            Source = this,
+                            Mode = BindingMode.TwoWay,
+                            UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
+                        });
+                        return true;
+
                     default:
                         throw new NotImplementedException($"No binding implemented for property {property}");
                 }
@@ -521,6 +634,10 @@ namespace Fontendo.Extensions
             public void UpdateValueRange(FontProperty property, (long Min, long Max) range)
             {
                 Properties.UpdateValueRange(property, range);
+            }
+            public void UpdatePreferredControl(FontProperty property, EditorType editor)
+            {
+                Properties.UpdatePreferredControl(property, editor);
             }
 
             public event PropertyChangedEventHandler? PropertyChanged;
@@ -622,26 +739,53 @@ namespace Fontendo.Extensions
 
                     break;
                 case Platform.Nitro:
-                    // TODO: Implement NTR fonts
                     TextureCodec = new Fontendo.Codecs.NTR.NTRTextureCodec();
-                    throw new NotImplementedException("NTR font not implemented yet");
-                //Font = new BCFNT();
-                //break;
+                    Font = new NitroFontResource(this);
+                    Settings = new FontSettings(Font);
+                    Settings.AddProperty(FontProperty.Endianness, "Endianness", PropertyValueType.Bool, EditorType.EndiannessPicker);
+                    Settings.AddProperty(FontProperty.CharEncoding, "Char encoding", PropertyValueType.CharEncoding, EditorType.Label);
+                    Settings.AddProperty(FontProperty.LineFeed, "Line feed", PropertyValueType.Byte, EditorType.NumberBox, (0, 0xFF));
+                    Settings.AddProperty(FontProperty.Height, "Height", PropertyValueType.Byte, EditorType.NumberBox, (0, 0xFF));
+                    Settings.AddProperty(FontProperty.Width, "Width", PropertyValueType.Byte, EditorType.NumberBox, (0, 0xFF));
+                    Settings.AddProperty(FontProperty.Ascent, "Ascent", PropertyValueType.Byte, EditorType.NumberBox, (0, 0xFF));
+                    Settings.AddProperty(FontProperty.Baseline, "Baseline", PropertyValueType.Byte, EditorType.NumberBox, (0, 0xFF));
+                    Settings.AddProperty(FontProperty.Version, "Version", PropertyValueType.UInt32, EditorType.Label, (0, 0xFFFFFFFF));
+                    // ntr only
+                    Settings.AddProperty(FontProperty.NtrBpp, "Image bit depth", PropertyValueType.Byte, EditorType.Label);
+                    Settings.AddProperty(FontProperty.NtrVertical, "Vertical", PropertyValueType.Byte, EditorType.CheckBox);
+                    Settings.AddProperty(FontProperty.NtrRotation, "Rotation", PropertyValueType.Byte, EditorType.Label);
+
+                    break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(platform));
             }
         }
-        public ActionResult LoadFont(string path)
+
+        public static FontBase? CreateFontBase(string path)
         {
+            FontBase fontBase;
             FileSystemHelper.FileType fontFileType = FileSystemHelper.GetFileTypeFromPath(path);
             if (fontFileType == FileSystemHelper.FileType.All)
-                return new ActionResult(false, "File extension is not recognised");
-            if (Font != null)
-                Font.Dispose();
-            Font = new BCFNT(this);
+                return null;
+            // establish codec from file extension
+            switch (fontFileType)
+            {
+                case FileSystemHelper.FileType.BinaryCrustFont:
+                    fontBase = new FontBase(Platform.CTR);
+                    break;
+                case FileSystemHelper.FileType.NitroFontResource:
+                    fontBase = new FontBase(Platform.Nitro);
+                    break;
+                default:
+                    return null;
+            }
+            fontBase.LoadedFontFileType = fontFileType;
+            return fontBase;
+        }
+
+        public ActionResult LoadFont(string path)
+        {
             ActionResult result = Font.Load(this, path);
-            // TODO: verify the font is of the expected type
-            LoadedFontFileType = fontFileType;
             if (result.Success)
                 LoadedFontFilePath = path;
             return result;
@@ -710,5 +854,29 @@ namespace Fontendo.Extensions
         public event PropertyChangedEventHandler? PropertyChanged;
         protected void OnPropertyChanged(string propertyName) =>
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+
+        public void Dispose()
+        {
+            if(Font != null)
+                Font.Dispose();
+        }
+
+        public static Bitmap CreateBitmapFromBytes(byte[] data, int width, int height, PixelFormat pixelFormat)
+        {
+            Bitmap bmp = new Bitmap(width, height, pixelFormat);
+            // Lock the bitmap’s bits
+            var rect = new Rectangle(0, 0, width, height);
+            var bmpData = bmp.LockBits(rect, ImageLockMode.WriteOnly, bmp.PixelFormat);
+            try
+            {
+                // Copy raw ARGB data into the bitmap
+                System.Runtime.InteropServices.Marshal.Copy(data, 0, bmpData.Scan0, data.Length);
+            }
+            finally
+            {
+                bmp.UnlockBits(bmpData);
+            }
+            return bmp;
+        }
     }
 }

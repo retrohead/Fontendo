@@ -8,10 +8,14 @@ public class FileSystemHelper
     public enum FileType
     {
         All,
+        /* fonts */
         BinaryCrustFont,
+        NitroFontResource,
+        /* roms */
         NDS,
         NDS3D,
         GBA,
+        /* standard files */
         Text,
         Image,
         Json,
@@ -62,6 +66,7 @@ public class FileSystemHelper
             {
                     // font files
                     { FileType.BinaryCrustFont,    new FileTypeInfo("Binary Crust Font", "*.bcfnt") },
+                    { FileType.NitroFontResource,    new FileTypeInfo("Nitro Font Reource", "*.NFTR") },
                     // roms
                     { FileType.NDS,    new FileTypeInfo("Nintendo DS ROM", "*.nds", "*.srl") },
                     { FileType.NDS3D,    new FileTypeInfo("Nintendo 3DS ROM", "*.3ds", "*.cia") },
@@ -145,16 +150,30 @@ public class FileSystemHelper
         string filePath = string.Empty;
 
         // Build filter string: All files first, then each supported type
-        var filters = new List<string>
+        var filters = new List<string>();
+
+        var allExtensions = SupportedFileTypes
+        .SelectMany(kvp => kvp.Value.Extensions) // collect all extensions
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .ToList();
+
+        if (allExtensions.Count > 0)
         {
-            SupportedFileTypes[FileType.All].ToFilter()
-        };
+            // Ensure extensions start with "*."
+            var normalized = allExtensions
+                .Select(ext => ext.StartsWith("*.") ? ext : ext.StartsWith(".") ? "*" + ext : "*." + ext)
+                .ToList();
+
+            string joined = string.Join(";", normalized);
+
+            filters.Add($"All Supported Files ({joined})|{joined}");
+        }
 
         foreach (var kvp in SupportedFileTypes)
         {
-            if (kvp.Key == FileType.All) continue; // skip duplicate
             filters.Add(kvp.Value.ToFilter());
         }
+        filters.Add(SupportedFileTypes[FileType.All].ToFilter());
         return OpenFileDialog(filters, title);
     }
 

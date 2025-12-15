@@ -117,20 +117,11 @@ namespace Fontendo.UI
 
         public void ShowGlyphDetails(Glyph? glyph)
         {
-            DataContext = null;
             if (!initialized)
             {
                 // Register legacy encodings (including Shift-JIS)
                 Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-                btnExportGlyph.SetBinding(Button.IsEnabledProperty,
-                    new Binding(nameof(UI_MainWindow.Self.ButtonEnabler.IsGlyphSelected)) { Source = UI_MainWindow.Self.ButtonEnabler });
-
-                btnReplaceGlyph.SetBinding(Button.IsEnabledProperty,
-                    new Binding(nameof(UI_MainWindow.Self.ButtonEnabler.IsGlyphSelected)) { Source = UI_MainWindow.Self.ButtonEnabler });
-
-                sliderZoom.SetBinding(Slider.IsEnabledProperty,
-                    new Binding(nameof(UI_MainWindow.Self.ButtonEnabler.IsGlyphSelected)) { Source = UI_MainWindow.Self.ButtonEnabler });
-
+                UpdateButtonBindings();
                 initialized = true;
             }
             if (UI_MainWindow.Self == null) return;
@@ -422,6 +413,19 @@ namespace Fontendo.UI
             zoomTransform.ScaleY = zoomFactor;
             borderGlyphImage.Width = imgGlyphPreview.ActualWidth * zoomFactor;
             borderGlyphImage.Height = imgGlyphPreview.ActualHeight * zoomFactor;
+        }
+
+        public void UpdateButtonBindings()
+        {
+            btnExportGlyph.SetBinding(Button.IsEnabledProperty,
+                new Binding(nameof(UI_MainWindow.Self.ButtonEnabler.IsGlyphSelected)) { Source = UI_MainWindow.Self.ButtonEnabler });
+
+            btnReplaceGlyph.SetBinding(Button.IsEnabledProperty,
+                new Binding(nameof(UI_MainWindow.Self.ButtonEnabler.IsGlyphSelected)) { Source = UI_MainWindow.Self.ButtonEnabler });
+
+            sliderZoom.SetBinding(Slider.IsEnabledProperty,
+                new Binding(nameof(UI_MainWindow.Self.ButtonEnabler.IsGlyphSelected)) { Source = UI_MainWindow.Self.ButtonEnabler });
+
         }
     }
 }

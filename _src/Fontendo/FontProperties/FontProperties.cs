@@ -88,6 +88,11 @@ namespace Fontendo.FontProperties
 
                 ValueRange = range;
             }
+
+            public void UpdatePreferredControl(EditorType editor)
+            {
+                PreferredControl = editor;
+            }
         }
 
         public class FontPropertyRegistry
@@ -166,6 +171,13 @@ namespace Fontendo.FontProperties
                     throw new ArgumentException("Min cannot be greater than Max.");
 
                 desc.UpdateValueRange(range);
+            }
+
+            public void UpdatePreferredControl(FontProperty prop, EditorType editor)
+            {
+                if (!FontPropertyDescriptors.TryGetValue(prop, out var desc))
+                    throw new KeyNotFoundException($"Descriptor for {prop} not found.");
+                desc.UpdatePreferredControl(editor);
             }
         }
 

@@ -1,6 +1,7 @@
-﻿using Fontendo.Extensions.BinaryTools;
+﻿using Fontendo.Extensions;
+using Fontendo.Extensions.BinaryTools;
 
-namespace Fontendo.Formats.CTR
+namespace Fontendo.Formats
 {
     public class NFTR
     {
@@ -10,6 +11,25 @@ namespace Fontendo.Formats.CTR
         public UInt32 FileSize; //Size of the full file in bytes
         public UInt16 PtrInfo; //Pointer to the begining of FINF section
         public UInt16 DataBlocks; //Number of data blocks in the file
+
+        private readonly BinaryReaderX? br;
+
+        public NFTR(BinaryReaderX br)
+        {
+            this.br = br;
+        }
+
+
+        public NFTR(UInt16 version = 0x0102, UInt32 magic = 0x4E465452U)
+        {
+            this.Version = version;
+            this.Magic = magic;
+            this.BOM = 0xFEFF;
+            this.FileSize = 0;
+            this.PtrInfo = 0;
+            this.DataBlocks = 0;
+        }
+
 
         public ActionResult Parse(BinaryReaderX br)
         {
@@ -31,11 +51,25 @@ namespace Fontendo.Formats.CTR
             return new ActionResult(true, "OK");
         }
 
-        private bool ValidateSignature()
+        public bool ValidateSignature()
         {
             if (Magic != 0x4E465452U && Magic != 0x5254464EU)
                 return false;
             return true;
+        }
+
+        public void Serialize(BinaryWriterX bw, BlockLinker linker)
+        {
+            linker.AddLookupValue(FontBase.FontPointerType.ptrFont, bw.BaseStream.Position);
+            bw.WriteUInt32(Magic);
+            bw.WriteUInt16(BOM);
+            bw.WriteUInt16(Version);
+            linker.AddPatchAddr(bw.BaseStream.Position, FontBase.FontPointerType.fileSize);
+            bw.WriteUInt32(FileSize);
+            linker.AddShortPatchAddr(bw.BaseStream.Position, FontBase.FontPointerType.ptrInfo);
+            bw.WriteUInt16(PtrInfo);
+            linker.AddShortPatchAddr(bw.BaseStream.Position, FontBase.FontPointerType.blockCount);
+            bw.WriteUInt16(DataBlocks);
         }
     }
 }

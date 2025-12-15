@@ -19,27 +19,17 @@ namespace Fontendo.Codecs.NTR
             TextureFormatFunctions = new Dictionary<TextureFormatType, TextureFormatData>();
         }
 
-        public DecodedTextureType DecodeTexture(ushort texFmt, BinaryReaderX br, ushort width, ushort height)
+        public DecodedTextureType DecodeTexture(ushort bpp, BinaryReaderX br, ushort width, ushort height)
         {
-            throw new NotImplementedException();
-        }
-
-
-        public byte[] EncodeTexture(ushort texFmt, byte[] data, ushort width, ushort height)
-        {
-            throw new NotImplementedException();
-        }
-
-
-        public static byte[] DecodeBitmap(int bpp, BitReader br, ushort width, ushort height)
-        {
+            BitReader bitr = new BitReader(br);
+            bitr.Update();
             byte[] imgBuf = new byte[width * height * 4];
 
             for (int y = 0; y < height; y++)
             {
                 for (int x = 0; x < width; x++)
                 {
-                    byte px = br.ReadBitsNormalizedBackwards(bpp);
+                    byte px = bitr.ReadBitsNormalizedBackwards(bpp);
 
                     int offset = ((y * width + x) * 4);
                     imgBuf[offset + 0] = px;
@@ -49,8 +39,15 @@ namespace Fontendo.Codecs.NTR
                 }
             }
 
-            return imgBuf;
+            return new DecodedTextureType(imgBuf, null);
         }
+
+
+        public byte[] EncodeTexture(ushort texFmt, byte[] data, ushort width, ushort height)
+        {
+            throw new NotImplementedException();
+        }
+
         private static byte FlipBitOrder(byte bits, int bpp)
         {
             byte result = 0;

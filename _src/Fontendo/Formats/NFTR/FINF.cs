@@ -1,10 +1,11 @@
 ﻿using Fontendo.Extensions.BinaryTools;
+using Fontendo.Formats.CTR;
 using System;
 using System.Reflection.PortableExecutable;
 using System.Text;
 using static Fontendo.Extensions.FontBase;
 
-namespace Fontendo.Formats.CTR
+namespace Fontendo.Formats
 {
     public class FINF
     {

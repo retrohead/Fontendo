@@ -4,7 +4,7 @@ using System.Reflection.PortableExecutable;
 using System.Runtime.CompilerServices;
 using static Fontendo.Extensions.FontBase;
 
-namespace Fontendo.Formats.CTR
+namespace Fontendo.Formats
 {
     public class CGLP
     {

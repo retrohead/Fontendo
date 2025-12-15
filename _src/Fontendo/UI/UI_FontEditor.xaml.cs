@@ -87,30 +87,24 @@ namespace Fontendo.UI
 
         public UI_FontEditor()
         {
-            DataContext = this;
             InitializeComponent();
+            gridFontOptions.DataContext = this;
             SelectedColor = ColorHelper.ToMediaColor(SettingsManager.Settings.FontBackgroundColor);
             SelectedTintColor = ColorHelper.ToMediaColor(SettingsManager.Settings.FontTintColor);
             SelectedAliasingTintColor = ColorHelper.ToMediaColor(SettingsManager.Settings.FontAliasingTintColor);
             colorPicker.SelectedColorChanged += ColorPicker_SelectedColorChanged;
             colorPickerTint.SelectedColorChanged += colorPickerTint_SelectedColorChanged;
-            colorPickerAliasingTint.SelectedColorChanged += colorPickerAliasingTint_SelectedColorChanged; 
+            colorPickerAliasingTint.SelectedColorChanged += colorPickerAliasingTint_SelectedColorChanged;
+        }
+        private void CustomWindowContentBase_Loaded(object sender, RoutedEventArgs e)
+        {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+            UpdateButtonBindings();
         }
 
 
         public void ShowFontDetails(FontBase? font)
         {
-            if (!initialized)
-            {
-                // Register legacy encodings (including Shift-JIS)
-                Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-                btnExportSheet.SetBinding(Button.IsEnabledProperty,
-                    new Binding(nameof(UI_MainWindow.Self.ButtonEnabler.IsSheetSelected)) { Source = UI_MainWindow.Self.ButtonEnabler });
-
-                btnReplaceSheet.SetBinding(Button.IsEnabledProperty,
-                    new Binding(nameof(UI_MainWindow.Self.ButtonEnabler.IsSheetSelected)) { Source = UI_MainWindow.Self.ButtonEnabler });
-                initialized = true;
-            }
             if (UI_MainWindow.Self == null) return;
             LoadedFont = font;
             if (font == null)
@@ -272,6 +266,12 @@ namespace Fontendo.UI
         {
             _previewSelectedTintColor = e.SelectedColor;
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(AliasingTintBrush)));
+        }
+
+        public void UpdateButtonBindings()
+        {
+            btnExportSheet.DataContext = UI_MainWindow.Self!.ButtonEnabler;
+            btnReplaceSheet.DataContext = UI_MainWindow.Self.ButtonEnabler;
         }
     }
 }

@@ -67,7 +67,6 @@ namespace Fontendo.Codecs.CTR
         public DecodedTextureType DecodeA4(BinaryReaderX br, ushort width, ushort height)
         {
             byte[] texBuf = new byte[width * height * 4];
-            byte[] maskBuf = new byte[width * height * 4];
 
             for (int tY = 0; tY < height / 8; tY++)
             {

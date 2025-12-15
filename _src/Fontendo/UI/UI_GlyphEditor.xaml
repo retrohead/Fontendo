@@ -77,6 +77,7 @@
             </Border>
                 <Slider x:Name="sliderZoom" Style="{DynamicResource SliderStyle}" Minimum="0" Grid.Row="1" Maximum="100" Value="50"
                 TickFrequency="1" IsSnapToTickEnabled="True"
+                IsEnabled="{Binding IsGlyphSelected, Mode=OneWay}"
                 Orientation="Horizontal" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ValueChanged="sliderZoom_ValueChanged"/>
         </Grid>
         <!-- glyph character -->
@@ -112,6 +113,7 @@
             ToolTip="Export the selected glyph to an image file" 
             Click="btnExportGlyph_Click" 
             Content="Export Glyph" 
+            IsEnabled="{Binding IsGlyphSelected, Mode=OneWay}"
             Grid.Row="6" Grid.Column="1" Background="{DynamicResource WindowBackgroundBrushMedium}" Margin="15,0,15,0" Height="25" HorizontalAlignment="Stretch" Cursor="Hand" Style="{DynamicResource ButtonStyleImage}" />
 
 
@@ -121,6 +123,7 @@
             ToolTip="Replace the selected glyph with a new image" 
             Click="btnReplaceGlyph_Click" 
             Content="Replace Glyph" 
+            IsEnabled="{Binding IsGlyphSelected, Mode=OneWay}"
             Grid.Row="7" Grid.Column="1" Background="{DynamicResource WindowBackgroundBrushMedium}" Margin="15,0,15,0" Height="25" HorizontalAlignment="Stretch" Cursor="Hand" Style="{DynamicResource ButtonStyleImage}" />
     </Grid>
 </dockm:CustomWindowContentBase>

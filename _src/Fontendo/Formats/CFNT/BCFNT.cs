@@ -32,18 +32,16 @@ namespace Fontendo.Formats.CTR
         public List<Glyph>? Glyphs { get; set; } = null;
         public List<CharImageType>? CharImages { get; set; } = null;
         public FontBase FontBase { get; }
+        public ITextureCodec Codec { get; set; } = TextureCodecFactory.Create(TextureCodecFactory.Platform.CTR);
 
         public BCFNT(FontBase FontBase)
         {
             this.FontBase = FontBase;
         }
 
-        public ITextureCodec Codec { get; set; } = TextureCodecFactory.Create(TextureCodecFactory.Platform.CTR);
 
         public ActionResult Load(FontBase fontbase, string filename)
         {
-
-
             ActionResult result;
             MainWindow.Log($"------------------------------------------");
             MainWindow.Log($"Loading file: {filename}");
@@ -171,37 +169,11 @@ namespace Fontendo.Formats.CTR
                         int decodeWidth = (TGLP.SheetWidth + 7) & ~7;  // round up to multiple of 8
                         int decodeHeight = (TGLP.SheetHeight + 7) & ~7;  // round up to multiple of 8
                         DecodedTextureType sheetRaw = Codec.DecodeTexture(TGLP.SheetFormat, br, TGLP.SheetWidth, TGLP.SheetHeight);
-
-                        Bitmap sheet = new Bitmap(TGLP.SheetWidth, TGLP.SheetHeight, PixelFormat.Format32bppArgb);
-                        // Lock the bitmap’s bits
-                        var rect = new Rectangle(0, 0, sheet.Width, sheet.Height);
-                        var bmpData = sheet.LockBits(rect, ImageLockMode.WriteOnly, sheet.PixelFormat);
-                        try
-                        {
-                            // Copy raw ARGB data into the bitmap
-                            System.Runtime.InteropServices.Marshal.Copy(sheetRaw.data, 0, bmpData.Scan0, sheetRaw.data.Length);
-                        }
-                        finally
-                        {
-                            sheet.UnlockBits(bmpData);
-                        }
-                        Sheets.Images.Add(sheet);
+                        Sheets.Images.Add(CreateBitmapFromBytes(sheetRaw.data, TGLP.SheetWidth, TGLP.SheetHeight, PixelFormat.Format32bppArgb));
 
                         if (sheetRaw.mask != null)
                         { 
-                            Bitmap mask = new Bitmap(TGLP.SheetWidth, TGLP.SheetHeight, PixelFormat.Format32bppArgb);
-                            // Lock the bitmap’s bits
-                            bmpData = mask.LockBits(rect, ImageLockMode.WriteOnly, sheet.PixelFormat);
-                            try
-                            {
-                                // Copy raw ARGB data into the bitmap
-                                System.Runtime.InteropServices.Marshal.Copy(sheetRaw.mask, 0, bmpData.Scan0, sheetRaw.mask.Length);
-                            }
-                            finally
-                            {
-                                mask.UnlockBits(bmpData);
-                            }
-                            Sheets.MaskImages.Add(mask);
+                            Sheets.MaskImages.Add(CreateBitmapFromBytes(sheetRaw.mask, TGLP.SheetWidth, TGLP.SheetHeight, PixelFormat.Format32bppArgb));
                         } else
                         {
                             Sheets.MaskImages.Add(null);
@@ -317,14 +289,7 @@ namespace Fontendo.Formats.CTR
                 }
                 catch (Exception e)
                 {
-                    if (CharImages != null)
-                    {
-                        foreach (var img in CharImages)
-                            img.Image.Dispose();
-                        CharImages.Clear();
-                    }
-                    if (Glyphs != null)
-                        Glyphs.Clear();
+                    Dispose();
                     return new ActionResult(false, e.Message);
                 }
                 br.Close();

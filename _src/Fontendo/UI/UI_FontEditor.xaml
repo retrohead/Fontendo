@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:Fontendo.Controls"
              xmlns:dockm="clr-namespace:Fontendo.DockManager"
-             MinWidth="180" MinHeight="350">
+             MinWidth="180" MinHeight="350" Loaded="CustomWindowContentBase_Loaded">
 
     <Grid x:Name="tableMainTable"
           HorizontalAlignment="Stretch"
@@ -49,7 +49,7 @@
                 Height="1" Margin="10,0" />
 
         <!-- Font colour options -->
-        <Grid Grid.Row="2" Grid.Column="1" Margin="5,5,0,5">
+        <Grid x:Name="gridFontOptions" Grid.Row="2" Grid.Column="1" Margin="5,5,0,5">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
@@ -84,16 +84,18 @@
             ToolTip="Export the selected sheet to an image file" 
             Click="btnExportSheet_Click" 
             Content="Export Sheet" 
+            IsEnabled="{Binding IsSheetSelected, Mode=OneWay}"
             Grid.Row="4" Grid.Column="1" Background="{DynamicResource WindowBackgroundBrushMedium}" Margin="15,0,15,0" Height="25" HorizontalAlignment="Stretch" Cursor="Hand" Style="{DynamicResource ButtonStyleImage}" />
 
 
         <!-- btnReplaceSheet -->
         <Button 
-        x:Name="btnReplaceSheet" 
-        ToolTip="Replace the selected sheet with a new image" 
-        Click="btnReplaceSheet_Click" 
-        Content="Replace Sheet" 
-        Grid.Row="5" Grid.Column="1" Background="{DynamicResource WindowBackgroundBrushMedium}" Margin="15,0,15,0" Height="25" HorizontalAlignment="Stretch" Cursor="Hand" Style="{DynamicResource ButtonStyleImage}" />
+            x:Name="btnReplaceSheet" 
+            ToolTip="Replace the selected sheet with a new image" 
+            Click="btnReplaceSheet_Click" 
+            Content="Replace Sheet" 
+            IsEnabled="{Binding IsSheetSelected, Mode=OneWay}"
+            Grid.Row="5" Grid.Column="1" Background="{DynamicResource WindowBackgroundBrushMedium}" Margin="15,0,15,0" Height="25" HorizontalAlignment="Stretch" Cursor="Hand" Style="{DynamicResource ButtonStyleImage}" />
         
     </Grid>
 </dockm:CustomWindowContentBase>
