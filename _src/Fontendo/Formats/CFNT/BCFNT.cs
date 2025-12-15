@@ -9,6 +9,8 @@ using static Fontendo.Extensions.FontBase.FontSettings;
 using System.Drawing;
 using System.IO;
 using Fontendo.UI;
+using static Fontendo.Interfaces.ITextureCodec;
+using System.Threading.Tasks;
 
 namespace Fontendo.Formats.CTR
 {
@@ -166,25 +168,45 @@ namespace Fontendo.Formats.CTR
                     MainWindow.Log($"0x{br.BaseStream.Position.ToString("X8")} Sheets start");
                     for (ushort i = 0; i < TGLP.SheetCount; i++)
                     {
-                        byte[] sheetRaw = Codec.DecodeTexture(TGLP.SheetFormat, br, TGLP.SheetWidth, TGLP.SheetHeight);
+                        int decodeWidth = (TGLP.SheetWidth + 7) & ~7;  // round up to multiple of 8
+                        int decodeHeight = (TGLP.SheetHeight + 7) & ~7;  // round up to multiple of 8
+                        DecodedTextureType sheetRaw = Codec.DecodeTexture(TGLP.SheetFormat, br, TGLP.SheetWidth, TGLP.SheetHeight);
 
                         Bitmap sheet = new Bitmap(TGLP.SheetWidth, TGLP.SheetHeight, PixelFormat.Format32bppArgb);
-
                         // Lock the bitmap’s bits
                         var rect = new Rectangle(0, 0, sheet.Width, sheet.Height);
                         var bmpData = sheet.LockBits(rect, ImageLockMode.WriteOnly, sheet.PixelFormat);
-
                         try
                         {
                             // Copy raw ARGB data into the bitmap
-                            System.Runtime.InteropServices.Marshal.Copy(sheetRaw, 0, bmpData.Scan0, sheetRaw.Length);
+                            System.Runtime.InteropServices.Marshal.Copy(sheetRaw.data, 0, bmpData.Scan0, sheetRaw.data.Length);
                         }
                         finally
                         {
                             sheet.UnlockBits(bmpData);
                         }
-
                         Sheets.Images.Add(sheet);
+
+                        if (sheetRaw.mask != null)
+                        { 
+                            Bitmap mask = new Bitmap(TGLP.SheetWidth, TGLP.SheetHeight, PixelFormat.Format32bppArgb);
+                            // Lock the bitmap’s bits
+                            bmpData = mask.LockBits(rect, ImageLockMode.WriteOnly, sheet.PixelFormat);
+                            try
+                            {
+                                // Copy raw ARGB data into the bitmap
+                                System.Runtime.InteropServices.Marshal.Copy(sheetRaw.mask, 0, bmpData.Scan0, sheetRaw.mask.Length);
+                            }
+                            finally
+                            {
+                                mask.UnlockBits(bmpData);
+                            }
+                            Sheets.MaskImages.Add(mask);
+                        } else
+                        {
+                            Sheets.MaskImages.Add(null);
+                        }
+
                     }
                     MainWindow.Log($"0x{br.BaseStream.Position.ToString("X8")} Sheets End");
 
@@ -198,6 +220,8 @@ namespace Fontendo.Formats.CTR
                         CharImages.Clear();
                     }
                     CharImages = new List<CharImageType>();
+
+                    List<Bitmap?> maskImages = new List<Bitmap?>();
                     for (int i = 0; i < CharMaps.Count(); i++) //Get glyph count from charMaps, cause there's no better way to do that
                     {
                         //Do some math to figure out where we should start reading the pixels
@@ -211,6 +235,10 @@ namespace Fontendo.Formats.CTR
 
                         Rectangle rect = new Rectangle(startX, startY, TGLP.CellWidth + 1, TGLP.CellHeight + 1);
                         Bitmap bmp = Sheets.Images[currentSheet].Clone(rect, Sheets.Images[currentSheet].PixelFormat);
+                        Bitmap? maskbmp = null;
+                        if(Sheets.MaskImages[currentSheet] != null)
+                            maskbmp = Sheets.MaskImages[currentSheet]!.Clone(rect, Sheets.MaskImages[currentSheet]!.PixelFormat);
+                        maskImages.Add(maskbmp);
                         CharImageType newImg = new CharImageType(i, currentSheet, bmp);
                         // Append Bitmap to list
                         CharImages.Add(newImg);
@@ -229,6 +257,7 @@ namespace Fontendo.Formats.CTR
                         glyph.Settings.GlyphWidth = CharWidths[i].GlyphWidth;
                         glyph.Settings.CharWidth = CharWidths[i].CharWidth;
                         glyph.Settings.Image = CharImages[i].Image;
+                        glyph.MaskImage = maskImages[i];
                         Glyphs.Add(glyph);
                     }
                     // try to fix corrupted fonts with too many char widths from NintyFont
@@ -635,12 +664,23 @@ namespace Fontendo.Formats.CTR
                 }
                 Sheets.Images.Clear();
             }
+            if (Sheets != null && Sheets.MaskImages != null)
+            {
+                foreach (var bmp in Sheets.MaskImages)
+                {
+                    if(bmp != null)
+                        bmp.Dispose();
+                }
+                Sheets.MaskImages.Clear();
+            }
             if (Glyphs != null)
             {
                 foreach (var glyph in Glyphs)
                 {
-                    if(glyph.Settings.Image != null)
+                    if (glyph.Settings.Image != null)
                         glyph.Settings.Image.Dispose();
+                    if (glyph.MaskImage != null)
+                        glyph.MaskImage.Dispose();
                 }
                 Glyphs.Clear();
             }

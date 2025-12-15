@@ -37,42 +37,42 @@ namespace Fontendo.Codecs.RVL
             */
         }
 
-        private byte[] decodeRGBA8(BinaryReaderX br, ushort width, ushort height)
+        private DecodedTextureType decodeRGBA8(BinaryReaderX br, ushort width, ushort height)
         {
             throw new NotImplementedException();
         }
 
-        private byte[] decodeRGB5A3(BinaryReaderX br, ushort width, ushort height)
+        private DecodedTextureType decodeRGB5A3(BinaryReaderX br, ushort width, ushort height)
         {
             throw new NotImplementedException();
         }
 
-        private byte[] decodeRGB565(BinaryReaderX br, ushort width, ushort height)
+        private DecodedTextureType decodeRGB565(BinaryReaderX br, ushort width, ushort height)
         {
             throw new NotImplementedException();
         }
 
-        private byte[] decodeIA8(BinaryReaderX br, ushort width, ushort height)
+        private DecodedTextureType decodeIA8(BinaryReaderX br, ushort width, ushort height)
         {
             throw new NotImplementedException();
         }
 
-        private byte[] decodeIA4(BinaryReaderX br, ushort width, ushort height)
+        private DecodedTextureType decodeIA4(BinaryReaderX br, ushort width, ushort height)
         {
             throw new NotImplementedException();
         }
 
-        private byte[] decodeI8(BinaryReaderX br, ushort width, ushort height)
+        private DecodedTextureType decodeI8(BinaryReaderX br, ushort width, ushort height)
         {
             throw new NotImplementedException();
         }
 
-        private byte[] decodeI4(BinaryReaderX br, ushort width, ushort height)
+        private DecodedTextureType decodeI4(BinaryReaderX br, ushort width, ushort height)
         {
             throw new NotImplementedException();
         }
 
-        public byte[] DecodeTexture(ushort texFmt, BinaryReaderX br, ushort width, ushort height)
+        public DecodedTextureType DecodeTexture(ushort texFmt, BinaryReaderX br, ushort width, ushort height)
         {
             if (texFmt > 0xFF)
                 throw new ArgumentOutOfRangeException("Texture format is out of range");

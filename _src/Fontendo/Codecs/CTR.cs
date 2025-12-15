@@ -1,6 +1,7 @@
 ﻿using Fontendo.Extensions.BinaryTools;
 using Fontendo.Interfaces;
 using System.IO;
+using System.Drawing;
 using static Fontendo.Extensions.FontBase;
 using static Fontendo.Interfaces.ITextureCodec;
 
@@ -53,19 +54,20 @@ namespace Fontendo.Codecs.CTR
 
         #region "Decoders"
 
-        private byte[] DecodeETC1A4(BinaryReaderX br, ushort width, ushort height)
+        private DecodedTextureType DecodeETC1A4(BinaryReaderX br, ushort width, ushort height)
         {
             throw new NotImplementedException();
         }
 
-        private byte[] DecodeETC1(BinaryReaderX br, ushort width, ushort height)
+        private DecodedTextureType DecodeETC1(BinaryReaderX br, ushort width, ushort height)
         {
             throw new NotImplementedException();
         }
 
-        public byte[] DecodeA4(BinaryReaderX br, ushort width, ushort height)
+        public DecodedTextureType DecodeA4(BinaryReaderX br, ushort width, ushort height)
         {
-            byte[] argbBuf = new byte[width * height * 4];
+            byte[] texBuf = new byte[width * height * 4];
+            byte[] maskBuf = new byte[width * height * 4];
 
             for (int tY = 0; tY < height / 8; tY++)
             {
@@ -73,139 +75,235 @@ namespace Fontendo.Codecs.CTR
                 {
                     for (int pixel = 0; pixel < 64; pixel += 2)
                     {
-                        int x = tileOrder[pixel] % 8;
-                        int y = (tileOrder[pixel] - x) / 8;
-                        int outputOffset = ((tX * 8) + x + ((tY * 8 + y) * width)) * 4;
-
                         byte data = br.ReadByte();
 
-                        // First nibble (low 4 bits)
-                        byte newpixel = (byte)((data & 0x0F) * 0x11);
-                        argbBuf[outputOffset + 0] = 0xFF;
-                        argbBuf[outputOffset + 1] = 0xFF;
-                        argbBuf[outputOffset + 2] = 0xFF;
-                        argbBuf[outputOffset + 3] = newpixel;
+                        // -------------------------
+                        // FIRST NIBBLE
+                        // -------------------------
+                        int p0 = tileOrder[pixel];
+                        int x0 = tX * 8 + (p0 % 8);
+                        int y0 = tY * 8 + (p0 / 8);
 
-                        // Second nibble (high 4 bits)
-                        newpixel = (byte)((data >> 4) * 0x11);
-                        argbBuf[outputOffset + 4] = 0xFF;
-                        argbBuf[outputOffset + 5] = 0xFF;
-                        argbBuf[outputOffset + 6] = 0xFF;
-                        argbBuf[outputOffset + 7] = newpixel;
+                        byte alpha0 = (byte)((data & 0x0F) * 0x11);
+
+                        int offset0 = (y0 * width + x0) * 4;
+
+                        // normal texture
+                        texBuf[offset0 + 0] = 0xFF;
+                        texBuf[offset0 + 1] = 0xFF;
+                        texBuf[offset0 + 2] = 0xFF;
+                        texBuf[offset0 + 3] = alpha0;
+
+                        // -------------------------
+                        // SECOND NIBBLE
+                        // -------------------------
+                        int p1 = tileOrder[pixel + 1];
+                        int x1 = tX * 8 + (p1 % 8);
+                        int y1 = tY * 8 + (p1 / 8);
+
+                        byte alpha1 = (byte)((data >> 4) * 0x11);
+
+                        int offset1 = (y1 * width + x1) * 4;
+
+                        // normal texture
+                        texBuf[offset1 + 0] = 0xFF;
+                        texBuf[offset1 + 1] = 0xFF;
+                        texBuf[offset1 + 2] = 0xFF;
+                        texBuf[offset1 + 3] = alpha1;
                     }
                 }
             }
 
-            return argbBuf;
+            return new DecodedTextureType(texBuf, null);
         }
 
-        private byte[] DecodeL4(BinaryReaderX br, ushort width, ushort height)
+        private DecodedTextureType DecodeL4(BinaryReaderX br, ushort width, ushort height)
         {
             throw new NotImplementedException();
         }
 
-        public byte[] DecodeLA44(BinaryReaderX br, ushort width, ushort height)
+        public DecodedTextureType DecodeLA44(BinaryReaderX br, ushort width, ushort height)
         {
-            byte[] argbBuf = new byte[width * height * 4];
+            byte[] texBuf = new byte[width * height * 4];
+            byte[] maskBuf = new byte[width * height * 4];
 
-            for (int tY = 0; tY < height / 8; tY++)
+
+            int tilesX = (width + 7) / 8;
+            int tilesY = (height + 7) / 8;
+
+            for (int tY = 0; tY < tilesY; tY++)
             {
-                for (int tX = 0; tX < width / 8; tX++)
+                for (int tX = 0; tX < tilesX; tX++)
                 {
                     for (int pixel = 0; pixel < 64; pixel++)
                     {
-                        int x = tileOrder[pixel] % 8;
-                        int y = (tileOrder[pixel] - x) / 8;
-                        int outputOffset = ((tX * 8) + x + ((tY * 8 + y) * width)) * 4;
+                        int localX = tileOrder[pixel] % 8;
+                        int localY = (tileOrder[pixel] - localX) / 8;
+
+                        int x = tX * 8 + localX;
+                        int y = tY * 8 + localY;
+
+                        if (x >= width || y >= height)
+                        {
+                            br.ReadByte();
+                            continue;
+                        }
 
                         byte data = br.ReadByte();
-
-                        // Lower nibble = luminance, Upper nibble = alpha
                         byte luminance = (byte)((data & 0x0F) * 0x11);
                         byte alpha = (byte)((data >> 4) * 0x11);
 
-                        argbBuf[outputOffset + 0] = luminance; // Blue
-                        argbBuf[outputOffset + 1] = luminance; // Green
-                        argbBuf[outputOffset + 2] = luminance; // Red
-                        argbBuf[outputOffset + 3] = alpha;     // Alpha
+                        int offset = (y * width + x) * 4;
+
+                        // -------------------------
+                        // NORMAL TEXTURE
+                        // -------------------------
+                        texBuf[offset + 0] = luminance;
+                        texBuf[offset + 1] = luminance;
+                        texBuf[offset + 2] = luminance;
+                        texBuf[offset + 3] = alpha;
+
+                        // -------------------------
+                        // MASK TEXTURE
+                        // -------------------------
+                        if (alpha == 0 && luminance > 0)
+                        {
+                            // Make them fully visible in the mask
+                            maskBuf[offset + 0] = luminance;
+                            maskBuf[offset + 1] = luminance;
+                            maskBuf[offset + 2] = luminance;
+                            maskBuf[offset + 3] = 0xFF;
+                        }
+                        else
+                        {
+                            // Everything else invisible
+                            maskBuf[offset + 0] = 0x00;
+                            maskBuf[offset + 1] = 0x00;
+                            maskBuf[offset + 2] = 0x00;
+                            maskBuf[offset + 3] = 0x00;
+                        }
                     }
                 }
             }
 
-            return argbBuf;
+            return new DecodedTextureType(texBuf, maskBuf);
         }
 
-        public byte[] DecodeA8(BinaryReaderX br, ushort width, ushort height)
+        public DecodedTextureType DecodeA8(BinaryReaderX br, ushort width, ushort height)
         {
-            byte[] argbBuf = new byte[width * height * 4];
+            byte[] texBuf = new byte[width * height * 4];
+            byte[] maskBuf = new byte[width * height * 4];
 
-            for (int tY = 0; tY < height / 8; tY++)
+            int tilesX = width / 8;
+            int tilesY = height / 8;
+
+            for (int tY = 0; tY < tilesY; tY++)
             {
-                for (int tX = 0; tX < width / 8; tX++)
+                for (int tX = 0; tX < tilesX; tX++)
                 {
                     for (int pixel = 0; pixel < 64; pixel++)
                     {
-                        int x = tileOrder[pixel] % 8;
-                        int y = (tileOrder[pixel] - x) / 8;
-                        int outputOffset = ((tX * 8) + x + ((tY * 8 + y) * width)) * 4;
+                        int localX = tileOrder[pixel] % 8;
+                        int localY = (tileOrder[pixel] - localX) / 8;
+
+                        int x = tX * 8 + localX;
+                        int y = tY * 8 + localY;
+
+                        int offset = (y * width + x) * 4;
 
                         byte alpha = br.ReadByte();
 
-                        argbBuf[outputOffset + 0] = 0xFF;   // Blue
-                        argbBuf[outputOffset + 1] = 0xFF;   // Green
-                        argbBuf[outputOffset + 2] = 0xFF;   // Red
-                        argbBuf[outputOffset + 3] = alpha;  // Alpha
+                        // -------------------------
+                        // NORMAL TEXTURE
+                        // -------------------------
+                        texBuf[offset + 0] = 0xFF;
+                        texBuf[offset + 1] = 0xFF;
+                        texBuf[offset + 2] = 0xFF;
+                        texBuf[offset + 3] = alpha;
                     }
                 }
             }
 
-            return argbBuf;
+            return new DecodedTextureType(texBuf, null);
         }
 
-        private byte[] DecodeL8(BinaryReaderX br, ushort width, ushort height)
+
+        private DecodedTextureType DecodeL8(BinaryReaderX br, ushort width, ushort height)
         {
             throw new NotImplementedException();
         }
 
-        private byte[] DecodeHL8(BinaryReaderX br, ushort width, ushort height)
+        private DecodedTextureType DecodeHL8(BinaryReaderX br, ushort width, ushort height)
         {
             throw new NotImplementedException();
         }
 
-        public byte[] DecodeLA88(BinaryReaderX br, ushort width, ushort height)
+        public DecodedTextureType DecodeLA88(BinaryReaderX br, ushort width, ushort height)
         {
-            byte[] argbBuf = new byte[width * height * 4];
+            byte[] texBuf = new byte[width * height * 4];
+            byte[] maskBuf = new byte[width * height * 4];
 
-            for (int tY = 0; tY < height / 8; tY++)
+            int tilesX = width / 8;
+            int tilesY = height / 8;
+
+            for (int tY = 0; tY < tilesY; tY++)
             {
-                for (int tX = 0; tX < width / 8; tX++)
+                for (int tX = 0; tX < tilesX; tX++)
                 {
                     for (int pixel = 0; pixel < 64; pixel++)
                     {
-                        int x = tileOrder[pixel] % 8;
-                        int y = (tileOrder[pixel] - x) / 8;
-                        int outputOffset = ((tX * 8) + x + ((tY * 8 + y) * width)) * 4;
+                        int localX = tileOrder[pixel] % 8;
+                        int localY = (tileOrder[pixel] - localX) / 8;
+
+                        int x = tX * 8 + localX;
+                        int y = tY * 8 + localY;
+
+                        int offset = (y * width + x) * 4;
 
                         byte luminance = br.ReadByte();
                         byte alpha = br.ReadByte();
 
-                        argbBuf[outputOffset + 0] = luminance; // Blue
-                        argbBuf[outputOffset + 1] = luminance; // Green
-                        argbBuf[outputOffset + 2] = luminance; // Red
-                        argbBuf[outputOffset + 3] = alpha;     // Alpha
+                        // -------------------------
+                        // NORMAL TEXTURE
+                        // -------------------------
+                        texBuf[offset + 0] = luminance;
+                        texBuf[offset + 1] = luminance;
+                        texBuf[offset + 2] = luminance;
+                        texBuf[offset + 3] = alpha;
+
+                        // -------------------------
+                        // MASK TEXTURE
+                        // alpha == 0 → visible in mask
+                        // else → fully transparent
+                        // -------------------------
+                        if (alpha == 0 && luminance > 0)
+                        {
+                            maskBuf[offset + 0] = luminance;
+                            maskBuf[offset + 1] = luminance;
+                            maskBuf[offset + 2] = luminance;
+                            maskBuf[offset + 3] = 0xFF;
+                        }
+                        else
+                        {
+                            maskBuf[offset + 0] = 0x00;
+                            maskBuf[offset + 1] = 0x00;
+                            maskBuf[offset + 2] = 0x00;
+                            maskBuf[offset + 3] = 0x00;
+                        }
                     }
                 }
             }
 
-            return argbBuf;
+            return new DecodedTextureType(texBuf, maskBuf);
         }
 
-        private byte[] DecodeRGBA4444(BinaryReaderX br, ushort width, ushort height)
+
+        private DecodedTextureType DecodeRGBA4444(BinaryReaderX br, ushort width, ushort height)
         {
             throw new NotImplementedException();
         }
 
-        public byte[] DecodeRGB565(BinaryReaderX br, ushort width, ushort height)
+        public DecodedTextureType DecodeRGB565(BinaryReaderX br, ushort width, ushort height)
         {
             byte[] argbBuf = new byte[width * height * 4];
 
@@ -234,12 +332,13 @@ namespace Fontendo.Codecs.CTR
                 }
             }
 
-            return argbBuf;
+            return new DecodedTextureType(argbBuf, null);
         }
 
-        public byte[] DecodeRGBA5551(BinaryReaderX br, ushort width, ushort height)
+        public DecodedTextureType DecodeRGBA5551(BinaryReaderX br, ushort width, ushort height)
         {
-            byte[] argbBuf = new byte[width * height * 4];
+            byte[] texBuf = new byte[width * height * 4];
+            byte[] maskBuf = new byte[width * height * 4];
 
             for (int tY = 0; tY < height / 8; tY++)
             {
@@ -247,9 +346,13 @@ namespace Fontendo.Codecs.CTR
                 {
                     for (int pixel = 0; pixel < 64; pixel++)
                     {
-                        int x = tileOrder[pixel] % 8;
-                        int y = (tileOrder[pixel] - x) / 8;
-                        int outputOffset = ((tX * 8) + x + ((tY * 8 + y) * width)) * 4;
+                        int localX = tileOrder[pixel] % 8;
+                        int localY = (tileOrder[pixel] - localX) / 8;
+
+                        int x = tX * 8 + localX;
+                        int y = tY * 8 + localY;
+
+                        int offset = (y * width + x) * 4;
 
                         ushort pixelData = (ushort)(br.ReadByte() | (br.ReadByte() << 8));
 
@@ -258,19 +361,47 @@ namespace Fontendo.Codecs.CTR
                         byte blue = (byte)(((pixelData >> 11) & 0x1F) << 3);
                         byte alpha = (byte)((pixelData & 1) * 0xFF);
 
-                        // Normalize 5-bit channels to 8-bit using Ohana3DS trick
-                        argbBuf[outputOffset + 0] = (byte)(blue | (blue >> 5));
-                        argbBuf[outputOffset + 1] = (byte)(green | (green >> 5));
-                        argbBuf[outputOffset + 2] = (byte)(red | (red >> 5));
-                        argbBuf[outputOffset + 3] = alpha;
+                        // Normalize 5-bit channels to 8-bit (Ohana trick)
+                        byte R = (byte)(red | (red >> 5));
+                        byte G = (byte)(green | (green >> 5));
+                        byte B = (byte)(blue | (blue >> 5));
+
+                        // -------------------------
+                        // NORMAL TEXTURE
+                        // -------------------------
+                        texBuf[offset + 0] = B;
+                        texBuf[offset + 1] = G;
+                        texBuf[offset + 2] = R;
+                        texBuf[offset + 3] = alpha;
+
+                        // -------------------------
+                        // MASK TEXTURE (RGB preserved)
+                        // alpha == 0 → keep RGB, alpha=255
+                        // alpha != 0 → alpha=0
+                        // -------------------------
+                        if (alpha == 0 && B + G + R > 0)
+                        {
+                            maskBuf[offset + 0] = B;
+                            maskBuf[offset + 1] = G;
+                            maskBuf[offset + 2] = R;
+                            maskBuf[offset + 3] = 0xFF;
+                        }
+                        else
+                        {
+                            maskBuf[offset + 0] = 0;
+                            maskBuf[offset + 1] = 0;
+                            maskBuf[offset + 2] = 0;
+                            maskBuf[offset + 3] = 0;
+                        }
                     }
                 }
             }
 
-            return argbBuf;
+            return new DecodedTextureType(texBuf, maskBuf);
         }
 
-        public byte[] DecodeRGB888(BinaryReaderX br, ushort width, ushort height)
+
+        public DecodedTextureType DecodeRGB888(BinaryReaderX br, ushort width, ushort height)
         {
             byte[] argbBuf = new byte[width * height * 4];
 
@@ -280,9 +411,13 @@ namespace Fontendo.Codecs.CTR
                 {
                     for (int pixel = 0; pixel < 64; pixel++)
                     {
-                        int x = tileOrder[pixel] % 8;
-                        int y = (tileOrder[pixel] - x) / 8;
-                        int outputOffset = ((tX * 8) + x + ((tY * 8 + y) * width)) * 4;
+                        int localX = tileOrder[pixel] % 8;
+                        int localY = (tileOrder[pixel] - localX) / 8;
+
+                        int x = tX * 8 + localX;
+                        int y = tY * 8 + localY;
+
+                        int outputOffset = (y * width + x) * 4;
 
                         byte red = br.ReadByte();
                         byte green = br.ReadByte();
@@ -293,45 +428,77 @@ namespace Fontendo.Codecs.CTR
                         argbBuf[outputOffset + 2] = red;
 
                         // Alpha: transparent if black, opaque otherwise
-                        argbBuf[outputOffset + 3] = (red == 0 && green == 0 && blue == 0) ? (byte)0x00 : (byte)0xFF;
+                        bool isTransparent = (red == 0 && green == 0 && blue == 0);
+                        byte alpha = isTransparent ? (byte)0x00 : (byte)0xFF;
+
+                        argbBuf[outputOffset + 3] = alpha;
                     }
                 }
             }
 
-            return argbBuf;
+            return new DecodedTextureType(argbBuf, null);
         }
 
-        public byte[] DecodeRGBA8888(BinaryReaderX br, ushort width, ushort height)
+        public DecodedTextureType DecodeRGBA8888(BinaryReaderX br, ushort width, ushort height)
         {
-            byte[] argbBuf = new byte[width * height * 4];
+            byte[] texBuf = new byte[width * height * 4];
+            byte[] maskBuf = new byte[width * height * 4];
 
-            for (int tY = 0; tY < height / 8; tY++)
+            int tilesX = width / 8;
+            int tilesY = height / 8;
+
+            for (int tY = 0; tY < tilesY; tY++)
             {
-                for (int tX = 0; tX < width / 8; tX++)
+                for (int tX = 0; tX < tilesX; tX++)
                 {
                     for (int pixel = 0; pixel < 64; pixel++)
                     {
-                        int x = tileOrder[pixel] % 8;
-                        int y = (tileOrder[pixel] - x) / 8;
-                        int outputOffset = ((tX * 8) + x + ((tY * 8 + y) * width)) * 4;
+                        int localX = tileOrder[pixel] % 8;
+                        int localY = (tileOrder[pixel] - localX) / 8;
+
+                        int x = tX * 8 + localX;
+                        int y = tY * 8 + localY;
+
+                        int offset = (y * width + x) * 4;
 
                         byte alpha = br.ReadByte();
                         byte red = br.ReadByte();
                         byte green = br.ReadByte();
                         byte blue = br.ReadByte();
 
-                        argbBuf[outputOffset + 0] = blue;
-                        argbBuf[outputOffset + 1] = green;
-                        argbBuf[outputOffset + 2] = red;
-                        argbBuf[outputOffset + 3] = alpha;
+                        // -------------------------
+                        // NORMAL TEXTURE
+                        // -------------------------
+                        texBuf[offset + 0] = blue;
+                        texBuf[offset + 1] = green;
+                        texBuf[offset + 2] = red;
+                        texBuf[offset + 3] = alpha;
+
+                        // -------------------------
+                        // MASK TEXTURE (RGB preserved)
+                        // -------------------------
+                        if (alpha == 0 && red + green + blue > 0)
+                        {
+                            maskBuf[offset + 0] = blue;
+                            maskBuf[offset + 1] = green;
+                            maskBuf[offset + 2] = red;
+                            maskBuf[offset + 3] = 0xFF;
+                        }
+                        else
+                        {
+                            maskBuf[offset + 0] = 0;
+                            maskBuf[offset + 1] = 0;
+                            maskBuf[offset + 2] = 0;
+                            maskBuf[offset + 3] = 0;
+                        }
                     }
                 }
             }
 
-            return argbBuf;
+            return new DecodedTextureType(texBuf, maskBuf);
         }
 
-        public byte[] DecodeTexture(ushort texFmt, BinaryReaderX br, ushort width, ushort height)
+        public DecodedTextureType DecodeTexture(ushort texFmt, BinaryReaderX br, ushort width, ushort height)
         {
             if (texFmt > 0xF)
                 throw new ArgumentOutOfRangeException("Texture format is out of range for a CTR font");

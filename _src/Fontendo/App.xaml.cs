@@ -14,6 +14,7 @@ using Fontendo.Controls;
 using Fontendo.DockManager;
 using Fontendo.UI;
 using System.Drawing.Drawing2D;
+using static System.Net.WebRequestMethods;
 
 namespace Fontendo
 {
@@ -43,104 +44,38 @@ namespace Fontendo
             if (e.Args.Length > 0)
             {
                 string filePath = e.Args[0];
-                if (File.Exists(filePath))
+                if (System.IO.File.Exists(filePath))
                     fileToOpen = filePath;
             }
         }
 
 
-        private static Assembly OnResolveAssembly(object sender, ResolveEventArgs args)
+        private static Assembly? OnResolveAssembly(object sender, ResolveEventArgs args)
         {
-            string[] excludes = {
-                "System.Private.DataContractSerialization.resources.dll",
-                "System.Private.Xml.resources.dll",
-                "PresentationFramework.Aero2.resources.dll",
-                "System.ComponentModel.TypeConverter.resources.dll",
-                "PresentationCore.resources.dll",
-                "PresentationFramework.resources.dll",
-                "Microsoft.VisualStudio.DesignTools.WpfTap.resources.dll",
-                "SharepointConnector.resources.dll",
-                "Microsoft.IdentityModel.Clients.ActiveDirectory.dll",
-                "System.Web.Http.dll",
-                "System.Web.Services.dll",
-                "System.ServiceModel.dll",
-                "System.Net.Requests.resources.dll",
-                "Fontendo.resources.dll",
-                "Microsoft.SharePoint.Client.Runtime.resources.dll",
-                "System.Net.Requests.resources.dll",
-                "SharePointPnP.IdentityModel.Extensions.dll",
-                "Microsoft.AnalysisServices.Tabular.resources.dll",
-                "Microsoft.AnalysisServices.Runtime.Core.resources.dll",
-                "Microsoft.VisualStudio.dll",
-                "System.Net.Sockets.resources.dll",
-                "ICSharpCode.AvalonEdit.resources.dll",
-                "Xceed.Wpf.Toolkit.resources.dll",
-                "Microsoft.CSharp.resources.dll",
-                "Microsoft.Data.SqlClient.resources.dll",
-                "CefSharp.Wpf.resources.dll",
-                "System.Xaml.resources.dll",
-                "WindowsBase.resources.dll",
-                "System.Private.Uri.resources.dll",
-                "System.Linq.resources.dll",
-                "Microsoft.AnalysisServices.Core.resources.dll",
-                "System.Data.Odbc.resources.dll",
-                "TOMWrapper.resources.dll",
-                "System.Data.Common.resources.dll",
-                "System.Data.Odbc.resources.dll",
-                "System.Net.Security.resources.dll",
-                "System.Net.Http.resources.dll",
-                "System.Formats.Nrbf.dll",
-                "System.Reflection.Metadata.dll",
-                "System.Configuration.ConfigurationManager.resources.dll"
-            };
+            var parentAssembly = Assembly.GetExecutingAssembly();
+            var resourceNames = parentAssembly.GetManifestResourceNames();
 
-            string finalname = args.Name.Substring(0, args.Name.IndexOf(',')) + ".dll";
+            // Extract the simple name of the assembly being requested
+            string requestedName = new AssemblyName(args.Name).Name + ".dll";
 
-            try
+            // Only handle assemblies that actually exist as embedded resources
+            string? resourceName = resourceNames
+                .FirstOrDefault(r => r.EndsWith(requestedName, StringComparison.OrdinalIgnoreCase));
+
+            if (resourceName == null)
             {
-                // Gets the main assembly
-                Assembly parentAssembly = Assembly.GetExecutingAssembly();
-
-                // Search the resources for our DLL and get the first match
-                string[]? resourcesList = parentAssembly.GetManifestResourceNames();
-                string? ourResourceName = resourcesList.FirstOrDefault(name => name.EndsWith(finalname));
-
-                if (!string.IsNullOrWhiteSpace(ourResourceName))
-                {
-                    // Get a stream representing our resource then load it as bytes
-                    using (Stream? stream = parentAssembly.GetManifestResourceStream(ourResourceName))
-                    {
-                        if (stream == null || stream.Length == 0)
-                        {
-                            if (!excludes.Contains(finalname))
-                            {
-                                CustomMessageBox.Show("Failed to resolve assembly " + finalname);
-                            }
-                            return null;
-                        }
-                        byte[] block = new byte[stream.Length];
-                        stream.Read(block, 0, block.Length);
-                        stream.Close();
-                        return Assembly.Load(block);
-                    }
-                }
-                else
-                {
-                    if (!excludes.Contains(finalname))
-                    {
-                        CustomMessageBox.Show("Failed to resolve assembly " + finalname);
-                    }
-                    return null;
-                }
-            }
-            catch (Exception ex)
-            {
-                if (!excludes.Contains(finalname))
-                {
-                    CustomMessageBox.Show("Failed to load assembly " + finalname + Environment.NewLine + Environment.NewLine + ex.Message);
-                }
+                // Not one of our embedded assemblies → ignore
                 return null;
             }
+
+            using Stream? stream = parentAssembly.GetManifestResourceStream(resourceName);
+            if (stream == null)
+                return null;
+
+            byte[] bytes = new byte[stream.Length];
+            stream.Read(bytes, 0, bytes.Length);
+
+            return Assembly.Load(bytes);
         }
         private void GlobalDispatcherExceptionHandler(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
         {
@@ -909,6 +844,23 @@ namespace Fontendo
             }
             return 0;
         }
+    }
+
+    public class AntiAliasToOpacityConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is int aa)
+            {
+                // Slider 0–100 → opacity 0.0–1.0
+                return aa / 100.0;
+            }
+
+            return 0.0;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+            => throw new NotImplementedException();
     }
 
 }

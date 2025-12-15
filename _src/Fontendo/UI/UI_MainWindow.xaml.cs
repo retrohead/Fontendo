@@ -13,6 +13,9 @@ using static FileSystemHelper;
 using static Fontendo.Extensions.FontBase;
 using static Fontendo.Extensions.FontBase.FontSettings;
 using Fontendo.DockManager;
+using System.Collections.ObjectModel;
+using System.Windows.Threading;
+using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
 
 namespace Fontendo.UI
 {
@@ -37,10 +40,37 @@ namespace Fontendo.UI
                 }
             }
         }
-        public UnicodeNames UnicodeNames;
-        public UI_GlyphEditor GlyphEditor = new UI_GlyphEditor();
+        public UnicodeNames? UnicodeNames;
+        public UI_GlyphEditor GlyphEditor;
         public UI_FontEditor FontEditor = new UI_FontEditor();
         private bool debugMode = false;
+
+        private ObservableCollection<GlyphItem> _GlyphsList = new ObservableCollection<GlyphItem>();
+        public ObservableCollection<GlyphItem> GlyphsList
+        {
+            get { return _GlyphsList; }
+            set
+            {
+                if (_GlyphsList != value)
+                {
+                    _GlyphsList = value;
+                    OnPropertyChanged(nameof(GlyphsList));
+                }
+            }
+        }
+        private ObservableCollection<SheetItem> _SheetsList = new ObservableCollection<SheetItem>();
+        public ObservableCollection<SheetItem> SheetsList
+        {
+            get { return _SheetsList; }
+            set
+            {
+                if (_SheetsList != value)
+                {
+                    _SheetsList = value;
+                    OnPropertyChanged(nameof(SheetsList));
+                }
+            }
+        }
 
         public static UI_MainWindow Self;
         public class MainFormButtonEnabler : INotifyPropertyChanged
@@ -85,6 +115,19 @@ namespace Fontendo.UI
 
         }
 
+        private int _ItemsLoadingCount = 0;
+
+        public void BeginLoading() { Interlocked.Increment(ref _ItemsLoadingCount); OnPropertyChanged(nameof(OpenButtonEnabled)); }
+        public void EndLoading() { Interlocked.Decrement(ref _ItemsLoadingCount); OnPropertyChanged(nameof(OpenButtonEnabled)); }
+
+        public bool OpenButtonEnabled
+        {
+            get
+            {
+                return _ItemsLoadingCount == 0;
+            }
+        }
+
 
         private MainFormButtonEnabler? _buttonEnabler;
         public MainFormButtonEnabler? ButtonEnabler
@@ -95,6 +138,8 @@ namespace Fontendo.UI
 
         public class SheetItem : INotifyPropertyChanged
         {
+            public UI_FontEditor FontEditor { get; }
+
             private string _Label = "";
             public string Label
             {
@@ -129,6 +174,24 @@ namespace Fontendo.UI
                 }
             }
 
+
+            private BitmapImage? _Mask;
+            public BitmapImage? Mask
+            {
+                get
+                {
+                    return _Mask;
+                }
+                set
+                {
+                    if (_Mask != value)
+                    {
+                        _Mask = value;
+                        OnPropertyChanged(nameof(Mask));
+                    }
+                }
+            }
+
             private object? _Tag;
             public object? Tag
             {
@@ -147,12 +210,20 @@ namespace Fontendo.UI
             }
 
             public double OriginalWidth => Image?.PixelWidth ?? 0;
+            public double OriginalHeight => Image?.PixelHeight ?? 0;
+
+            public SheetItem(UI_FontEditor editor)
+            {
+                FontEditor = editor;
+            }
             public event PropertyChangedEventHandler? PropertyChanged;
             protected void OnPropertyChanged(string name) =>
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
         public class GlyphItem : INotifyPropertyChanged
         {
+            public UI_FontEditor FontEditor { get; }
+
             private string _Label = "";
             public string Label
             {
@@ -186,6 +257,26 @@ namespace Fontendo.UI
                     }
                 }
             }
+            private BitmapImage? _MaskImage;
+            public BitmapImage? MaskImage
+            {
+                get
+                {
+                    return _MaskImage;
+                }
+                set
+                {
+                    if (_MaskImage != value)
+                    {
+                        _MaskImage = value;
+                        OnPropertyChanged(nameof(MaskImage));
+                    }
+                }
+            }
+            public GlyphItem(UI_FontEditor editor)
+            {
+                FontEditor = editor;
+            }
             private object? _Tag;
             public object? Tag
             {
@@ -203,6 +294,7 @@ namespace Fontendo.UI
                 }
             }
             public double OriginalWidth => Image?.PixelWidth ?? 0;
+            public double OriginalHeight => Image?.PixelHeight ?? 0;
             public event PropertyChangedEventHandler? PropertyChanged;
             protected void OnPropertyChanged(string name) =>
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
@@ -210,10 +302,11 @@ namespace Fontendo.UI
 
         public UI_MainWindow()
         {
+            GlyphEditor = new UI_GlyphEditor(FontEditor);
+            Self = this;
+            InitializeComponent();
             try
             {
-                Self = this;
-                InitializeComponent();
                 // At application startup, choose which file types to support
                 FileSystemHelper.Initialize(new List<FileType>
             {
@@ -489,8 +582,12 @@ namespace Fontendo.UI
             ListFontSheets();
             FontEditor.ShowFontDetails(FontendoFont);
         }
-        public static BitmapImage ConvertBitmap(System.Drawing.Bitmap bmp)
+        public static BitmapImage? ConvertBitmap(System.Drawing.Bitmap bmp)
         {
+            if(bmp == null)
+            {
+                return null;
+            }
             using (var ms = new MemoryStream())
             {
                 bmp.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
@@ -512,24 +609,42 @@ namespace Fontendo.UI
 
             SheetsType sheets = FontendoFont.Settings.Sheets;
 
-            var items = new List<SheetItem>();
-
+            listViewSheets.DataContext = this;
+            SheetsList = new ObservableCollection<SheetItem>();
             for (int i = 0; i < sheets.Images.Count; i++)
             {
-                Bitmap bmp = sheets.Images[i];
-                items.Add(new SheetItem
+                int index = i;
+                BeginLoading();
+                var dispatcher = Application.Current?.Dispatcher;
+                // App is closing or dispatcher is gone → skip safely
+                if (dispatcher == null || dispatcher.HasShutdownStarted || dispatcher.HasShutdownFinished)
+                    return;
+
+                dispatcher.BeginInvoke(() =>
                 {
-                    Label = $"Sheet {i + 1}",
-                    Image = ConvertBitmap(bmp),
-                    Tag = sheets.Images[i], // store the Bitmap in Tag
-                });
+                    try
+                    {
+                        Bitmap bmp = sheets.Images[index];
+                        Bitmap? bmp2 = sheets.MaskImages[index];
+                        SheetsList.Add(new SheetItem(FontEditor)
+                        {
+                            Label = $"Sheet {index + 1}",
+                            Image = ConvertBitmap(bmp),
+                            Mask = bmp2 == null ? null : ConvertBitmap(bmp2),
+                            Tag = sheets.Images[index]
+                        });
+                        if (listViewSheets.Items.Count > 0 && listViewSheets.SelectedIndex == -1)
+                        {
+                            listViewSheets.SelectedIndex = 0;
+                            listViewSheets.ScrollIntoView(listViewSheets.Items[0]);
+                        }
+                    }
+                    finally
+                    {
+                        EndLoading();
+                    }
+                }, DispatcherPriority.Background);
             }
-
-            listViewSheets.ItemsSource = items;
-
-            // optional: select first item
-            if (listViewSheets.Items.Count > 0)
-                listViewSheets.SelectedIndex = 0;
         }
 
         private void UserControl_Loaded(object sender, RoutedEventArgs e)
@@ -562,35 +677,56 @@ namespace Fontendo.UI
             popUps.loadPopUp(MainWindow.Self, "Theme Settings", "theme.png", ref pop, true);
         }
 
-        private void listViewSheets_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private async void listViewSheets_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (listViewSheets.SelectedIndex < 0)
                 return;
 
             int sheetIndex = listViewSheets.SelectedIndex;
-
-            // Get all CharImages belonging to this sheet
-            var glyphsForSheet = FontendoFont.Settings.Glyphs?
-                .Where(g => g.Sheet == sheetIndex);
-
-            if (glyphsForSheet == null)
-                return;
-
-            var items = new List<GlyphItem>();
-            foreach (var glyph in glyphsForSheet)
+            GlyphsList = new ObservableCollection<GlyphItem>();
+            listViewCharacters.DataContext = this;
+            await Task.Run(() =>
             {
-                items.Add(new GlyphItem
+                // Get all CharImages belonging to this sheet
+                var glyphsForSheet = FontendoFont.Settings.Glyphs?
+                    .Where(g => g.Sheet == sheetIndex);
+
+                if (glyphsForSheet == null)
+                    return;
+
+                foreach (var glyph in glyphsForSheet)
                 {
-                    Label = $"Char {glyph.Index}",
-                    Image = ConvertBitmap(glyph.Settings.Image),
-                    Tag = glyph
-                });
-            }
+                    BeginLoading();
+                    var dispatcher = Application.Current?.Dispatcher;
+                    // App is closing or dispatcher is gone → skip safely
+                    if (dispatcher == null || dispatcher.HasShutdownStarted || dispatcher.HasShutdownFinished)
+                        return;
 
-            listViewCharacters.ItemsSource = items;
+                    dispatcher.BeginInvoke(() =>
+                    {
+                        try
+                        {
+                            GlyphsList.Add(new GlyphItem(FontEditor)
+                            {
+                                Label = $"Char {glyph.Index}",
+                                Image = ConvertBitmap(glyph.Settings.Image),
+                                MaskImage = glyph.MaskImage == null ? null : ConvertBitmap(glyph.MaskImage),
+                                Tag = glyph
+                            });
 
-            if (listViewCharacters.Items.Count > 0)
-                listViewCharacters.SelectedIndex = 0;
+                            if (listViewCharacters.Items.Count > 0 && listViewCharacters.SelectedIndex == -1)
+                            {
+                                listViewCharacters.SelectedIndex = 0;
+                                listViewCharacters.ScrollIntoView(listViewCharacters.Items[0]);
+                            }
+                        }
+                        finally
+                        {
+                            EndLoading();
+                        }
+                    }, DispatcherPriority.Background);
+                }
+            });
         }
 
         private void listViewCharacters_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -631,7 +767,6 @@ namespace Fontendo.UI
         {
             GlyphEditor.ReplaceGlyph();
         }
-
 
         public event PropertyChangedEventHandler? PropertyChanged;
         protected void OnPropertyChanged(string name) =>

@@ -33,7 +33,7 @@
                           Style="{DynamicResource MenuItemNoIconStyle}"
                           Foreground="{DynamicResource ControlTextInactive}"
                           Height="32">
-                    <MenuItem Header="Open" Click="MenuItem_Open_Click" Style="{DynamicResource MenuItemStyle}" local:ThemeHelper.IsThemed="False"/>
+                    <MenuItem Header="Open" IsEnabled="{Binding OpenButtonEnabled, RelativeSource={RelativeSource AncestorType=UserControl}}" Click="MenuItem_Open_Click" Style="{DynamicResource MenuItemStyle}" local:ThemeHelper.IsThemed="False"/>
                     <MenuItem Header="Save" Click="MenuItem_Save_Click" Style="{DynamicResource MenuItemStyle}" local:ThemeHelper.IsThemed="False"/>
                     <MenuItem Header="Save As..." Click="MenuItem_SaveAs_Click" Style="{DynamicResource MenuItemStyle}" local:ThemeHelper.IsThemed="False"/>
                     <MenuItem x:Name="menuRecent" Header="Recent Items" Style="{DynamicResource MenuItemStyle}" local:ThemeHelper.IsThemed="False"/>
@@ -64,6 +64,7 @@
             <Button x:Name="btnBrowseFont"
                     Grid.Row="1" Grid.Column="1" Margin="1,1,0,1"
                     Content="..."
+                    IsEnabled="{Binding OpenButtonEnabled, RelativeSource={RelativeSource AncestorType=UserControl}}"
                     Height="27"
                     Background="{DynamicResource WindowBackgroundBrushMedium}"
                     ToolTip="Open File"
@@ -102,19 +103,20 @@
 
                     <!-- Left list -->
                     <ListView x:Name="listViewSheets"
-          Background="#7A41C4"
-          Foreground="White"
-          BorderThickness="0"
-          SelectionMode="Single"
-          ItemsSource="{Binding Sheets}"
-          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-          ScrollViewer.VerticalScrollBarVisibility="Auto"
-          ItemContainerStyle="{DynamicResource GalleryListViewItemStyle}" SelectionChanged="listViewSheets_SelectionChanged">
+                          Background="#7A41C4"
+                          Foreground="White"
+                          BorderThickness="0"
+                          VirtualizingPanel.IsVirtualizing="True"
+                          VirtualizingPanel.VirtualizationMode="Recycling"
+                          ScrollViewer.CanContentScroll="True"
+                          SelectionMode="Single"
+                          ItemsSource="{Binding SheetsList}"
+                          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                          ScrollViewer.VerticalScrollBarVisibility="Auto"
+                          ItemContainerStyle="{DynamicResource GalleryListViewItemStyle}" SelectionChanged="listViewSheets_SelectionChanged">
                         <ListView.Template>
                             <ControlTemplate TargetType="ListView">
-                                <Border BorderThickness="{TemplateBinding BorderThickness}"
-                    BorderBrush="{TemplateBinding BorderBrush}"
-                    Background="{TemplateBinding Background}">
+                                <Border BorderThickness="{TemplateBinding BorderThickness}" BorderBrush="{TemplateBinding BorderBrush}" Background="{TemplateBinding Background}">
                                     <ScrollViewer Style="{DynamicResource GalleryScrollViewerStyle}">
                                         <ItemsPresenter/>
                                     </ScrollViewer>
@@ -125,34 +127,56 @@
                         <ListView.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <WrapPanel IsItemsHost="True"
-                   Orientation="Horizontal"
-                   Margin="10" Cursor="Hand"/>
+                                   Orientation="Horizontal"
+                                   Margin="10" Cursor="Hand"/>
                             </ItemsPanelTemplate>
                         </ListView.ItemsPanel>
+                        
                         <!-- Each item: image + label -->
                         <ListView.ItemTemplate>
                             <DataTemplate>
-                                <StackPanel Margin="10">
-                                    <StackPanel.ContextMenu>
+                                <Grid Margin="10">
+                                    <Grid.ContextMenu>
                                         <ContextMenu Style="{DynamicResource ContextMenuStyle1}">
                                             <MenuItem Header="Export Sheet"
-                              Click="ExportSheet_Click"
-                              Style="{DynamicResource MenuItemStyle}"
-                              local:ThemeHelper.IsThemed="False"/>
+                                                  Click="ExportSheet_Click"
+                                                  Style="{DynamicResource MenuItemStyle}"
+                                                  local:ThemeHelper.IsThemed="False"/>
                                             <MenuItem Header="Replace Sheet"
-                              Click="ReplaceSheet_Click"
-                              Style="{DynamicResource MenuItemStyle}"
-                              local:ThemeHelper.IsThemed="False"/>
+                                                  Click="ReplaceSheet_Click"
+                                                  Style="{DynamicResource MenuItemStyle}"
+                                                  local:ThemeHelper.IsThemed="False"/>
                                         </ContextMenu>
-                                    </StackPanel.ContextMenu>
-                                    <Image Source="{Binding Image}" Width="{Binding OriginalWidth}"
-                       Stretch="Uniform"
-                       HorizontalAlignment="Center"/>
+                                    </Grid.ContextMenu>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="100*" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <Grid Width="{Binding OriginalWidth}" Height="{Binding OriginalHeight}">
+                                         <Grid
+                                                    Opacity="{Binding FontEditor.AntiAliasing, Converter={StaticResource AntiAliasToOpacityConverter}}"
+                                                    HorizontalAlignment="Stretch"
+                                                    Background="{Binding FontEditor.AliasingTintBrush}">
+                                                <Grid.OpacityMask>
+                                                    <ImageBrush ImageSource="{Binding Mask}" Stretch="None"/>
+                                                </Grid.OpacityMask>
+                                            </Grid>
+
+                                        <Grid
+                                                    HorizontalAlignment="Stretch"
+                                                    Background="{Binding FontEditor.TintBrush}"
+                                                    RenderOptions.BitmapScalingMode="NearestNeighbor">
+                                            <Grid.OpacityMask>
+                                                <ImageBrush ImageSource="{Binding Image}" Stretch="None"/>
+                                            </Grid.OpacityMask>
+                                        </Grid>
+                                    </Grid>
                                     <TextBlock Text="{Binding Label}"
-                           Foreground="{DynamicResource ControlTextActive}"
-                           HorizontalAlignment="Center"
-                           Margin="0,5,0,0"/>
-                                </StackPanel>
+                                                Foreground="{DynamicResource ControlTextActive}"
+                                                HorizontalAlignment="Center"
+                                                Grid.Row="1"
+                                                Margin="0,5,0,0"/>
+                                </Grid>
                             </DataTemplate>
                         </ListView.ItemTemplate>
                     </ListView>
@@ -162,20 +186,23 @@
                     <!-- Right list -->
 
                     <ListView x:Name="listViewCharacters" Grid.Column="2"
-          Background="#7A41C4"
-          Foreground="White"
-          BorderThickness="0"
-          SelectionMode="Single"
-          ItemsSource="{Binding Sheets}"
-          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-          ScrollViewer.VerticalScrollBarVisibility="Auto"
-          ItemContainerStyle="{DynamicResource GalleryListViewItemStyle}" SelectionChanged="listViewCharacters_SelectionChanged">
+                          Background="#7A41C4"
+                          Foreground="White"
+                          BorderThickness="0"
+                          SelectionMode="Single"
+                          ItemsSource="{Binding GlyphsList}"
+                          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                          ScrollViewer.VerticalScrollBarVisibility="Auto"
+                          VirtualizingPanel.IsVirtualizing="True"
+                          VirtualizingPanel.VirtualizationMode="Recycling"
+                          ScrollViewer.CanContentScroll="True"
+                          ItemContainerStyle="{DynamicResource GalleryListViewItemStyle}" SelectionChanged="listViewCharacters_SelectionChanged">
 
                         <ListView.Template>
                             <ControlTemplate TargetType="ListView">
                                 <Border BorderThickness="{TemplateBinding BorderThickness}"
-                    BorderBrush="{TemplateBinding BorderBrush}"
-                    Background="{TemplateBinding Background}">
+                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                        Background="{TemplateBinding Background}">
                                     <ScrollViewer Style="{DynamicResource GalleryScrollViewerStyle}">
                                         <ItemsPresenter/>
                                     </ScrollViewer>
@@ -186,37 +213,50 @@
                         <ListView.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <WrapPanel IsItemsHost="True"
-                   Orientation="Horizontal"
-                   Margin="10" Cursor="Hand"/>
+                                   Orientation="Horizontal"
+                                   Margin="10" Cursor="Hand"/>
                             </ItemsPanelTemplate>
                         </ListView.ItemsPanel>
                         <!-- Each item: image + label -->
                         <ListView.ItemTemplate>
                             <DataTemplate>
-                                <Grid Margin="10" MinWidth="55" MinHeight="55">
+                                <Grid Margin="10" MinWidth="55" MinHeight="55" Width="{Binding OriginalWidth}" Height="{Binding OriginalHeight}">
                                     <Grid.ContextMenu>
                                         <ContextMenu Style="{DynamicResource ContextMenuStyle1}">
                                             <MenuItem Header="Export Glyph"
-                              Click="ExportGlyph_Click"
-                              Style="{DynamicResource MenuItemStyle}"
-                              local:ThemeHelper.IsThemed="False"/>
+                                              Click="ExportGlyph_Click"
+                                              Style="{DynamicResource MenuItemStyle}"
+                                              local:ThemeHelper.IsThemed="False"/>
                                             <MenuItem Header="Replace Glyph"
-                              Click="ReplaceGlyph_Click"
-                              Style="{DynamicResource MenuItemStyle}"
-                              local:ThemeHelper.IsThemed="False"/>
+                                              Click="ReplaceGlyph_Click"
+                                              Style="{DynamicResource MenuItemStyle}"
+                                              local:ThemeHelper.IsThemed="False"/>
                                         </ContextMenu>
                                     </Grid.ContextMenu>
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="100*" />
                                         <RowDefinition Height="20" />
                                     </Grid.RowDefinitions>
-                                    <Image Source="{Binding Image}" Width="{Binding OriginalWidth}"
-                       Stretch="Uniform"
-                       HorizontalAlignment="Center"/>
+                                    <Grid VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
+                                                Opacity="{Binding FontEditor.AntiAliasing, Converter={StaticResource AntiAliasToOpacityConverter}}" 
+                                                
+                                                Background="{Binding FontEditor.AliasingTintBrush}">
+                                        <Grid.OpacityMask>
+                                            <ImageBrush ImageSource="{Binding MaskImage}" Stretch="None"/>
+                                        </Grid.OpacityMask>
+                                    </Grid>
+
+                                    <Grid
+                                                 VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
+                                                Background="{Binding FontEditor.TintBrush}">
+                                        <Grid.OpacityMask>
+                                            <ImageBrush ImageSource="{Binding Image}" Stretch="None"/>
+                                        </Grid.OpacityMask>
+                                    </Grid>
                                     <TextBlock Grid.Row="1" Text="{Binding Label}"
-                           Foreground="{DynamicResource ControlTextActive}"
-                           HorizontalAlignment="Center"
-                           Margin="0,5,0,0"/>
+                                           Foreground="{DynamicResource ControlTextActive}"
+                                           HorizontalAlignment="Center"
+                                           Margin="0,5,0,0"/>
                                 </Grid>
                             </DataTemplate>
                         </ListView.ItemTemplate>

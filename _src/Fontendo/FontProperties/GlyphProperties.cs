@@ -16,7 +16,8 @@ namespace Fontendo.FontProperties
             Left,
             GlyphWidth,
             CharWidth,
-            Image
+            Image,
+            MaskImage
         }
 
         /// <summary>

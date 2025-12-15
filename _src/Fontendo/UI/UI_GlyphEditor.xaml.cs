@@ -43,6 +43,34 @@ namespace Fontendo.UI
             }
         }
 
+        private BitmapSource? glyphImage;
+        public BitmapSource? GlyphImage
+        {
+            get { return glyphImage; }
+            set
+            {
+                if (glyphImage != value)
+                {
+                    glyphImage = value;
+                    OnPropertyChanged(new PropertyChangedEventArgs(nameof(GlyphImage)));
+                }
+            }
+        }
+
+        private BitmapSource? glyphMaskImage;
+        public BitmapSource? GlyphMaskImage
+        {
+            get { return glyphMaskImage; }
+            set
+            {
+                if (glyphMaskImage != value)
+                {
+                    glyphMaskImage = value;
+                    OnPropertyChanged(new PropertyChangedEventArgs(nameof(GlyphMaskImage)));
+                }
+            }
+        }
+
         private void updateBackground()
         {
             try
@@ -74,12 +102,16 @@ namespace Fontendo.UI
 
         }
 
-        public UI_GlyphEditor()
+        public UI_FontEditor FontEditor { get; }
+
+        public UI_GlyphEditor(UI_FontEditor fontEditor)
         {
+            FontEditor = fontEditor;
             suppressZoomEvent = true;
             InitializeComponent();
             suppressZoomEvent = false;
             GlyphBackground = ColorHelper.HexToColor(SettingsManager.Settings.FontBackgroundColor);
+            
         }
 
 
@@ -109,7 +141,7 @@ namespace Fontendo.UI
             }
             ShowGlyphImage(glyph);
             LoadedGlyph = glyph;
-            DataContext = LoadedGlyph.Settings;
+            panelGlyphProperties.DataContext = LoadedGlyph.Settings;
             BuildPropertiesPanel(panelGlyphProperties, glyph);
             ShowUnicodeDetails();
         }
@@ -178,7 +210,6 @@ namespace Fontendo.UI
         }
         private void ShowGlyphImage(Glyph? glyph)
         {
-            imgGlyphPreview.Source = null; // prevent auto-draw
             LoadedGlyph = glyph;
             if (glyph == null)
             {
@@ -217,12 +248,15 @@ namespace Fontendo.UI
                 // Respect user’s chosen zoom
                 zoomFactor = (float)sliderZoom.Value / 100f;
             }
-            imgGlyphPreview.Source = ConvertBitmapToBitmapSource(glyph.Settings.Image);
-
+            GlyphImage = ConvertBitmapToBitmapSource(glyph.Settings.Image);
+            GlyphMaskImage = glyph.MaskImage == null ? null : ConvertBitmapToBitmapSource(glyph.MaskImage);
+            borderGlyphImage.DataContext = this;
 
             // Apply zoom factor
             imgGlyphPreview.RenderTransform = zoomTransform;
             imgGlyphPreview.RenderTransformOrigin = new System.Windows.Point(0.5, 0.5);
+            imgGlyphPreviewMask.RenderTransform = zoomTransform;
+            imgGlyphPreviewMask.RenderTransformOrigin = new System.Windows.Point(0.5, 0.5);
             zoomTransform.ScaleX = zoomFactor;
             zoomTransform.ScaleY = zoomFactor;
             borderGlyphImage.Width = LoadedGlyph.Settings.Image.Width * zoomFactor;
@@ -276,12 +310,17 @@ namespace Fontendo.UI
             LoadedGlyph.Settings.Image = (Bitmap)bmp.Clone();
             item.Tag = LoadedGlyph;
             item.Image = UI_MainWindow.ConvertBitmap(LoadedGlyph.Settings.Image);
-
+            Bitmap? mask = FontBase.GenerateTransparencyMask(LoadedGlyph.Settings.Image);
+            item.MaskImage = mask == null ? null : UI_MainWindow.ConvertBitmap(mask);
+            LoadedGlyph.MaskImage = mask == null ? null : (Bitmap)mask.Clone();
+            if (mask != null)
+                mask.Dispose();
             bmp.Dispose();
             ShowGlyphDetails(LoadedGlyph);
             MessageBox.Show("Glyph image imported successfully.", "Import Successful", MessageBoxButton.OK, MessageBoxImage.Information);
-
         }
+
+
         private void btnReplaceGlyph_Click(object sender, RoutedEventArgs e)
         {
             ReplaceGlyph();

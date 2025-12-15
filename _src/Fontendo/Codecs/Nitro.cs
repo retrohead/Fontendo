@@ -19,7 +19,7 @@ namespace Fontendo.Codecs.NTR
             TextureFormatFunctions = new Dictionary<TextureFormatType, TextureFormatData>();
         }
 
-        public byte[] DecodeTexture(ushort texFmt, BinaryReaderX br, ushort width, ushort height)
+        public DecodedTextureType DecodeTexture(ushort texFmt, BinaryReaderX br, ushort width, ushort height)
         {
             throw new NotImplementedException();
         }

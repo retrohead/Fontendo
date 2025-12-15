@@ -30,11 +30,11 @@ namespace Fontendo
         public static MainWindow? Self;
         public const string appname = "Fontendo";
         public static string appDataPath = "";
-        public const string appver = "2.0.0.0";
+        public const string appver = "2.0.0.1";
         public const string appdeveloper = "retrohead";
         public const string appfirstyear = "2025";
         public static objectAnimations? objectAnim;
-        private bool debugMode = false;
+        private bool debugMode = true;
         public class runFunctionsType
         {
             public hexAndMathFunctions hexAndMathFunction = new hexAndMathFunctions();

@@ -8,6 +8,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using static Fontendo.FontProperties.PropertyList;
 using System.Drawing;
+using System.Windows.Media;
 
 namespace Fontendo.UI
 {
@@ -29,6 +30,56 @@ namespace Fontendo.UI
                 }
             }
         }
+        private System.Windows.Media.Color _selectedTintColor;
+        public System.Windows.Media.Color SelectedTintColor
+        {
+            get => _previewSelectedTintColor != null ? (System.Windows.Media.Color)_previewSelectedTintColor : _selectedTintColor;
+            set
+            {
+                if (_selectedTintColor != value)
+                {
+                    _selectedTintColor = value;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectedTintColor)));
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(TintBrush)));
+                }
+            }
+        }
+
+        public System.Windows.Media.Brush TintBrush => new SolidColorBrush(SelectedTintColor);
+
+
+        private System.Windows.Media.Color _selectedAliasingTintColor;
+        public System.Windows.Media.Color SelectedAliasingTintColor
+        {
+            get => _previewSelectedTintColor != null ? (System.Windows.Media.Color)_previewSelectedTintColor : _selectedAliasingTintColor;
+            set
+            {
+                if (_selectedAliasingTintColor != value)
+                {
+                    _selectedAliasingTintColor = value;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectedAliasingTintColor)));
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(AliasingTintBrush)));
+                }
+            }
+        }
+        public System.Windows.Media.Brush AliasingTintBrush => new SolidColorBrush(SelectedAliasingTintColor);
+
+
+
+        private int _antiAliasing = 50;
+        public int AntiAliasing
+        {
+            get => _antiAliasing;
+            set
+            {
+                if (_antiAliasing != value)
+                {
+                    _antiAliasing = value;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(AntiAliasing)));
+                }
+            }
+        }
+        private System.Windows.Media.Color? _previewSelectedTintColor = null;
         private FontBase? LoadedFont;
         bool initialized = false;
 
@@ -39,8 +90,12 @@ namespace Fontendo.UI
             DataContext = this;
             InitializeComponent();
             SelectedColor = ColorHelper.ToMediaColor(SettingsManager.Settings.FontBackgroundColor);
+            SelectedTintColor = ColorHelper.ToMediaColor(SettingsManager.Settings.FontTintColor);
+            SelectedAliasingTintColor = ColorHelper.ToMediaColor(SettingsManager.Settings.FontAliasingTintColor);
+            colorPicker.SelectedColorChanged += ColorPicker_SelectedColorChanged;
+            colorPickerTint.SelectedColorChanged += colorPickerTint_SelectedColorChanged;
+            colorPickerAliasingTint.SelectedColorChanged += colorPickerAliasingTint_SelectedColorChanged; 
         }
-
 
 
         public void ShowFontDetails(FontBase? font)
@@ -181,7 +236,7 @@ namespace Fontendo.UI
             ReplaceSheet();
         }
 
-        private void ColorPickerButton_SelectedColorChanged(object sender, ColorPicker.ColorChangedEventArgs e)
+        private void ColorPicker_SelectedColorChanged(object? sender, ColorPicker.ColorChangedEventArgs? e)
         {
             SelectedColor = e.SelectedColor;
             if (UI_MainWindow.Self == null)
@@ -192,6 +247,31 @@ namespace Fontendo.UI
         private void colorPicker_PreviewSelectedColorChanged(object sender, ColorPicker.ColorChangedEventArgs e)
         {
             UI_MainWindow.Self.SetBackgroundColour(ColorHelper.ToDrawingColor(e.SelectedColor), false);
+        }
+
+        private void colorPickerTint_PreviewSelectedColorChanged(object sender, ColorPicker.ColorChangedEventArgs e)
+        {
+            _previewSelectedTintColor = e.SelectedColor;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(TintBrush)));
+        }
+
+        private void colorPickerTint_SelectedColorChanged(object? sender, ColorPicker.ColorChangedEventArgs? e)
+        {
+            SettingsManager.Settings.FontTintColor = ColorHelper.ColorToHex(ColorHelper.ToDrawingColor(e.SelectedColor));
+            SettingsManager.Save();
+            _previewSelectedTintColor = null;
+        }
+
+        private void colorPickerAliasingTint_SelectedColorChanged(object? sender, ColorPicker.ColorChangedEventArgs? e)
+        {
+            SettingsManager.Settings.FontAliasingTintColor = ColorHelper.ColorToHex(ColorHelper.ToDrawingColor(e.SelectedColor));
+            SettingsManager.Save();
+            _previewSelectedTintColor = null;
+        }
+        private void colorPickerAliasingTint_PreviewSelectedColorChanged(object sender, ColorPicker.ColorChangedEventArgs e)
+        {
+            _previewSelectedTintColor = e.SelectedColor;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(AliasingTintBrush)));
         }
     }
 }

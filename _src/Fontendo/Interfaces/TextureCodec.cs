@@ -1,17 +1,29 @@
 ﻿using Fontendo.Extensions.BinaryTools;
+using System.Drawing;
 using static Fontendo.Extensions.FontBase;
 
 namespace Fontendo.Interfaces
 {
     public interface ITextureCodec
     {
-        byte[] DecodeTexture(ushort texFmt, BinaryReaderX br, ushort width, ushort height);
+        public class DecodedTextureType
+        {
+            public byte[] data { get; }
+            public byte[]? mask { get; }
+
+            public DecodedTextureType(byte[] data, byte[]? mask)
+            {
+                this.data = data;
+                this.mask = mask;
+            }
+        }
+        DecodedTextureType DecodeTexture(ushort texFmt, BinaryReaderX br, ushort width, ushort height);
         byte[] EncodeTexture(ushort texFmt, byte[] data, ushort width, ushort height);
         public byte ConvertGeneralTextureTypeToPlatform(ImageFormats generalFmt);
         public ImageFormats ConvertPlatformTextureTypeToGeneral(ushort texFmt);
 
 
-        public delegate byte[] DecodeFunc(BinaryReaderX br, ushort width, ushort height);
+        public delegate DecodedTextureType DecodeFunc(BinaryReaderX br, ushort width, ushort height);
         public delegate byte[] EncodeFunc(byte[] argbBuf, ushort width, ushort height);
 
         public class TextureFormatData

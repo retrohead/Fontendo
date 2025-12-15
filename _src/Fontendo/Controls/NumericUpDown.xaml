@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              MinHeight="24" MinWidth="60">
     <Border x:Name="mainBorder" BorderThickness="1"
-            Background="{Binding Background}"
+            Background="{Binding Background, RelativeSource={RelativeSource AncestorType=UserControl}}"
             BorderBrush="{DynamicResource ControlBorder}"
             CornerRadius="3" HorizontalAlignment="Stretch">
         <Grid HorizontalAlignment="Stretch" Focusable="True" GotFocus="Grid_GotFocus">

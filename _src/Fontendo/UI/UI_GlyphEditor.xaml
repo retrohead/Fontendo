@@ -1,7 +1,8 @@
 ﻿<dockm:CustomWindowContentBase x:Class="Fontendo.UI.UI_GlyphEditor"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:Fontendo.Controls"
+             xmlns:local="clr-namespace:Fontendo"
+             xmlns:controls="clr-namespace:Fontendo.Controls"
              xmlns:dockm="clr-namespace:Fontendo.DockManager"
              xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
              MinWidth="180" MinHeight="350">
@@ -51,12 +52,26 @@
                     <Border.Effect>
                         <DropShadowEffect ShadowDepth="0" BlurRadius="25" Color="Black" />
                     </Border.Effect>
-                    <Image x:Name="imgGlyphPreview"
-                           Stretch="None"
-                           RenderOptions.BitmapScalingMode="NearestNeighbor"
-                           HorizontalAlignment="Center"
-                           VerticalAlignment="Center">
-                    </Image>
+                    <Grid>
+                         <Grid x:Name="imgGlyphPreviewMask" Width="{Binding GlyphImage.Width, RelativeSource={RelativeSource AncestorType=UserControl}}" Height="{Binding GlyphImage.Height, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                 Opacity="{Binding FontEditor.AntiAliasing, Converter={StaticResource AntiAliasToOpacityConverter}}"
+                                 HorizontalAlignment="Center"
+                                 Background="{Binding FontEditor.AliasingTintBrush}"
+                               RenderOptions.BitmapScalingMode="NearestNeighbor">
+                             <Grid.OpacityMask>
+                                 <ImageBrush ImageSource="{Binding GlyphMaskImage, RelativeSource={RelativeSource AncestorType=UserControl}}" Stretch="None"/>
+                             </Grid.OpacityMask>
+                         </Grid>
+                            <Grid x:Name="imgGlyphPreview"
+                                Width="{Binding GlyphImage.Width, RelativeSource={RelativeSource AncestorType=UserControl}}" Height="{Binding GlyphImage.Height, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                 HorizontalAlignment="Center"
+                                 Background="{Binding FontEditor.TintBrush}"
+                                  RenderOptions.BitmapScalingMode="NearestNeighbor">
+                                <Grid.OpacityMask>
+                                    <ImageBrush ImageSource="{Binding GlyphImage, RelativeSource={RelativeSource AncestorType=UserControl}}" Stretch="None"/>
+                                </Grid.OpacityMask>
+                            </Grid>
+                    </Grid>
                     </Border>
                 </Border>
             </Border>

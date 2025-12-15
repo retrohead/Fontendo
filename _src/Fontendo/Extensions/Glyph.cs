@@ -256,6 +256,9 @@ namespace Fontendo.Extensions
         public int Index { get; set; }
         public int Sheet { get; set; }
 
+        public Bitmap? MaskImage = null;
+
+
         public Glyph(int sheet, int index, int cmap_id, Dictionary<GlyphProperty, object>? propertyValues = null)
         {
             Sheet = sheet;

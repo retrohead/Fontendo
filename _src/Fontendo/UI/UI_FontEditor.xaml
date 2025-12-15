@@ -23,7 +23,7 @@
             <!-- separator -->
             <RowDefinition Height="10" />
             <!-- colorPickerBgColour -->
-            <RowDefinition Height="40" />
+            <RowDefinition Height="Auto" />
             <!-- separator -->
             <RowDefinition Height="10" />
             <!-- btnExportSheet -->
@@ -48,17 +48,28 @@
                 Background="{DynamicResource ControlBorder}"
                 Height="1" Margin="10,0" />
 
-        <!-- colorPickerBgColour -->
-        <Grid Grid.Row="2" Grid.Column="1" Margin="5,0,0,0">
+        <!-- Font colour options -->
+        <Grid Grid.Row="2" Grid.Column="1" Margin="5,5,0,5">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="85" />
                 <ColumnDefinition Width="32" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
-            <Label Content="Background" Foreground="{DynamicResource LabelTextBrush}" Grid.Column="0" Grid.Row="0" HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="12" FontFamily="{DynamicResource FontendoFont}" />
+            <Label Content="Background" Margin="0,5" Foreground="{DynamicResource LabelTextBrush}" Grid.Column="0" Grid.Row="0" HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="12" FontFamily="{DynamicResource FontendoFont}" />
+            <local:ColorPickerButton x:Name="colorPicker" HorizontalAlignment="Left" Grid.Column="1" Height="20" Width="20" SelectedColor="{Binding SelectedColor, Mode=TwoWay}" EnableAlphaChannel="True" PreviewSelectedColorChanged="colorPicker_PreviewSelectedColorChanged" />
 
-            <local:ColorPickerButton x:Name="colorPicker" Grid.Column="1" Height="20" Width="20" SelectedColor="{Binding SelectedColor, Mode=TwoWay}" EnableAlphaChannel="True" SelectedColorChanged="ColorPickerButton_SelectedColorChanged" PreviewSelectedColorChanged="colorPicker_PreviewSelectedColorChanged" />
+            <Label Content="Tint" Margin="0,5" Foreground="{DynamicResource LabelTextBrush}" Grid.Column="0" Grid.Row="1" HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="12" FontFamily="{DynamicResource FontendoFont}" />
+            <local:ColorPickerButton x:Name="colorPickerTint" HorizontalAlignment="Left" Grid.Row="1" Grid.Column="1" Height="20" Width="20" SelectedColor="{Binding SelectedTintColor, Mode=TwoWay}" EnableAlphaChannel="False" PreviewSelectedColorChanged="colorPickerTint_PreviewSelectedColorChanged" />
+            <local:ColorPickerButton x:Name="colorPickerAliasingTint" HorizontalAlignment="Left" Grid.Row="1" Grid.Column="2" Height="20" Width="20" SelectedColor="{Binding SelectedAliasingTintColor, Mode=TwoWay}" EnableAlphaChannel="False" PreviewSelectedColorChanged="colorPickerAliasingTint_PreviewSelectedColorChanged" />
+
+            <Label x:Name="labelAntiAliasing" Content="Anti Aliasing" Grid.Row="2" Foreground="{DynamicResource LabelTextBrush}" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="12" FontFamily="{DynamicResource FontendoFont}" />
+            <Slider x:Name="sliderAntiAlialising" Value="{Binding AntiAliasing, Mode=TwoWay}" Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" VerticalAlignment="Center" Minimum="0" Maximum="100" Style="{DynamicResource SliderStyle}" Margin="0,5,10,5" />
         </Grid>
 
 

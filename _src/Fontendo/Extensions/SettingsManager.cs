@@ -11,6 +11,8 @@ namespace Fontendo.Extensions
         public string RecentFiles { get; set; } = "";
         public int AnimationSpeed { get; set; } = 1;
         public string FontBackgroundColor { get; set; } = "#452175";
+        public string FontTintColor { get; set; } = "#FFFFFF";
+        public string FontAliasingTintColor { get; set; } = "#000000";
     }
     public static class SettingsManager
     {

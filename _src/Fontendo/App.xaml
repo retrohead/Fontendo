@@ -21,6 +21,7 @@
         <local:BooleanToVisibilityConverter  x:Key="BooleanToVisibilityConverter"/>
         <local:ThemeHelper x:Key="ThemeHelper"/>
         <local:ChevronFlipConverter x:Key="ChevronFlipConverter"/>
+        <local:AntiAliasToOpacityConverter  x:Key="AntiAliasToOpacityConverter"/>
 
 
         <local:ValueToWholeNumberConverter x:Key="NumberConverter" />

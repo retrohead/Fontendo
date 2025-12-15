@@ -1,4 +1,11 @@
-﻿## V2.0.0.0
+﻿## V2.0.0.1
+
+- Added support for viewing transparent non-black pixels in glyphs.
+- Added Tint option for glyphs and transparent non-black pixels.
+- Added slider to adjust the level of transparency for transparent non-black pixels.
+
+
+## V2.0.0.0
 
 - Ported to WPF and added theming support.
  

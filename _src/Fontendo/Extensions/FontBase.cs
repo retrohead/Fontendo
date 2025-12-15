@@ -6,6 +6,9 @@ using System.Windows.Data;
 using System.Drawing;
 using static Fontendo.FontProperties.FontPropertyList;
 using static Fontendo.FontProperties.PropertyList;
+using System.Drawing.Imaging;
+using System.Windows.Media;
+using Color = System.Drawing.Color;
 
 namespace Fontendo.Extensions
 {
@@ -64,11 +67,29 @@ namespace Fontendo.Extensions
                 {
                     get; set;
                 }
+                public List<Bitmap?> MaskImages
+                {
+                    get; set;
+                }
+
+                public bool HasMaskImages
+                {
+                    get
+                    {
+                        foreach (var img in MaskImages)
+                        {
+                            if (img != null)
+                                return true;
+                        }
+                        return false;
+                    }
+                }
 
                 public SheetsType(int Width, int Height)
                 {
                     this.Width = Width;
                     this.Height = Height;
+                    MaskImages = new List<Bitmap?>();
                     Images = new List<Bitmap>();
                 }
 
@@ -645,6 +666,46 @@ namespace Fontendo.Extensions
         {
             Font.RecreateGlyphsFromSheet(sheetNumber);
         }
+
+        public static Bitmap? GenerateTransparencyMask(Bitmap? source)
+        {
+            if (source == null)
+                return null;
+            int width = source.Width;
+            int height = source.Height;
+
+            Bitmap mask = new Bitmap(width, height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+
+            bool hasTransparentPixels = false;
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    Color c = source.GetPixel(x, y);
+
+                    bool interesting =
+                        c.A == 0 &&
+                        (c.R > 0 || c.G > 0 || c.B > 0);
+
+                    if (interesting)
+                    {
+                        // White pixel in mask
+                        mask.SetPixel(x, y, Color.FromArgb(255, c.R, c.G, c.B));
+                        hasTransparentPixels = true;
+                    }
+                    else
+                    {
+                        // transparent pixel in mask
+                        mask.SetPixel(x, y, Color.FromArgb(0, 0, 0, 0));
+                    }
+                }
+            }
+            if(hasTransparentPixels)
+                return mask;
+            return null;
+        }
+
+
 
         public event PropertyChangedEventHandler? PropertyChanged;
         protected void OnPropertyChanged(string propertyName) =>
