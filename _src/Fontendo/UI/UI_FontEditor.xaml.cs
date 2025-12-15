@@ -156,7 +156,14 @@ namespace Fontendo.UI
             UI_MainWindow.SheetItem? item = UI_MainWindow.Self.GetSelectedSheetItem();
             if (item == null) throw new Exception("Failed to get the selected sheet item");
             item.Image = UI_MainWindow.ConvertBitmap(LoadedFont.Settings.Sheets.Images[index]);
+
+            Bitmap? mask = FontBase.GenerateTransparencyMask(bmp);
+            item.Mask = LoadedFont.Settings.Sheets.MaskImages[index] == null ? null : UI_MainWindow.ConvertBitmap(mask);
             item.Tag = LoadedFont.Settings.Sheets.Images[index];
+            LoadedFont.RecreateGlyphsFromSheet(index);
+
+            if (mask != null)
+                mask.Dispose();
             bmp.Dispose();
             MessageBox.Show("Sheet image imported successfully.", "Import Successful", MessageBoxButton.OK, MessageBoxImage.Information);
 

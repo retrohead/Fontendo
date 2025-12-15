@@ -11,6 +11,8 @@ using System.IO;
 using Fontendo.UI;
 using static Fontendo.Interfaces.ITextureCodec;
 using System.Threading.Tasks;
+using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
+using System.Drawing.Drawing2D;
 
 namespace Fontendo.Formats.CTR
 {
@@ -305,38 +307,104 @@ namespace Fontendo.Formats.CTR
         private List<Bitmap> CreateAllSheets()
         {
             List<Bitmap> sheetImgs = new List<Bitmap>();
+
+            // Create empty sheets
             for (var i = 0; i < TGLP.SheetCount; i++)
             {
-                var bmp = new Bitmap(SheetSize.Value.X, SheetSize.Value.Y, PixelFormat.Format32bppArgb);
-                using (var gfx = Graphics.FromImage(bmp)) gfx.Clear(Color.Transparent);
+                var bmp = new Bitmap(
+                    SheetSize.Value.X,
+                    SheetSize.Value.Y,
+                    PixelFormat.Format32bppArgb);
+
+                using (var gfx = Graphics.FromImage(bmp))
+                    gfx.Clear(Color.Transparent);
+
                 sheetImgs.Add(bmp);
             }
+
+            // Fill sheets with glyphs
             foreach (var g in Glyphs)
             {
-                var i = g.Settings.Index;
-                var currentSheet = i / (TGLP.CellsPerRow * TGLP.CellsPerColumn);
-                var i2 = i - (currentSheet * TGLP.CellsPerRow * TGLP.CellsPerColumn);
-                var currentRow = i2 / TGLP.CellsPerRow;
-                var currentColumn = i2 - (currentRow * TGLP.CellsPerRow);
-                var startX = (int)(currentColumn * (CellSize.Value.X + 1));
-                var startY = (int)(currentRow * (CellSize.Value.Y + 1));
+                int index = g.Settings.Index;
+
+                int currentSheet = index / (TGLP.CellsPerRow * TGLP.CellsPerColumn);
                 if (currentSheet >= sheetImgs.Count)
-                {
                     throw new Exception("calculated sheet index exceeds created sheets count");
-                }
-                // Draw glyph image onto the sheet
-                using (var gfx = Graphics.FromImage(sheetImgs[(int)currentSheet]))
+
+                int i2 = index - (currentSheet * TGLP.CellsPerRow * TGLP.CellsPerColumn);
+                int currentRow = i2 / TGLP.CellsPerRow;
+                int currentColumn = i2 - (currentRow * TGLP.CellsPerRow);
+
+                int startX = (int)(currentColumn * (CellSize.Value.X + 1));
+                int startY = (int)(currentRow * (CellSize.Value.Y + 1));
+
+                // Exact ARGB copy — preserves 00FFFFFF perfectly
+                BlitGlyphExact(
+                    sheetImgs[currentSheet],
+                    g.Settings.Image,
+                    startX,
+                    startY);
+            }
+
+            return sheetImgs;
+        }
+
+
+        private static void BlitGlyphExact(
+            Bitmap sheet,
+            Bitmap glyph,
+            int destX,
+            int destY)
+        {
+            if (sheet.PixelFormat != PixelFormat.Format32bppArgb ||
+                glyph.PixelFormat != PixelFormat.Format32bppArgb)
+                throw new InvalidOperationException("Expected Format32bppArgb for exact blit.");
+
+            var rectSheet = new Rectangle(0, 0, sheet.Width, sheet.Height);
+            var rectGlyph = new Rectangle(0, 0, glyph.Width, glyph.Height);
+
+            var sheetData = sheet.LockBits(rectSheet, ImageLockMode.WriteOnly, sheet.PixelFormat);
+            var glyphData = glyph.LockBits(rectGlyph, ImageLockMode.ReadOnly, glyph.PixelFormat);
+
+            try
+            {
+                int bytesPerPixel = 4;
+
+                for (int y = 0; y < glyph.Height; y++)
                 {
-                    gfx.DrawImage(g.Settings.Image, new Rectangle(startX, startY, g.Settings.Image.Width, g.Settings.Image.Height));
+                    int srcOffset = y * glyphData.Stride;
+                    int dstOffset = (destY + y) * sheetData.Stride + destX * bytesPerPixel;
+
+                    // Copy one row from glyph to sheet
+                    byte[] row = new byte[glyph.Width * bytesPerPixel];
+                    System.Runtime.InteropServices.Marshal.Copy(
+                        glyphData.Scan0 + srcOffset,
+                        row,
+                        0,
+                        row.Length);
+
+                    System.Runtime.InteropServices.Marshal.Copy(
+                        row,
+                        0,
+                        sheetData.Scan0 + dstOffset,
+                        row.Length);
                 }
             }
-            return sheetImgs;
+            finally
+            {
+                sheet.UnlockBits(sheetData);
+                glyph.UnlockBits(glyphData);
+            }
         }
 
         public void RecreateSheetFromGlyphs(int i)
         {
             var bmp = new Bitmap(SheetSize.Value.X, SheetSize.Value.Y, PixelFormat.Format32bppArgb);
-            using (var gfx = Graphics.FromImage(bmp)) gfx.Clear(Color.Transparent);
+            // Clear to transparent first
+            using (var gfx = Graphics.FromImage(bmp))
+            {
+                gfx.Clear(Color.Transparent);
+            }
             foreach (var g in Glyphs)
             {
                 var index = g.Settings.Index;
@@ -348,14 +416,22 @@ namespace Fontendo.Formats.CTR
                 var startX = (int)(currentColumn * (CellSize.Value.X + 1));
                 var startY = (int)(currentRow * (CellSize.Value.Y + 1));
                 // Draw glyph image onto the sheet
-                using (var gfx = Graphics.FromImage(bmp))
-                {
-                    gfx.DrawImage(g.Settings.Image, new Rectangle(startX, startY, g.Settings.Image.Width, g.Settings.Image.Height));
-                }
+                BlitGlyphExact(
+                    bmp,
+                    g.Settings.Image,
+                    startX,
+                    startY);
             }
             // Replace old sheet image
-            Sheets.Images[i].Dispose();
+            Sheets!.Images[i].Dispose();
             Sheets.Images[i] = bmp;
+
+            if (Sheets!.MaskImages[i] != null)
+            {
+                Sheets.MaskImages[i]!.Dispose();
+            }
+            Bitmap? mask = FontBase.GenerateTransparencyMask(bmp);
+            Sheets.MaskImages[i] = mask == null ? null : mask;
         }
 
 
@@ -377,7 +453,14 @@ namespace Fontendo.Formats.CTR
                 // replace the bmp
                 charImages[i].Image.Dispose();
                 charImages[i].Image = bmp;
+                if (Glyphs![charImages[i].Index].Settings.Image != null)
+                    Glyphs[charImages[i].Index].Settings.Image.Dispose();
+                if (Glyphs[charImages[i].Index].MaskImage != null)
+                    Glyphs[charImages[i].Index].MaskImage!.Dispose();
                 Glyphs[charImages[i].Index].Settings.Image = bmp;
+
+                Bitmap? mask = FontBase.GenerateTransparencyMask(Glyphs[charImages[i].Index].Settings.Image);
+                Glyphs[charImages[i].Index].MaskImage = mask == null ? null : mask;
             }
         }
 

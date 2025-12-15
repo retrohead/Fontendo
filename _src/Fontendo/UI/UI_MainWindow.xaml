@@ -36,7 +36,7 @@
                     <MenuItem Header="Open" IsEnabled="{Binding OpenButtonEnabled, RelativeSource={RelativeSource AncestorType=UserControl}}" Click="MenuItem_Open_Click" Style="{DynamicResource MenuItemStyle}" local:ThemeHelper.IsThemed="False"/>
                     <MenuItem Header="Save" Click="MenuItem_Save_Click" Style="{DynamicResource MenuItemStyle}" local:ThemeHelper.IsThemed="False"/>
                     <MenuItem Header="Save As..." Click="MenuItem_SaveAs_Click" Style="{DynamicResource MenuItemStyle}" local:ThemeHelper.IsThemed="False"/>
-                    <MenuItem x:Name="menuRecent" Header="Recent Items" Style="{DynamicResource MenuItemStyle}" local:ThemeHelper.IsThemed="False"/>
+                    <MenuItem x:Name="menuRecent" IsEnabled="{Binding OpenButtonEnabled, RelativeSource={RelativeSource AncestorType=UserControl}}" Header="Recent Items" Style="{DynamicResource MenuItemStyle}" local:ThemeHelper.IsThemed="False"/>
                     <MenuItem Header="Exit" Click="MenuItem_Close_Click" Style="{DynamicResource MenuItemStyle}" local:ThemeHelper.IsThemed="False"/>
                 </MenuItem>
                 <MenuItem Header="Theme" Click="MenuItem_Options_Click" Style="{DynamicResource MenuItemNoIconStyle}" local:ThemeHelper.IsThemed="False"/>

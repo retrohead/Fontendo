@@ -1,6 +1,8 @@
 ﻿using Fontendo.Controls;
 using Fontendo.DockManager;
 using Fontendo.Extensions;
+using Fontendo.Interfaces;
+using System;
 using System.ComponentModel;
 using System.Drawing;
 using System.IO;
@@ -213,6 +215,18 @@ namespace Fontendo.UI
                 ClearGlyphDetails();
                 return;
             }
+            try
+            {
+                if (LoadedGlyph?.Settings.Image.Width <= 0 || LoadedGlyph?.Settings.Image.Height <= 0)
+                {
+                    ClearGlyphDetails();
+                    return;
+                }
+            } catch
+            {
+                ClearGlyphDetails();
+                return;
+            }
 
             // Compute max zoom so image fits inside PictureBox
             float scaleX = (float)borderGlyphImageBorder.ActualHeight / LoadedGlyph.Settings.Image.Width;
@@ -298,16 +312,31 @@ namespace Fontendo.UI
             }
             if (LoadedGlyph.Settings.Image != null)
                 LoadedGlyph.Settings.Image.Dispose();
-            LoadedGlyph.Settings.Image = (Bitmap)bmp.Clone();
-            item.Tag = LoadedGlyph;
-            item.Image = UI_MainWindow.ConvertBitmap(LoadedGlyph.Settings.Image);
-            Bitmap? mask = FontBase.GenerateTransparencyMask(LoadedGlyph.Settings.Image);
-            item.MaskImage = mask == null ? null : UI_MainWindow.ConvertBitmap(mask);
-            LoadedGlyph.MaskImage = mask == null ? null : (Bitmap)mask.Clone();
-            if (mask != null)
-                mask.Dispose();
-            bmp.Dispose();
+
+            int index = UI_MainWindow.Self.FontendoFont!.Settings.Glyphs!.IndexOf(LoadedGlyph);
+            Glyph glyph = UI_MainWindow.Self.FontendoFont!.Settings.Glyphs[index];
+            glyph.Settings.Image = (Bitmap)bmp.Clone();
+            Bitmap? mask = FontBase.GenerateTransparencyMask(glyph.Settings.Image);
+            glyph.MaskImage = mask == null ? null : (Bitmap)mask.Clone();
+            LoadedGlyph = glyph;
             ShowGlyphDetails(LoadedGlyph);
+
+            item.Image = mask == null ? null : UI_MainWindow.ConvertBitmap(bmp);
+            item.MaskImage = mask == null ? null : UI_MainWindow.ConvertBitmap(mask);
+
+            UI_MainWindow.Self.FontendoFont!.RecreateSheetFromGlyphs(LoadedGlyph.Sheet);
+
+            var sheetitem = UI_MainWindow.Self.SheetsList[LoadedGlyph.Sheet];
+            sheetitem.Image = UI_MainWindow.ConvertBitmap(UI_MainWindow.Self.FontendoFont!.Settings.Sheets!.Images[LoadedGlyph.Sheet]);
+            sheetitem.Mask = UI_MainWindow.Self.FontendoFont!.Settings.Sheets!.MaskImages[LoadedGlyph.Sheet] == null ? null : UI_MainWindow.ConvertBitmap(UI_MainWindow.Self.FontendoFont!.Settings.Sheets!.MaskImages[LoadedGlyph.Sheet]);
+
+            UI_MainWindow.Self.SheetsList[LoadedGlyph.Sheet] = sheetitem;
+            if (mask != null)
+            {
+                mask.Dispose();
+                mask = null;
+            }
+            bmp.Dispose();
             MessageBox.Show("Glyph image imported successfully.", "Import Successful", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 

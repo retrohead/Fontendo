@@ -196,22 +196,52 @@ namespace Fontendo.Formats
                         Glyphs.Add(glyph);
                     }
 
-                    // Stitch glyphs together into one large sheet
-                    Bitmap sheetBitmap = new Bitmap(FINF.Width, FINF.Height);
-                    using (Graphics g = Graphics.FromImage(sheetBitmap))
+                    // Stitch glyphs together into small sheets for easier loading in UI, max 128 x 128
+                    int sheetWidth = 128 - (128 % CGLP.CellWidth);
+                    int sheetHeight = 128 - (128 % CGLP.CellHeight);
+
+                    int cellsPerRow = sheetWidth / CGLP.CellWidth;
+                    int cellsPerCol = sheetHeight / CGLP.CellHeight;
+                    int cellsPerSheet = cellsPerRow * cellsPerCol;
+
+                    // Create the first sheet
+                    Bitmap sheetBitmap = new Bitmap(sheetWidth, sheetHeight);
+                    Graphics gfx = Graphics.FromImage(sheetBitmap);
+                    gfx.Clear(Color.Transparent);
+
+                    int glyphIndexInSheet = 0;
+                    Sheets = new SheetsType(sheetWidth, sheetHeight);
+                    for (int i = 0; i < Glyphs.Count; i++)
                     {
-                        g.Clear(Color.Transparent);
-                        for (int i = 0; i < Glyphs.Count; i++)
+                        // If the current sheet is full, finalize it and start a new one
+                        if (glyphIndexInSheet >= cellsPerSheet)
                         {
-                            Glyph glyph = Glyphs[i];
-                            int x = glyph.Settings.Index % (FINF.Width / CGLP.CellWidth) * CGLP.CellWidth;
-                            int y = glyph.Settings.Index / (FINF.Width / CGLP.CellWidth) * CGLP.CellHeight;
-                            g.DrawImage(glyph.Settings.Image, x, y, CGLP.CellWidth, CGLP.CellHeight);
+                            Sheets.Images.Add(sheetBitmap);
+                            Sheets.MaskImages.Add(null);
+
+                            sheetBitmap = new Bitmap(sheetWidth, sheetHeight);
+                            gfx.Dispose();
+                            gfx = Graphics.FromImage(sheetBitmap);
+                            gfx.Clear(Color.Transparent);
+
+                            glyphIndexInSheet = 0;
                         }
+
+                        Glyph glyph = Glyphs[i];
+                        glyph.Sheet = Sheets.Images.Count(); // set the sheet index
+
+                        int x = (glyphIndexInSheet % cellsPerRow) * CGLP.CellWidth;
+                        int y = (glyphIndexInSheet / cellsPerRow) * CGLP.CellHeight;
+
+                        gfx.DrawImage(glyph.Settings.Image, x, y, CGLP.CellWidth, CGLP.CellHeight);
+
+                        glyphIndexInSheet++;
                     }
-                    Sheets = new SheetsType(FINF.Width, FINF.Height);
+
+                    // Add the final sheet
                     Sheets.Images.Add(sheetBitmap);
                     Sheets.MaskImages.Add(null);
+                    gfx.Dispose();
 
                     // Set the glyph code point bounds
                     (long Min, long Max) range;

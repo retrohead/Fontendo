@@ -17,6 +17,7 @@ using System.Collections.ObjectModel;
 using System.Windows.Threading;
 using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
 using Fontendo.Interfaces;
+using System;
 
 namespace Fontendo.UI
 {
@@ -116,7 +117,10 @@ namespace Fontendo.UI
 
         }
 
-        private int _ItemsLoadingCount = 0;
+        private int _ItemsLoadingCount = 0; 
+        private CancellationTokenSource? _sheetLoadCts;
+        private Task _sheetLoadTask = Task.CompletedTask;
+        private bool _isLoadingSheet;
 
         public void BeginLoading() { Interlocked.Increment(ref _ItemsLoadingCount); OnPropertyChanged(nameof(OpenButtonEnabled)); }
         public void EndLoading() { Interlocked.Decrement(ref _ItemsLoadingCount); OnPropertyChanged(nameof(OpenButtonEnabled)); }
@@ -332,7 +336,6 @@ namespace Fontendo.UI
                 MessageBox.Show("Error during initialization of main window.");
             }
         }
-
 
 
         public int SelectedSheet
@@ -601,9 +604,19 @@ namespace Fontendo.UI
             ListFontSheets();
             FontEditor.ShowFontDetails(FontendoFont);
         }
-        public static BitmapImage? ConvertBitmap(System.Drawing.Bitmap bmp)
+        public static BitmapImage? ConvertBitmap(Bitmap? bmp)
         {
-            if(bmp == null)
+            if (bmp == null)
+            {
+                return null;
+            }
+            try
+            {
+                if (bmp.Width <= 0 || bmp.Height <= 0)
+                {
+                    return null;
+                }
+            } catch
             {
                 return null;
             }
@@ -629,8 +642,8 @@ namespace Fontendo.UI
 
             SheetsType sheets = FontendoFont.Settings.Sheets;
 
-            listViewSheets.DataContext = this;
             SheetsList = new ObservableCollection<SheetItem>();
+            listViewSheets.DataContext = this;
             for (int i = 0; i < sheets.Images.Count; i++)
             {
                 int index = i;
@@ -648,20 +661,20 @@ namespace Fontendo.UI
                         Bitmap? bmp2 = sheets.MaskImages[index];
                         SheetsList.Add(new SheetItem(FontEditor)
                         {
-                            Label = $"Sheet {index + 1}",
+                            Label = FontendoFont.LoadedFontFileType == FileType.NitroFontResource ? $"Block {index + 1}" : $"Sheet {index + 1}",
                             Image = ConvertBitmap(bmp),
                             Mask = bmp2 == null ? null : ConvertBitmap(bmp2),
                             Tag = sheets.Images[index]
                         });
+                    }
+                    finally
+                    {
+                        EndLoading();
                         if (listViewSheets.Items.Count > 0 && listViewSheets.SelectedIndex == -1)
                         {
                             listViewSheets.SelectedIndex = 0;
                             listViewSheets.ScrollIntoView(listViewSheets.Items[0]);
                         }
-                    }
-                    finally
-                    {
-                        EndLoading();
                     }
                 }, DispatcherPriority.Background);
             }
@@ -702,52 +715,80 @@ namespace Fontendo.UI
             if (listViewSheets.SelectedIndex < 0)
                 return;
 
+            // Cancel previous load
+            _sheetLoadCts?.Cancel();
+
+            // Wait for previous load to fully stop
+            try
+            {
+                await _sheetLoadTask;
+            }
+            catch
+            {
+                // Ignore cancellation exceptions
+            }
+
+            // Start new load
+            _sheetLoadCts = new CancellationTokenSource();
+            var token = _sheetLoadCts.Token;
+
             int sheetIndex = listViewSheets.SelectedIndex;
+
+            _sheetLoadTask = LoadSheetAsync(sheetIndex, token);
+        }
+
+
+        private async Task LoadSheetAsync(int sheetIndex, CancellationToken token)
+        {
             GlyphsList = new ObservableCollection<GlyphItem>();
             listViewCharacters.DataContext = this;
-            await Task.Run(() =>
+
+            var glyphsForSheet = FontendoFont.Settings.Glyphs?
+                .Where(g => g.Sheet == sheetIndex)
+                .ToList();
+
+            if (glyphsForSheet == null)
+                return;
+
+            foreach (var glyph in glyphsForSheet)
             {
-                // Get all CharImages belonging to this sheet
-                var glyphsForSheet = FontendoFont.Settings.Glyphs?
-                    .Where(g => g.Sheet == sheetIndex);
 
-                if (glyphsForSheet == null)
-                    return;
-
-                foreach (var glyph in glyphsForSheet)
+                BeginLoading();
+                try
                 {
-                    BeginLoading();
-                    var dispatcher = Application.Current?.Dispatcher;
-                    // App is closing or dispatcher is gone → skip safely
-                    if (dispatcher == null || dispatcher.HasShutdownStarted || dispatcher.HasShutdownFinished)
+                    if (token.IsCancellationRequested)
                         return;
 
-                    dispatcher.BeginInvoke(() =>
+                    await Application.Current.Dispatcher.InvokeAsync(() =>
                     {
-                        try
-                        {
-                            GlyphsList.Add(new GlyphItem(FontEditor)
-                            {
-                                Label = $"Char {glyph.Index}",
-                                Image = ConvertBitmap(glyph.Settings.Image),
-                                MaskImage = glyph.MaskImage == null ? null : ConvertBitmap(glyph.MaskImage),
-                                Tag = glyph
-                            });
+                        if (token.IsCancellationRequested)
+                            return;
 
-                            if (listViewCharacters.Items.Count > 0 && listViewCharacters.SelectedIndex == -1)
-                            {
-                                listViewCharacters.SelectedIndex = 0;
-                                listViewCharacters.ScrollIntoView(listViewCharacters.Items[0]);
-                            }
-                        }
-                        finally
+                        GlyphsList.Add(new GlyphItem(FontEditor)
                         {
-                            EndLoading();
+                            Label = $"Char {glyph.Index}",
+                            Image = ConvertBitmap(glyph.Settings.Image),
+                            MaskImage = glyph.MaskImage == null ? null : ConvertBitmap(glyph.MaskImage),
+                            Tag = glyph
+                        });
+
+                        if (listViewCharacters.Items.Count > 0 &&
+                        listViewCharacters.SelectedIndex == -1)
+                        {
+                            listViewCharacters.SelectedIndex = 0;
+                            listViewCharacters.ScrollIntoView(listViewCharacters.Items[0]);
                         }
                     }, DispatcherPriority.Background);
                 }
-            });
+                finally
+                {
+                    EndLoading();
+                }
+            }
         }
+
+
+
 
         private void listViewCharacters_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
