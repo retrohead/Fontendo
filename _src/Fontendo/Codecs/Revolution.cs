@@ -5,7 +5,7 @@ using static Fontendo.Interfaces.ITextureCodec;
 
 namespace Fontendo.Codecs.RVL
 {
-    public class RVLTextureCodec : Fontendo.Interfaces.ITextureCodec
+    public class RVLTextureCodec : ITextureCodec
     {
         public Dictionary<TextureFormatType, TextureFormatData> TextureFormatFunctions { get; }
 
@@ -96,6 +96,11 @@ namespace Fontendo.Codecs.RVL
         }
 
         public FontBase.ImageFormats ConvertPlatformTextureTypeToGeneral(ushort texFmt)
+        {
+            throw new NotImplementedException();
+        }
+
+        public DecodedTextureType DecodeBitmap(ushort bpp, BitReader bitr, ushort width, ushort height)
         {
             throw new NotImplementedException();
         }

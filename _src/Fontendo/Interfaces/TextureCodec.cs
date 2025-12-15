@@ -17,7 +17,10 @@ namespace Fontendo.Interfaces
                 this.mask = mask;
             }
         }
-        DecodedTextureType DecodeTexture(ushort texFmt, BinaryReaderX br, ushort width, ushort height);
+        public DecodedTextureType DecodeTexture(ushort texFmt, BinaryReaderX br, ushort width, ushort height);
+
+        public DecodedTextureType DecodeBitmap(ushort bpp, BitReader bitr, ushort width, ushort height);
+
         byte[] EncodeTexture(ushort texFmt, byte[] data, ushort width, ushort height);
         public byte ConvertGeneralTextureTypeToPlatform(ImageFormats generalFmt);
         public ImageFormats ConvertPlatformTextureTypeToGeneral(ushort texFmt);

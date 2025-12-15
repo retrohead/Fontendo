@@ -39,5 +39,10 @@ namespace Fontendo.Codecs.CAFE
         {
             throw new NotImplementedException();
         }
+
+        public DecodedTextureType DecodeBitmap(ushort bpp, BitReader bitr, ushort width, ushort height)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

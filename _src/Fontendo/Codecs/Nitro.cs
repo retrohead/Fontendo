@@ -21,8 +21,10 @@ namespace Fontendo.Codecs.NTR
 
         public DecodedTextureType DecodeTexture(ushort bpp, BinaryReaderX br, ushort width, ushort height)
         {
-            BitReader bitr = new BitReader(br);
-            bitr.Update();
+            throw new NotImplementedException();
+        }
+        public DecodedTextureType DecodeBitmap(ushort bpp, BitReader bitr, ushort width, ushort height)
+        {
             byte[] imgBuf = new byte[width * height * 4];
 
             for (int y = 0; y < height; y++)

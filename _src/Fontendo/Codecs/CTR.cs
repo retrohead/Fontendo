@@ -966,5 +966,10 @@ namespace Fontendo.Codecs.CTR
                     return (byte)TextureFormatType.RGBA8888; //In case it's something unknown, default to RGBA8
             }
         }
+
+        public DecodedTextureType DecodeBitmap(ushort bpp, BitReader bitr, ushort width, ushort height)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

@@ -134,7 +134,8 @@ namespace Fontendo.Formats
                         CharImages.Clear();
                     }
                     CharImages = new List<CharImageType>();
-                    for (int i = 0; i < CharMaps.Count; i++)
+                    BitReader bitReader = new BitReader(br);
+                    for (int i = 0; i < CharMaps.Count(); i++)
                     {
                         long offset = CGLP.BitmapPtr + (CGLP.CellSize * i);
                         br.BaseStream.Position = offset;
@@ -146,7 +147,8 @@ namespace Fontendo.Formats
                                 return new ActionResult(false, $"Failed parsing CWDH charwidth at index {i}\n\n{result.Message}");
                             CharWidths.Add(cw);
                         }
-                        DecodedTextureType tex = Codec.DecodeTexture(CGLP.BytesPerPixel, br, CGLP.CellWidth, CGLP.CellHeight);
+                        bitReader.Update();
+                        DecodedTextureType tex = Codec.DecodeBitmap(CGLP.BytesPerPixel, bitReader, CGLP.CellWidth, CGLP.CellHeight);
                         CharImages.Add(
                             new CharImageType(
                                 i, 

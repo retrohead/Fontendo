@@ -568,6 +568,8 @@ namespace Fontendo.UI
             if (FontendoFont == null)
                 return;
             textFontFilePath.Text = "";
+            SheetsList = new ObservableCollection<SheetItem>();
+            GlyphsList = new ObservableCollection<GlyphItem>();
             FontEditor.ShowFontDetails(null);
             GlyphEditor.ShowGlyphDetails(null);
 
@@ -605,6 +607,7 @@ namespace Fontendo.UI
             {
                 return null;
             }
+
             using (var ms = new MemoryStream())
             {
                 bmp.Save(ms, System.Drawing.Imaging.ImageFormat.Png);

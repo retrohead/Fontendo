@@ -9,6 +9,7 @@ using Color = System.Drawing.Color;
 using Fontendo.Formats;
 using System.Drawing.Imaging;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace Fontendo.Extensions
 {
@@ -867,10 +868,25 @@ namespace Fontendo.Extensions
             // Lock the bitmap’s bits
             var rect = new Rectangle(0, 0, width, height);
             var bmpData = bmp.LockBits(rect, ImageLockMode.WriteOnly, bmp.PixelFormat);
+
             try
             {
-                // Copy raw ARGB data into the bitmap
-                System.Runtime.InteropServices.Marshal.Copy(data, 0, bmpData.Scan0, data.Length);
+                int srcStride = width * 4;          // tightly packed ARGB32 input
+                int dstStride = bmpData.Stride;     // GDI+ stride (may be padded)
+
+                IntPtr dstScan0 = bmpData.Scan0;
+
+                for (int y = 0; y < height; y++)
+                {
+                    // Source offset (tightly packed)
+                    int srcOffset = y * srcStride;
+
+                    // Destination offset (stride padded)
+                    IntPtr dstRowPtr = IntPtr.Add(dstScan0, y * dstStride);
+
+                    // Copy one row
+                    Marshal.Copy(data, srcOffset, dstRowPtr, srcStride);
+                }
             }
             finally
             {
