@@ -1,11 +1,14 @@
 ﻿using Fontendo.Extensions;
 using Fontendo.Extensions.BinaryTools;
 using Fontendo.Interfaces;
+using System.Drawing;
+using System.Drawing.Imaging;
+using System.Runtime.InteropServices;
 using static Fontendo.Interfaces.ITextureCodec;
 
 namespace Fontendo.Codecs.NTR
 {
-    public class NTRTextureCodec : Fontendo.Interfaces.ITextureCodec
+    public class NTRTextureCodec : ITextureCodec
     {
         public Dictionary<TextureFormatType, TextureFormatData> TextureFormatFunctions { get; }
 
@@ -59,6 +62,86 @@ namespace Fontendo.Codecs.NTR
             }
             return (byte)(result >> (8 - bpp));
         }
+
+        public void EncodeBitmap(Bitmap image, Span<byte> span, byte bpp, int width, int height)
+        {
+            if (span.Length == 0)
+                return;
+
+            // Expected encoded size; if this doesn't match, caller logic is wrong.
+            int expectedBytes = (width * height * bpp) / 8;
+            if (span.Length < expectedBytes)
+                throw new ArgumentException("Span too small for encoded bitmap", nameof(span));
+
+            var rect = new Rectangle(0, 0, width, height);
+            var data = image.LockBits(rect, ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
+
+            try
+            {
+                int stride = data.Stride;
+                int bitpos = 0;
+                double conv = (((1 << 8) - 1.0) / ((1 << bpp) - 1.0));
+
+                int dstIndex = 0;
+                byte[] rowBuffer = new byte[width * 4];
+
+                for (int y = 0; y < height; y++)
+                {
+                    IntPtr srcPtr = data.Scan0 + y * stride;
+                    Marshal.Copy(srcPtr, rowBuffer, 0, rowBuffer.Length);
+
+                    for (int x = 0; x < width; x++)
+                    {
+                        int offset = x * 4;
+
+                        byte blue = rowBuffer[offset + 0];
+                        byte green = rowBuffer[offset + 1];
+                        byte red = rowBuffer[offset + 2];
+                        byte alpha = rowBuffer[offset + 3];
+
+                        double floatpixel =
+                            (((red + green + blue) / 3.0) * (alpha / 255.0)) / conv;
+
+                        byte bytepx = FlipBitOrder((byte)Math.Round(floatpixel), bpp);
+
+                        int shift = (8 - bpp) - bitpos;
+
+                        // First write
+                        if (dstIndex >= span.Length)
+                            throw new IndexOutOfRangeException("EncodeBitmap: dstIndex out of range");
+
+                        if (shift >= 0)
+                            span[dstIndex] |= (byte)(bytepx << shift);
+                        else
+                            span[dstIndex] |= (byte)(bytepx >> -shift);
+
+                        bitpos += bpp;
+
+                        if (bitpos >= 8)
+                        {
+                            bitpos %= 8;
+                            dstIndex++;
+
+                            if (bitpos != 0)
+                            {
+                                if (dstIndex >= span.Length)
+                                    throw new IndexOutOfRangeException("EncodeBitmap: dstIndex out of range (carry write)");
+
+                                // Same logic as C++: *dst |= bytepx << (8 - (8 - bitpos));
+                                span[dstIndex] |= (byte)(bytepx << bitpos);
+                            }
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                image.UnlockBits(data);
+            }
+        }
+
+
+
         public static void EncodeBitmap(byte[] argb, byte[] dst, int bpp, ushort width, ushort height)
         {
             int bitpos = 0;

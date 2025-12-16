@@ -46,5 +46,6 @@ namespace Fontendo.Interfaces
         // default stub to use for unimplemented formats
         static DecodeFunc NotImplemented(string formatName) =>
                 (br, w, h) => throw new NotImplementedException($"Format {formatName} not implemented");
+        void EncodeBitmap(Bitmap image, Span<byte> span, byte ntrBpp, int x, int y);
     }
 }

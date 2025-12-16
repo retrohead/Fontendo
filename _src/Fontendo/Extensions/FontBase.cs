@@ -755,6 +755,7 @@ namespace Fontendo.Extensions
                     Settings.AddProperty(FontProperty.NtrBpp, "Image bit depth", PropertyValueType.Byte, EditorType.Label);
                     Settings.AddProperty(FontProperty.NtrVertical, "Vertical", PropertyValueType.Byte, EditorType.CheckBox);
                     Settings.AddProperty(FontProperty.NtrRotation, "Rotation", PropertyValueType.Byte, EditorType.Label);
+                    Settings.AddProperty(FontProperty.NtrGameFreak, "PM BW/B2W2 font", PropertyValueType.Bool, EditorType.None);
 
                     break;
                 default:
@@ -893,6 +894,54 @@ namespace Fontendo.Extensions
                 bmp.UnlockBits(bmpData);
             }
             return bmp;
+        }
+
+
+        public static void BlitBitmapExact(
+            Bitmap sheet,
+            Bitmap glyph,
+            int destX,
+            int destY)
+        {
+            if (sheet.PixelFormat != PixelFormat.Format32bppArgb ||
+                glyph.PixelFormat != PixelFormat.Format32bppArgb)
+                throw new InvalidOperationException("Expected Format32bppArgb for exact blit.");
+
+            var rectSheet = new Rectangle(0, 0, sheet.Width, sheet.Height);
+            var rectGlyph = new Rectangle(0, 0, glyph.Width, glyph.Height);
+
+            var sheetData = sheet.LockBits(rectSheet, ImageLockMode.WriteOnly, sheet.PixelFormat);
+            var glyphData = glyph.LockBits(rectGlyph, ImageLockMode.ReadOnly, glyph.PixelFormat);
+
+            try
+            {
+                int bytesPerPixel = 4;
+
+                for (int y = 0; y < glyph.Height; y++)
+                {
+                    int srcOffset = y * glyphData.Stride;
+                    int dstOffset = (destY + y) * sheetData.Stride + destX * bytesPerPixel;
+
+                    // Copy one row from glyph to sheet
+                    byte[] row = new byte[glyph.Width * bytesPerPixel];
+                    System.Runtime.InteropServices.Marshal.Copy(
+                        glyphData.Scan0 + srcOffset,
+                        row,
+                        0,
+                        row.Length);
+
+                    System.Runtime.InteropServices.Marshal.Copy(
+                        row,
+                        0,
+                        sheetData.Scan0 + dstOffset,
+                        row.Length);
+                }
+            }
+            finally
+            {
+                sheet.UnlockBits(sheetData);
+                glyph.UnlockBits(glyphData);
+            }
         }
     }
 }

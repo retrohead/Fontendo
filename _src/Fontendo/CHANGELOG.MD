@@ -1,4 +1,9 @@
-﻿## V2.0.0.1
+﻿## V2.0.0.2
+
+- Added NFTR support for loading and saving fonts.
+- Fixed default char widths, left and glyph width values being overwritten with default values when saving.
+
+## V2.0.0.1
 
 - Added support for viewing transparent non-black pixels in glyphs.
 - Added Tint option for glyphs and transparent non-black pixels.

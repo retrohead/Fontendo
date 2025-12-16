@@ -3,16 +3,11 @@ using Fontendo.Extensions.BinaryTools;
 using Fontendo.Interfaces;
 using System.Drawing.Imaging;
 using static Fontendo.Extensions.FontBase;
-using static Fontendo.FontProperties.FontPropertyList;
 using static Fontendo.FontProperties.GlyphProperties;
 using static Fontendo.Extensions.FontBase.FontSettings;
 using System.Drawing;
 using System.IO;
-using Fontendo.UI;
 using static Fontendo.Interfaces.ITextureCodec;
-using System.Threading.Tasks;
-using Xceed.Wpf.Toolkit.PropertyGrid.Attributes;
-using System.Drawing.Drawing2D;
 
 namespace Fontendo.Formats.CTR
 {
@@ -339,7 +334,7 @@ namespace Fontendo.Formats.CTR
                 int startY = (int)(currentRow * (CellSize.Value.Y + 1));
 
                 // Exact ARGB copy — preserves 00FFFFFF perfectly
-                BlitGlyphExact(
+                BlitBitmapExact(
                     sheetImgs[currentSheet],
                     g.Settings.Image,
                     startX,
@@ -347,54 +342,6 @@ namespace Fontendo.Formats.CTR
             }
 
             return sheetImgs;
-        }
-
-
-        private static void BlitGlyphExact(
-            Bitmap sheet,
-            Bitmap glyph,
-            int destX,
-            int destY)
-        {
-            if (sheet.PixelFormat != PixelFormat.Format32bppArgb ||
-                glyph.PixelFormat != PixelFormat.Format32bppArgb)
-                throw new InvalidOperationException("Expected Format32bppArgb for exact blit.");
-
-            var rectSheet = new Rectangle(0, 0, sheet.Width, sheet.Height);
-            var rectGlyph = new Rectangle(0, 0, glyph.Width, glyph.Height);
-
-            var sheetData = sheet.LockBits(rectSheet, ImageLockMode.WriteOnly, sheet.PixelFormat);
-            var glyphData = glyph.LockBits(rectGlyph, ImageLockMode.ReadOnly, glyph.PixelFormat);
-
-            try
-            {
-                int bytesPerPixel = 4;
-
-                for (int y = 0; y < glyph.Height; y++)
-                {
-                    int srcOffset = y * glyphData.Stride;
-                    int dstOffset = (destY + y) * sheetData.Stride + destX * bytesPerPixel;
-
-                    // Copy one row from glyph to sheet
-                    byte[] row = new byte[glyph.Width * bytesPerPixel];
-                    System.Runtime.InteropServices.Marshal.Copy(
-                        glyphData.Scan0 + srcOffset,
-                        row,
-                        0,
-                        row.Length);
-
-                    System.Runtime.InteropServices.Marshal.Copy(
-                        row,
-                        0,
-                        sheetData.Scan0 + dstOffset,
-                        row.Length);
-                }
-            }
-            finally
-            {
-                sheet.UnlockBits(sheetData);
-                glyph.UnlockBits(glyphData);
-            }
         }
 
         public void RecreateSheetFromGlyphs(int i)
@@ -416,7 +363,7 @@ namespace Fontendo.Formats.CTR
                 var startX = (int)(currentColumn * (CellSize.Value.X + 1));
                 var startY = (int)(currentRow * (CellSize.Value.Y + 1));
                 // Draw glyph image onto the sheet
-                BlitGlyphExact(
+                BlitBitmapExact(
                     bmp,
                     g.Settings.Image,
                     startX,
@@ -433,7 +380,6 @@ namespace Fontendo.Formats.CTR
             Bitmap? mask = FontBase.GenerateTransparencyMask(bmp);
             Sheets.MaskImages[i] = mask == null ? null : mask;
         }
-
 
         public void RecreateGlyphsFromSheet(int sheetNum)
         {
@@ -524,7 +470,7 @@ namespace Fontendo.Formats.CTR
                 }
 
                 // Build width entries (CWDH) from encodedGlyphs
-                List<CharWidths> widthEntries = CTR.CharWidths.CreateWidthEntries(encodedGlyphs);
+                List<CharWidths> widthEntries = Formats.CharWidths.CreateWidthEntries(encodedGlyphs);
 
                 // Build CMAP entries: Direct, Table, Scan
                 List<(Glyph First, Glyph Last)> directEntries = CMAP.CreateDirectEntries(ref encodedGlyphs);
@@ -533,48 +479,40 @@ namespace Fontendo.Formats.CTR
 
                 // Create headers from current property values
                 // FINF expects many fields from FontProperties and current state
-                var finfLineFeed = FontBase.Settings.LineFeed;
-                var finfCharEnc = FontBase.Settings.CharEncoding;
-                var finfHeight = FontBase.Settings.Height;
-                var finfWidth = FontBase.Settings.Width;
-                var finfAscent = FontBase.Settings.Ascent;
-                var finfBaseline = FontBase.Settings.Baseline;
-                var cfntVersion = FontBase.Settings.Version;
-                var endiannessLittle = FontBase.Settings.Endianness;
 
                 // Construct CFNT, FINF, TGLP blocks (matching signatures and constants from your parsers)
                 var cfnt = new CFNT(); // If your CFNT has ctor overload, adjust accordingly
                 var finf = new FINF(
                     0x20,
                     0x1,
-                    finfLineFeed,
-                    0x00 /*Hardcoded altCharIndex to 0*/,
-                    widthEntries[0],       // same as original: template from first glyph
-                    ((byte)finfCharEnc),
-                    finfHeight,
-                    finfWidth,
-                    finfAscent,
+                    FontBase.Settings.LineFeed,
+                    (ushort)(FINF == null ? 0x00 : FINF.DefaultCharIndex),
+                    FINF == null ? widthEntries[0] : FINF.DefaultWidths!,
+                    (byte)FontBase.Settings.CharEncoding,
+                    FontBase.Settings.Height,
+                    FontBase.Settings.Width,
+                    FontBase.Settings.Ascent,
                     0x464E4946U
                     );
 
                 var tglp = new TGLP(
-                    (byte)CellSize.Value.X,
+                    (byte)CellSize!.Value.X,
                     (byte)CellSize.Value.Y,
-                    finfBaseline,
+                    FontBase.Settings.Baseline,
                     maxCharWidth,
                     (uint)encodedSheets[0].Length,
                     (ushort)encodedSheets.Count,
                     platformFmt,
-                    (ushort)TGLP.CellsPerRow,
+                    (ushort)TGLP!.CellsPerRow,
                     (ushort)TGLP.CellsPerColumn,
-                    (ushort)SheetSize.Value.X,
+                    (ushort)SheetSize!.Value.X,
                     (ushort)SheetSize.Value.Y,
                     0x504C4754U
                 );
                 if (CharMaps.Count() != widthEntries.Count())
                     return new ActionResult(false, "character maps count does not match character widths count");
                 // Create CWDH headers container
-                List<CWDH> cwdhHeaders = new List<CWDH> { new CWDH(widthEntries, 0x48445743U) };
+                List<CWDH> cwdhHeaders = new List<CWDH>();
                 
                 // Create CMAP
                 var cmapHeaders = new List<CMAP>();
@@ -592,44 +530,23 @@ namespace Fontendo.Formats.CTR
                 if (File.Exists(filename)) File.Delete(filename);
 
                 // Write with correct endianness
-                using (var bw = new BinaryWriterX(filename, endiannessLittle == Endianness.Endian.Little))
+                using (var bw = new BinaryWriterX(filename, FontBase.Settings.Endianness == Endianness.Endian.Little))
                 {
                     var linker = new BlockLinker();
 
-                    MainWindow.Log($"0x{bw.BaseStream.Position.ToString("X8")} CTR Start");
                     cfnt.Serialize(bw, linker);
-                    MainWindow.Log($"0x{bw.BaseStream.Position.ToString("X8")} CTR End");
-
-                    MainWindow.Log($"0x{bw.BaseStream.Position.ToString("X8")} FINF Start");
                     finf.Serialize(bw, linker);
-                    MainWindow.Log($"0x{bw.BaseStream.Position.ToString("X8")} FINF End");
-
-                    MainWindow.Log($"0x{bw.BaseStream.Position.ToString("X8")} TGLP Start");
                     tglp.Serialize(bw, linker, encodedSheets, align: 0x80); // CTR alignment
-
-                    MainWindow.Log($"0x{bw.BaseStream.Position.ToString("X8")} CWHD Start");
                     linker.AddLookupValue(FontPointerType.ptrWidth, bw.BaseStream.Position);
-                    int count = 0;
                     foreach (var header in cwdhHeaders)
                     {
-                        MainWindow.Log($"0x{bw.BaseStream.Position.ToString("X8")} CWHD {count} Start");
                         header.Serialize(bw, linker);
-                        MainWindow.Log($"0x{bw.BaseStream.Position.ToString("X8")} CWHD {count} End");
-                        count++;
                     }
-                    MainWindow.Log($"0x{bw.BaseStream.Position.ToString("X8")} CWHD End");
-
-                    MainWindow.Log($"0x{bw.BaseStream.Position.ToString("X8")} CMAP Start");
                     linker.AddLookupValue(FontPointerType.ptrMap, bw.BaseStream.Position + 0x8U);
-                    count = 0;
                     foreach (var cmap in cmapHeaders)
                     {
-                        MainWindow.Log($"0x{bw.BaseStream.Position.ToString("X8")} CMAP {count} Start");
                         cmap.Serialize(bw, linker);
-                        MainWindow.Log($"0x{bw.BaseStream.Position.ToString("X8")} CMAP {count} End");
-                        count++;
                     }
-                    MainWindow.Log($"0x{bw.BaseStream.Position.ToString("X8")} CMAP End");
                     linker.AddLookupValue(FontPointerType.fileSize, bw.BaseStream.Position);
 
                     linker.MakeBlockLink(bw);

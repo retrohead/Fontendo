@@ -967,7 +967,13 @@ namespace Fontendo.Codecs.CTR
             }
         }
 
+        // NTR ONLY, NOT USED
         public DecodedTextureType DecodeBitmap(ushort bpp, BitReader bitr, ushort width, ushort height)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void EncodeBitmap(Bitmap image, Span<byte> span, byte ntrBpp, int x, int y)
         {
             throw new NotImplementedException();
         }

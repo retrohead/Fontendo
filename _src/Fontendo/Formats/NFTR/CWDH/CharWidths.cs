@@ -1,9 +1,8 @@
 ﻿using Fontendo.Extensions;
 using Fontendo.Extensions.BinaryTools;
-using Fontendo.FontProperties;
 using static Fontendo.FontProperties.GlyphProperties;
 
-namespace Fontendo.Formats.CTR
+namespace Fontendo.Formats
 {
     public class CharWidths
     {

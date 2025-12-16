@@ -113,6 +113,17 @@ namespace Fontendo.UI
                 return;
             }
             BuildPropertiesPanel(panelFontProperties, font);
+            if(font.Settings.Sheets?.HasMaskImages == true)
+            {
+                sliderAntiAlialising.Visibility = Visibility.Visible;
+                labelAntiAliasing.Visibility = Visibility.Visible;
+                colorPickerAliasingTint.Visibility = Visibility.Visible;
+            } else
+            {
+                sliderAntiAlialising.Visibility = Visibility.Collapsed;
+                labelAntiAliasing.Visibility = Visibility.Collapsed;
+                colorPickerAliasingTint.Visibility = Visibility.Collapsed;
+            }
         }
         public void ClearFontDetails()
         {
@@ -162,6 +173,15 @@ namespace Fontendo.UI
             item.Tag = LoadedFont.Settings.Sheets.Images[index];
             LoadedFont.RecreateGlyphsFromSheet(index);
 
+            // update the loaded glyphs in main window
+            var sheetGlyphs = LoadedFont.Settings.Glyphs!.FindAll(g => g.Sheet == index);
+
+            for (int i=0;i< sheetGlyphs.Count(); i++)
+            {
+                UI_MainWindow.Self.GlyphsList[i].Image = UI_MainWindow.ConvertBitmap(sheetGlyphs[i].Settings.Image);
+            }
+            UI_MainWindow.Self.GlyphEditor.ShowGlyphDetails((Glyph?)UI_MainWindow.Self.GetSelectedCharacterItem()!.Tag);
+
             if (mask != null)
                 mask.Dispose();
             bmp.Dispose();
@@ -208,21 +228,22 @@ namespace Fontendo.UI
                     Grid.SetRow(label, rowIndex);
                     Grid.SetColumn(label, 0);
                     grid.Children.Add(label);
-                }
 
-                font.Settings.GetBindingsForObject(kvp.Key, out var bindings);
-                FrameworkElement? editor = CreateControlForEditorType(descriptor.PreferredControl, descriptor, bindings);
 
-                if (editor != null)
-                {
-                    editor.Margin = new Thickness(0, 5, 0, 0);
-                    Grid.SetRow(editor, rowIndex);
-                    Grid.SetColumn(editor, 1);
-                    grid.Children.Add(editor);
+                    font.Settings.GetBindingsForObject(kvp.Key, out var bindings);
+                    FrameworkElement? editor = CreateControlForEditorType(descriptor.PreferredControl, descriptor, bindings);
 
-                    // Fix row height to 32px
-                    grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(32) });
-                    rowIndex++;
+                    if (editor != null)
+                    {
+                        editor.Margin = new Thickness(0, 5, 0, 0);
+                        Grid.SetRow(editor, rowIndex);
+                        Grid.SetColumn(editor, 1);
+                        grid.Children.Add(editor);
+
+                        // Fix row height to 32px
+                        grid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(32) });
+                        rowIndex++;
+                    }
                 }
             }
 

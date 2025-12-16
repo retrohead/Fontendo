@@ -1,6 +1,7 @@
 ﻿using Fontendo.Extensions;
 using Fontendo.Extensions.BinaryTools;
 using Fontendo.Interfaces;
+using System.Drawing;
 using static Fontendo.Interfaces.ITextureCodec;
 
 namespace Fontendo.Codecs.RVL
@@ -100,7 +101,13 @@ namespace Fontendo.Codecs.RVL
             throw new NotImplementedException();
         }
 
+        // NTR ONLY, NOT USED
         public DecodedTextureType DecodeBitmap(ushort bpp, BitReader bitr, ushort width, ushort height)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void EncodeBitmap(Bitmap image, Span<byte> span, byte ntrBpp, int x, int y)
         {
             throw new NotImplementedException();
         }

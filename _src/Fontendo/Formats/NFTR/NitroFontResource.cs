@@ -4,7 +4,10 @@ using Fontendo.Formats.CTR;
 using Fontendo.Interfaces;
 using System;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
+using System.Reflection;
+using System.Runtime.ConstrainedExecution;
 using static Fontendo.Extensions.FontBase;
 using static Fontendo.Extensions.FontBase.FontSettings;
 using static Fontendo.FontProperties.FontPropertyList;
@@ -206,8 +209,8 @@ namespace Fontendo.Formats
 
                     // Create the first sheet
                     Bitmap sheetBitmap = new Bitmap(sheetWidth, sheetHeight);
-                    Graphics gfx = Graphics.FromImage(sheetBitmap);
-                    gfx.Clear(Color.Transparent);
+                    using (var gfx = Graphics.FromImage(sheetBitmap))
+                        gfx.Clear(Color.Transparent);
 
                     int glyphIndexInSheet = 0;
                     Sheets = new SheetsType(sheetWidth, sheetHeight);
@@ -220,9 +223,8 @@ namespace Fontendo.Formats
                             Sheets.MaskImages.Add(null);
 
                             sheetBitmap = new Bitmap(sheetWidth, sheetHeight);
-                            gfx.Dispose();
-                            gfx = Graphics.FromImage(sheetBitmap);
-                            gfx.Clear(Color.Transparent);
+                            using (var gfx = Graphics.FromImage(sheetBitmap))
+                                gfx.Clear(Color.Transparent);
 
                             glyphIndexInSheet = 0;
                         }
@@ -233,7 +235,7 @@ namespace Fontendo.Formats
                         int x = (glyphIndexInSheet % cellsPerRow) * CGLP.CellWidth;
                         int y = (glyphIndexInSheet / cellsPerRow) * CGLP.CellHeight;
 
-                        gfx.DrawImage(glyph.Settings.Image, x, y, CGLP.CellWidth, CGLP.CellHeight);
+                        BlitBitmapExact(sheetBitmap, glyph.Settings.Image, x, y);
 
                         glyphIndexInSheet++;
                     }
@@ -241,7 +243,6 @@ namespace Fontendo.Formats
                     // Add the final sheet
                     Sheets.Images.Add(sheetBitmap);
                     Sheets.MaskImages.Add(null);
-                    gfx.Dispose();
 
                     // Set the glyph code point bounds
                     (long Min, long Max) range;
@@ -286,7 +287,7 @@ namespace Fontendo.Formats
                     FontBase.Settings.Sheets = Sheets;
                     FontBase.Settings.Glyphs = Glyphs;
 
-                    if(NFTR.Version <= 0x1000)
+                    if (NFTR.Version <= 0x1000)
                     {
                         // hide some controls for older versions
                         FontBase.Settings.UpdatePreferredControl(FontProperty.Height, EditorType.None);
@@ -294,11 +295,7 @@ namespace Fontendo.Formats
                         FontBase.Settings.UpdatePreferredControl(FontProperty.Ascent, EditorType.None);
                     }
 
-                    if (isPocketMonstersFont)
-                    {
-                        FontBase.Settings.AddProperty(FontProperty.NtrGameFreak, "PM BW/B2W2 font", PropertyValueType.Bool, EditorType.None);
-                        FontBase.Settings.NtrGameFreak = true;
-                    }
+                    FontBase.Settings.NtrGameFreak = isPocketMonstersFont;
                 }
                 catch (Exception e)
                 {
@@ -312,19 +309,193 @@ namespace Fontendo.Formats
             return new ActionResult(true, "OK");
         }
 
-        public void RecreateGlyphsFromSheet(int i)
+        public void RecreateGlyphsFromSheet(int sheetNum)
         {
-            throw new NotImplementedException();
+            int sheetWidth = 128 - (128 % CGLP!.CellWidth);
+            int sheetHeight = 128 - (128 % CGLP.CellHeight);
+
+            int cellsPerRow = sheetWidth / CGLP.CellWidth;
+            int cellsPerCol = sheetHeight / CGLP.CellHeight;
+
+            // Get glyphs for this sheet IN ORDER
+            var sheetGlyphs = Glyphs!
+                .Where(g => g.Sheet == sheetNum)
+                .OrderBy(g => g.Index)   // ensures stable ordering
+                .ToList();
+
+            for (int index = 0; index < sheetGlyphs.Count; index++)
+            {
+                int x = (index % cellsPerRow) * CGLP.CellWidth;
+                int y = (index / cellsPerRow) * CGLP.CellHeight;
+
+                Rectangle rect = new Rectangle(x, y, CGLP.CellWidth, CGLP.CellHeight);
+
+                Bitmap bmp = Sheets!.Images[sheetNum].Clone(rect, Sheets.Images[sheetNum].PixelFormat);
+
+                // Replace glyph image
+                var glyph = sheetGlyphs[index];
+                glyph.Settings.Image?.Dispose();
+                glyph.Settings.Image = bmp;
+
+                // Update CharImages too
+                var ci = CharImages!.First(c => c.Index == glyph.Index);
+                ci.Image?.Dispose();
+                ci.Image = bmp;
+            }
         }
+
 
         public void RecreateSheetFromGlyphs(int i)
         {
-            throw new NotImplementedException();
+            int sheetWidth = 128 - (128 % CGLP.CellWidth);
+            int sheetHeight = 128 - (128 % CGLP.CellHeight);
+
+            int cellsPerRow = sheetWidth / CGLP.CellWidth;
+            int cellsPerCol = sheetHeight / CGLP.CellHeight;
+            int cellsPerSheet = cellsPerRow * cellsPerCol;
+            var bmp = new Bitmap(sheetWidth, sheetHeight, PixelFormat.Format32bppArgb);
+            // Clear to transparent first
+            using (var gfx = Graphics.FromImage(bmp))
+            {
+                gfx.Clear(Color.Transparent);
+            }
+            var sheetGlyphs = Glyphs!.FindAll(g => g.Sheet == i);
+            for (int index = 0; index < sheetGlyphs.Count; index++)
+            {
+
+                int x = (index % cellsPerRow) * CGLP.CellWidth;
+                int y = (index / cellsPerRow) * CGLP.CellHeight;
+
+                BlitBitmapExact(bmp, sheetGlyphs[index].Settings.Image, x, y);
+            }
+            // Replace old sheet image
+            Sheets!.Images[i].Dispose();
+            Sheets.Images[i] = bmp;
         }
 
         public ActionResult Save(string filename)
         {
-            throw new NotImplementedException();
+            if (CharMaps.Count() != CharWidths.Count())
+                return new ActionResult(false, "character maps count does not match character widths count");
+
+            // Prepare glyphs for export: sort by code point, set indices, track max char width
+            var encodedGlyphs = new LinkedList<Glyph>(Glyphs.OrderBy((a) =>
+            {
+                return a.Settings.CodePoint;
+            }).ToList());
+
+            //Set glyph indexes, while also looking for the widest glyph
+            byte maxCharWidth = 0;
+            ushort index = 0;
+            foreach (var g in encodedGlyphs)
+            {
+                g.Settings.Index = index;
+                var cw = g.Settings.GetValue<byte>(GlyphProperty.CharWidth);
+                if (cw > maxCharWidth) maxCharWidth = cw;
+                index++;
+            }
+            bool isGF = FontBase.Settings.NtrGameFreak;
+
+            double bits = CellSize!.Value.X * CellSize.Value.Y * FontBase.Settings.NtrBpp;
+            int cellBytes = (int)Math.Ceiling(bits / 8);
+
+            if (isGF == true)
+                cellBytes += 3;
+
+            List<CharWidths> widthEntries = Formats.CharWidths.CreateWidthEntries(encodedGlyphs);
+
+            //Encode the images
+            List<byte[]> sheetImgs = new List<byte[]>();
+            foreach (var g in encodedGlyphs)
+            {
+                byte[] cell = new byte[cellBytes];
+                sheetImgs.Add(cell);
+                if(!isGF)
+                {
+                    Codec.EncodeBitmap(g.Settings.Image, cell, FontBase.Settings.NtrBpp, g.Settings.Image.Width, g.Settings.Image.Height);
+                } else
+                {
+                    cell[0] = (byte)g.Settings.Left;
+                    cell[1] = (byte)g.Settings.GlyphWidth;
+                    cell[2] = (byte)g.Settings.CharWidth;
+                    Codec.EncodeBitmap(g.Settings.Image, cell.AsSpan(3), FontBase.Settings.NtrBpp, g.Settings.Image.Width, g.Settings.Image.Height);
+                }
+            }
+
+            // Build CMAP entries: Direct, Table, Scan
+            List<(Glyph First, Glyph Last)> directEntries = CMAP.CreateDirectEntries(ref encodedGlyphs);
+            List<List<CMAPEntry>> tableEntries = CMAP.CreateTableEntries(ref encodedGlyphs);
+            List<List<CMAPEntry>> scanEntries = CMAP.CreateScanEntries(encodedGlyphs);
+
+
+            var nftr = new NFTR(version: (ushort)FontBase.Settings.Version);
+            uint finfSize = 0x1C;
+            if (FontBase.Settings.Width != 0xFF || FontBase.Settings.Height != 0xFF || FontBase.Settings.Ascent != 0xFF)
+                finfSize = 0x20;
+
+            var finf = new FINF(
+                finfSize,
+                0x0,
+                FontBase.Settings.LineFeed,
+                (ushort)(FINF == null ? 0x00 : FINF.DefaultCharIndex),
+                FINF == null ? widthEntries[0] : FINF.DefaultWidths!,
+                (byte)FontBase.Settings.CharEncoding,
+                FontBase.Settings.Height,
+                FontBase.Settings.Width,
+                FontBase.Settings.Ascent
+                );
+
+            var cglp = new CGLP(
+                (byte)CellSize.Value.X,
+                (byte)CellSize.Value.Y,
+                (ushort)cellBytes,
+                (sbyte)FontBase.Settings.Baseline,
+                maxCharWidth,
+                FontBase.Settings.NtrBpp,
+                FontBase.Settings.NtrRotation
+                );
+
+            List<CWDH> cwdhHeaders = new List<CWDH> { new CWDH(widthEntries) };
+
+            var cmapHeaders = new List<CMAP>();
+            for (var i = 0; i < directEntries.Count(); i++)
+                cmapHeaders.Add(new CMAP(directEntries[i]));
+            for (var i = 0; i < tableEntries.Count(); i++)
+                cmapHeaders.Add(new CMAP(0x1, tableEntries[i]));
+            for (var i = 0; i < scanEntries.Count(); i++)
+                cmapHeaders.Add(new CMAP(0x2, scanEntries[i]));
+
+            // sort headers TODO: not sure if needed of it will break anything
+            cmapHeaders = cmapHeaders.OrderBy(h => h.MappingMethod)
+                        .ThenBy(h => h.CodeBegin)
+                        .ToList();
+
+            // Delete old file if exists
+            if (File.Exists(filename)) File.Delete(filename);
+
+            // Write with correct endianness
+            using (var bw = new BinaryWriterX(filename, FontBase.Settings.Endianness == Endianness.Endian.Little))
+            {
+                var linker = new BlockLinker();
+                nftr.Serialize(bw, linker);
+                finf.Serialize(bw, linker);
+                cglp.Serialize(bw, linker, sheetImgs);
+                linker.AddLookupValue(FontPointerType.ptrWidth, (uint)bw.BaseStream.Position);
+                foreach (var cwdh in cwdhHeaders)
+                {
+                    cwdh.Serialize(bw, linker);
+                }
+                linker.AddLookupValue(FontPointerType.ptrMap, bw.BaseStream.Position + 0x8);
+                foreach (var cmap in cmapHeaders)
+                {
+                    cmap.Serialize(bw, linker);
+                }
+                linker.AddLookupValue(FontPointerType.fileSize, bw.BaseStream.Position);
+                linker.MakeBlockLink(bw);
+            }
+
+            // Nothing to cleanup :)
+            return new ActionResult(true, "OK");
         }
 
         bool IsValidBlockOffset(long offset, uint blockMagic, long fileLength, BinaryReader br)

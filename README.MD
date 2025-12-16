@@ -9,11 +9,19 @@ https://github.com/hadashisora/NintyFont
 
 ## Features
 
-Currently supports loading and modifying CTR fonts only for now.
+Supports loading and modifying CTR and NFTR fonts.
+
+Visualize transparent non-black pixels with the anti aliasing slider for supported fonts.
 
 ## Supported Formats
 
-- CFNT - Binary Citrus FoNT, used in many 3DS titles utilizing old versions of NW4C.
+### CFNT
+Binary Citrus FoNT, used in many 3DS titles utilizing old versions of NW4C.
+
+### NFTR/RTFN
+Nitro FonT Resource, used by a lot of DS titles utilizing the NTR_SYSTEM SDK package. As well as normal format, the slightly different version used in GameFreak's Pocket Monsters BW/B2W2 games is also supported. Both opening and saving work;
+Pocket Monsters D/P/Pt/HG/SS fonts, supports both opening and saving;
+
 
 ## Download
 

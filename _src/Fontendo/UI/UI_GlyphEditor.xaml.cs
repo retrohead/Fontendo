@@ -321,7 +321,7 @@ namespace Fontendo.UI
             LoadedGlyph = glyph;
             ShowGlyphDetails(LoadedGlyph);
 
-            item.Image = mask == null ? null : UI_MainWindow.ConvertBitmap(bmp);
+            item.Image = UI_MainWindow.ConvertBitmap(bmp);
             item.MaskImage = mask == null ? null : UI_MainWindow.ConvertBitmap(mask);
 
             UI_MainWindow.Self.FontendoFont!.RecreateSheetFromGlyphs(LoadedGlyph.Sheet);
