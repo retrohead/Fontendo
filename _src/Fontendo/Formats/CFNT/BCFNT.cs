@@ -8,8 +8,9 @@ using static Fontendo.Extensions.FontBase.FontSettings;
 using System.Drawing;
 using System.IO;
 using static Fontendo.Interfaces.ITextureCodec;
+using Fontendo.Formats.CTR;
 
-namespace Fontendo.Formats.CTR
+namespace Fontendo.Formats
 {
     public class BCFNT : IFontendoFont, IDisposable
     {
@@ -29,16 +30,18 @@ namespace Fontendo.Formats.CTR
         public List<Glyph>? Glyphs { get; set; } = null;
         public List<CharImageType>? CharImages { get; set; } = null;
         public FontBase FontBase { get; }
-        public ITextureCodec Codec { get; set; } = TextureCodecFactory.Create(TextureCodecFactory.Platform.CTR);
 
         public BCFNT(FontBase FontBase)
         {
             this.FontBase = FontBase;
         }
 
+        public ITextureCodec Codec { get; set; } = TextureCodecFactory.Create(TextureCodecFactory.Platform.CTR);
 
         public ActionResult Load(FontBase fontbase, string filename)
         {
+
+
             ActionResult result;
             MainWindow.Log($"------------------------------------------");
             MainWindow.Log($"Loading file: {filename}");
@@ -166,12 +169,39 @@ namespace Fontendo.Formats.CTR
                         int decodeWidth = (TGLP.SheetWidth + 7) & ~7;  // round up to multiple of 8
                         int decodeHeight = (TGLP.SheetHeight + 7) & ~7;  // round up to multiple of 8
                         DecodedTextureType sheetRaw = Codec.DecodeTexture(TGLP.SheetFormat, br, TGLP.SheetWidth, TGLP.SheetHeight);
-                        Sheets.Images.Add(CreateBitmapFromBytes(sheetRaw.data, TGLP.SheetWidth, TGLP.SheetHeight, PixelFormat.Format32bppArgb));
+
+                        Bitmap sheet = new Bitmap(TGLP.SheetWidth, TGLP.SheetHeight, PixelFormat.Format32bppArgb);
+                        // Lock the bitmap’s bits
+                        var rect = new Rectangle(0, 0, sheet.Width, sheet.Height);
+                        var bmpData = sheet.LockBits(rect, ImageLockMode.WriteOnly, sheet.PixelFormat);
+                        try
+                        {
+                            // Copy raw ARGB data into the bitmap
+                            System.Runtime.InteropServices.Marshal.Copy(sheetRaw.data, 0, bmpData.Scan0, sheetRaw.data.Length);
+                        }
+                        finally
+                        {
+                            sheet.UnlockBits(bmpData);
+                        }
+                        Sheets.Images.Add(sheet);
 
                         if (sheetRaw.mask != null)
-                        { 
-                            Sheets.MaskImages.Add(CreateBitmapFromBytes(sheetRaw.mask, TGLP.SheetWidth, TGLP.SheetHeight, PixelFormat.Format32bppArgb));
-                        } else
+                        {
+                            Bitmap mask = new Bitmap(TGLP.SheetWidth, TGLP.SheetHeight, PixelFormat.Format32bppArgb);
+                            // Lock the bitmap’s bits
+                            bmpData = mask.LockBits(rect, ImageLockMode.WriteOnly, sheet.PixelFormat);
+                            try
+                            {
+                                // Copy raw ARGB data into the bitmap
+                                System.Runtime.InteropServices.Marshal.Copy(sheetRaw.mask, 0, bmpData.Scan0, sheetRaw.mask.Length);
+                            }
+                            finally
+                            {
+                                mask.UnlockBits(bmpData);
+                            }
+                            Sheets.MaskImages.Add(mask);
+                        }
+                        else
                         {
                             Sheets.MaskImages.Add(null);
                         }
@@ -205,7 +235,7 @@ namespace Fontendo.Formats.CTR
                         Rectangle rect = new Rectangle(startX, startY, TGLP.CellWidth + 1, TGLP.CellHeight + 1);
                         Bitmap bmp = Sheets.Images[currentSheet].Clone(rect, Sheets.Images[currentSheet].PixelFormat);
                         Bitmap? maskbmp = null;
-                        if(Sheets.MaskImages[currentSheet] != null)
+                        if (Sheets.MaskImages[currentSheet] != null)
                             maskbmp = Sheets.MaskImages[currentSheet]!.Clone(rect, Sheets.MaskImages[currentSheet]!.PixelFormat);
                         maskImages.Add(maskbmp);
                         CharImageType newImg = new CharImageType(i, currentSheet, bmp);
@@ -264,7 +294,7 @@ namespace Fontendo.Formats.CTR
                     }
 
                     // Assign the range to the descriptors
-                    foreach(var g in Glyphs)
+                    foreach (var g in Glyphs)
                         g.Settings.UpdateValueRange(GlyphProperty.Code, range);
 
                     // fill in some other stuff
@@ -286,7 +316,14 @@ namespace Fontendo.Formats.CTR
                 }
                 catch (Exception e)
                 {
-                    Dispose();
+                    if (CharImages != null)
+                    {
+                        foreach (var img in CharImages)
+                            img.Image.Dispose();
+                        CharImages.Clear();
+                    }
+                    if (Glyphs != null)
+                        Glyphs.Clear();
                     return new ActionResult(false, e.Message);
                 }
                 br.Close();
@@ -376,10 +413,11 @@ namespace Fontendo.Formats.CTR
             if (Sheets!.MaskImages[i] != null)
             {
                 Sheets.MaskImages[i]!.Dispose();
+                Bitmap? mask = FontBase.GenerateTransparencyMask(bmp);
+                Sheets.MaskImages[i] = mask == null ? null : mask;
             }
-            Bitmap? mask = FontBase.GenerateTransparencyMask(bmp);
-            Sheets.MaskImages[i] = mask == null ? null : mask;
         }
+
 
         public void RecreateGlyphsFromSheet(int sheetNum)
         {
@@ -399,14 +437,7 @@ namespace Fontendo.Formats.CTR
                 // replace the bmp
                 charImages[i].Image.Dispose();
                 charImages[i].Image = bmp;
-                if (Glyphs![charImages[i].Index].Settings.Image != null)
-                    Glyphs[charImages[i].Index].Settings.Image.Dispose();
-                if (Glyphs[charImages[i].Index].MaskImage != null)
-                    Glyphs[charImages[i].Index].MaskImage!.Dispose();
                 Glyphs[charImages[i].Index].Settings.Image = bmp;
-
-                Bitmap? mask = FontBase.GenerateTransparencyMask(Glyphs[charImages[i].Index].Settings.Image);
-                Glyphs[charImages[i].Index].MaskImage = mask == null ? null : mask;
             }
         }
 
@@ -479,44 +510,52 @@ namespace Fontendo.Formats.CTR
 
                 // Create headers from current property values
                 // FINF expects many fields from FontProperties and current state
+                var finfLineFeed = FontBase.Settings.LineFeed;
+                var finfCharEnc = FontBase.Settings.CharEncoding;
+                var finfHeight = FontBase.Settings.Height;
+                var finfWidth = FontBase.Settings.Width;
+                var finfAscent = FontBase.Settings.Ascent;
+                var finfBaseline = FontBase.Settings.Baseline;
+                var cfntVersion = FontBase.Settings.Version;
+                var endiannessLittle = FontBase.Settings.Endianness;
 
                 // Construct CFNT, FINF, TGLP blocks (matching signatures and constants from your parsers)
                 var cfnt = new CFNT(); // If your CFNT has ctor overload, adjust accordingly
                 var finf = new FINF(
                     0x20,
                     0x1,
-                    FontBase.Settings.LineFeed,
-                    (ushort)(FINF == null ? 0x00 : FINF.DefaultCharIndex),
-                    FINF == null ? widthEntries[0] : FINF.DefaultWidths!,
-                    (byte)FontBase.Settings.CharEncoding,
-                    FontBase.Settings.Height,
-                    FontBase.Settings.Width,
-                    FontBase.Settings.Ascent,
+                    finfLineFeed,
+                    0x00 /*Hardcoded altCharIndex to 0*/,
+                    widthEntries[0],       // same as original: template from first glyph
+                    ((byte)finfCharEnc),
+                    finfHeight,
+                    finfWidth,
+                    finfAscent,
                     0x464E4946U
                     );
 
                 var tglp = new TGLP(
-                    (byte)CellSize!.Value.X,
+                    (byte)CellSize.Value.X,
                     (byte)CellSize.Value.Y,
-                    FontBase.Settings.Baseline,
+                    finfBaseline,
                     maxCharWidth,
                     (uint)encodedSheets[0].Length,
                     (ushort)encodedSheets.Count,
                     platformFmt,
-                    (ushort)TGLP!.CellsPerRow,
+                    (ushort)TGLP.CellsPerRow,
                     (ushort)TGLP.CellsPerColumn,
-                    (ushort)SheetSize!.Value.X,
+                    (ushort)SheetSize.Value.X,
                     (ushort)SheetSize.Value.Y,
                     0x504C4754U
                 );
                 if (CharMaps.Count() != widthEntries.Count())
                     return new ActionResult(false, "character maps count does not match character widths count");
                 // Create CWDH headers container
-                List<CWDH> cwdhHeaders = new List<CWDH>();
-                
+                List<CWDH> cwdhHeaders = new List<CWDH> { new CWDH(widthEntries, 0x48445743U) };
+
                 // Create CMAP
                 var cmapHeaders = new List<CMAP>();
-                for(var i = 0; i < directEntries.Count(); i++)
+                for (var i = 0; i < directEntries.Count(); i++)
                     cmapHeaders.Add(new CMAP(directEntries[i], 0x50414D43U));
                 for (var i = 0; i < tableEntries.Count(); i++)
                     cmapHeaders.Add(new CMAP(0x1, tableEntries[i], 0x50414D43U));
@@ -530,23 +569,44 @@ namespace Fontendo.Formats.CTR
                 if (File.Exists(filename)) File.Delete(filename);
 
                 // Write with correct endianness
-                using (var bw = new BinaryWriterX(filename, FontBase.Settings.Endianness == Endianness.Endian.Little))
+                using (var bw = new BinaryWriterX(filename, endiannessLittle == Endianness.Endian.Little))
                 {
                     var linker = new BlockLinker();
 
+                    MainWindow.Log($"0x{bw.BaseStream.Position.ToString("X8")} CTR Start");
                     cfnt.Serialize(bw, linker);
+                    MainWindow.Log($"0x{bw.BaseStream.Position.ToString("X8")} CTR End");
+
+                    MainWindow.Log($"0x{bw.BaseStream.Position.ToString("X8")} FINF Start");
                     finf.Serialize(bw, linker);
+                    MainWindow.Log($"0x{bw.BaseStream.Position.ToString("X8")} FINF End");
+
+                    MainWindow.Log($"0x{bw.BaseStream.Position.ToString("X8")} TGLP Start");
                     tglp.Serialize(bw, linker, encodedSheets, align: 0x80); // CTR alignment
+
+                    MainWindow.Log($"0x{bw.BaseStream.Position.ToString("X8")} CWHD Start");
                     linker.AddLookupValue(FontPointerType.ptrWidth, bw.BaseStream.Position);
+                    int count = 0;
                     foreach (var header in cwdhHeaders)
                     {
+                        MainWindow.Log($"0x{bw.BaseStream.Position.ToString("X8")} CWHD {count} Start");
                         header.Serialize(bw, linker);
+                        MainWindow.Log($"0x{bw.BaseStream.Position.ToString("X8")} CWHD {count} End");
+                        count++;
                     }
+                    MainWindow.Log($"0x{bw.BaseStream.Position.ToString("X8")} CWHD End");
+
+                    MainWindow.Log($"0x{bw.BaseStream.Position.ToString("X8")} CMAP Start");
                     linker.AddLookupValue(FontPointerType.ptrMap, bw.BaseStream.Position + 0x8U);
+                    count = 0;
                     foreach (var cmap in cmapHeaders)
                     {
+                        MainWindow.Log($"0x{bw.BaseStream.Position.ToString("X8")} CMAP {count} Start");
                         cmap.Serialize(bw, linker);
+                        MainWindow.Log($"0x{bw.BaseStream.Position.ToString("X8")} CMAP {count} End");
+                        count++;
                     }
+                    MainWindow.Log($"0x{bw.BaseStream.Position.ToString("X8")} CMAP End");
                     linker.AddLookupValue(FontPointerType.fileSize, bw.BaseStream.Position);
 
                     linker.MakeBlockLink(bw);
@@ -633,7 +693,7 @@ namespace Fontendo.Formats.CTR
             {
                 foreach (var bmp in Sheets.MaskImages)
                 {
-                    if(bmp != null)
+                    if (bmp != null)
                         bmp.Dispose();
                 }
                 Sheets.MaskImages.Clear();

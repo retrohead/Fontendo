@@ -316,26 +316,26 @@ namespace Fontendo.UI
             int index = UI_MainWindow.Self.FontendoFont!.Settings.Glyphs!.IndexOf(LoadedGlyph);
             Glyph glyph = UI_MainWindow.Self.FontendoFont!.Settings.Glyphs[index];
             glyph.Settings.Image = (Bitmap)bmp.Clone();
-            Bitmap? mask = FontBase.GenerateTransparencyMask(glyph.Settings.Image);
-            glyph.MaskImage = mask == null ? null : (Bitmap)mask.Clone();
+            if (UI_MainWindow.Self.FontendoFont!.Settings.Sheets!.HasMaskImages)
+            {
+                Bitmap? mask = FontBase.GenerateTransparencyMask(glyph.Settings.Image);
+                glyph.MaskImage = mask == null ? null : (Bitmap)mask.Clone();
+                if(mask != null)
+                mask.Dispose();
+            }
             LoadedGlyph = glyph;
             ShowGlyphDetails(LoadedGlyph);
 
             item.Image = UI_MainWindow.ConvertBitmap(bmp);
-            item.MaskImage = mask == null ? null : UI_MainWindow.ConvertBitmap(mask);
+            item.MaskImage = glyph.MaskImage == null ? null : UI_MainWindow.ConvertBitmap(glyph.MaskImage);
 
             UI_MainWindow.Self.FontendoFont!.RecreateSheetFromGlyphs(LoadedGlyph.Sheet);
 
             var sheetitem = UI_MainWindow.Self.SheetsList[LoadedGlyph.Sheet];
+
             sheetitem.Image = UI_MainWindow.ConvertBitmap(UI_MainWindow.Self.FontendoFont!.Settings.Sheets!.Images[LoadedGlyph.Sheet]);
             sheetitem.Mask = UI_MainWindow.Self.FontendoFont!.Settings.Sheets!.MaskImages[LoadedGlyph.Sheet] == null ? null : UI_MainWindow.ConvertBitmap(UI_MainWindow.Self.FontendoFont!.Settings.Sheets!.MaskImages[LoadedGlyph.Sheet]);
 
-            UI_MainWindow.Self.SheetsList[LoadedGlyph.Sheet] = sheetitem;
-            if (mask != null)
-            {
-                mask.Dispose();
-                mask = null;
-            }
             bmp.Dispose();
             MessageBox.Show("Glyph image imported successfully.", "Import Successful", MessageBoxButton.OK, MessageBoxImage.Information);
         }

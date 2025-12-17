@@ -805,6 +805,10 @@ namespace Fontendo.UI
         {
             return (GlyphItem?)listViewCharacters.SelectedItem;
         }
+        public void SetSelectedCharacterItem(GlyphItem glyph)
+        {
+            listViewCharacters.SelectedItem = glyph;
+        }
         public SheetItem? GetSelectedSheetItem()
         {
             return (SheetItem?)listViewSheets.SelectedItem;

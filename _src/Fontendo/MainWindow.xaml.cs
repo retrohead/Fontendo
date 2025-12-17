@@ -30,7 +30,7 @@ namespace Fontendo
         public static MainWindow? Self;
         public const string appname = "Fontendo";
         public static string appDataPath = "";
-        public const string appver = "2.0.0.2";
+        public const string appver = "2.0.0.3";
         public const string appdeveloper = "retrohead";
         public const string appfirstyear = "2025";
         public static objectAnimations? objectAnim;

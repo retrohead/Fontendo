@@ -1,4 +1,8 @@
-﻿## V2.0.0.2
+﻿## V2.0.0.3
+
+- Bug fix release. BCFNT fonts now save correctly again.
+
+## V2.0.0.2
 
 - Added NFTR support for loading and saving fonts.
 - Fixed default char widths, left and glyph width values being overwritten with default values when saving.
