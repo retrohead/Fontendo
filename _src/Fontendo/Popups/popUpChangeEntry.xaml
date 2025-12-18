@@ -66,13 +66,7 @@
 
             <StackPanel x:Name="buttons" Grid.Row="1" Grid.Column="1" VerticalAlignment="Center">
                 <Grid HorizontalAlignment="Right">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="27"/>
-                        <ColumnDefinition />
-                    </Grid.ColumnDefinitions>
-                    <Button x:Name="btnAccept" Width="25" Height="25" HorizontalAlignment="Right" Cursor="Hand" Grid.Column="0" Style="{DynamicResource ButtonStyleImage}" Click="btnAccept_Click">
-                        <Image HorizontalAlignment="Left" Margin="0" VerticalAlignment="Center" Source="/Resources/accept_green.png" Width="16" Height="16"/>
-                    </Button>
+                    <Button x:Name="btnAccept" Content="Save" Style="{DynamicResource PopUpAcceptButtonStyle}" Click="btnAccept_Click" />
                 </Grid>
             </StackPanel>
         </Grid>
